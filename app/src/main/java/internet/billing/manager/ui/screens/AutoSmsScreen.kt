@@ -518,7 +518,7 @@ fun AutoSmsScreen(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "${AutoSmsManager.defaultTemplates.size} Templates",
+                        text = if (isBangla) "${AutoSmsManager.defaultTemplates.size}টি টেমপ্লেট" else "${AutoSmsManager.defaultTemplates.size} Templates",
                         color = AccentCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold

@@ -91,7 +91,7 @@ fun AdvancedFeaturesScreen(
                     icon = Icons.Default.Chat,
                     iconTint = AccentCyan,
                     title = if (isBangla) "অটো এসএমএস সিস্টেম (সিম)" else "Auto SMS System (SIM)",
-                    subtitle = if (isBangla) "সিম রেট-লিমিট ডিসপ্যাচ, নোটিশ ও ৯টি টেমপ্লেট" else "SIM rate-limited dispatch, billing notices & 9 templates",
+                    subtitle = if (isBangla) "সিম রেট-লিমিট ডিসপ্যাচ, নোটিশ ও ৯টি বাংলা টেমপ্লেট" else "SIM rate-limited dispatch, billing notices & 9 templates",
                     badgeText = if (AutoSmsManager.isAutoSmsEnabled) "ON" else "OFF",
                     badgeColor = if (AutoSmsManager.isAutoSmsEnabled) AccentGreen else TextMuted,
                     showChevron = true,

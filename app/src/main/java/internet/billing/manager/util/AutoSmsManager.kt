@@ -48,57 +48,57 @@ object AutoSmsManager {
     val defaultTemplates = listOf(
         SmsTemplateItem(
             key = "bill_generated",
-            title = "Monthly Bill Notice",
-            description = "Sent when monthly bill is generated",
-            defaultText = "Dear {NAME}, your internet bill for {MONTH} is ৳{BILL}. Please pay by the 10th to enjoy uninterrupted service. Helpline: {PHONE}. - {COMPANY}"
+            title = "মাসিক বিল নোটিশ",
+            description = "প্রতি মাসের ১ তারিখে বিল তৈরির পর পাঠানো হয়",
+            defaultText = "প্রিয় {NAME}, আপনার {MONTH} মাসের ইন্টারনেট বিল ৳{BILL} টাকা। নিরবচ্ছিন্ন সেবার জন্য আগামী ১০ তারিখের মধ্যে বিল পরিশোধের অনুরোধ রইল। হেল্পলাইন: {PHONE}। - {COMPANY}"
         ),
         SmsTemplateItem(
             key = "payment_received",
-            title = "Payment Received Receipt",
-            description = "Sent after payment is collected",
-            defaultText = "Dear {NAME}, received payment of ৳{AMOUNT} for {MONTH}. Remaining due: ৳{DUE}. Thank you for staying with {COMPANY}."
+            title = "বিল পরিশোধের রসিদ",
+            description = "গ্রাহক বিল পরিশোধ করলে স্বয়ংক্রিয়ভাবে পাঠানো হয়",
+            defaultText = "প্রিয় {NAME}, {MONTH} মাসের বিল বাবদ ৳{AMOUNT} টাকা সফলভাবে জমা হয়েছে। অবশিষ্ট বকেয়া: ৳{DUE} টাকা। {COMPANY}-র সাথে থাকার জন্য ধন্যবাদ।"
         ),
         SmsTemplateItem(
             key = "due_reminder",
-            title = "Due Warning / Reminder",
-            description = "Sent to remind customers with unpaid due",
-            defaultText = "Dear {NAME}, your unpaid due is ৳{DUE}. Please clear your bill within 24 hours to avoid line disconnection. Helpline: {PHONE}. - {COMPANY}"
+            title = "বকেয়া বিলের তাগাদা",
+            description = "বকেয়া বিল পরিশোধের জন্য তাগাদাপত্র",
+            defaultText = "প্রিয় {NAME}, আপনার মোট বকেয়া বিল ৳{DUE} টাকা। সংযোগ সচল রাখতে দ্রুত বিল পরিশোধ করার অনুরোধ রইল। হেল্পলাইন: {PHONE}। - {COMPANY}"
         ),
         SmsTemplateItem(
             key = "line_suspended",
-            title = "Line Disconnection Notice",
-            description = "Sent when customer line is suspended",
-            defaultText = "Dear {NAME}, your internet line has been temporarily suspended due to unpaid bill ৳{DUE}. Please pay to restore line immediately. Helpline: {PHONE}. - {COMPANY}"
+            title = "সংযোগ স্থগিত নোটিশ",
+            description = "বকেয়া বিলের কারণে লাইন সাময়িক স্থগিত হলে পাঠানো হয়",
+            defaultText = "প্রিয় {NAME}, বকেয়া বিল ৳{DUE} টাকা অপরিশোধিত থাকায় আপনার ইন্টারনেট সংযোগ সাময়িকভাবে স্থগিত করা হয়েছে। বিল পরিশোধ করে দ্রুত সংযোগ চালু করুন। হেল্পলাইন: {PHONE}। - {COMPANY}"
         ),
         SmsTemplateItem(
             key = "line_reconnected",
-            title = "Reconnection Success Alert",
-            description = "Sent when line is restored/active",
-            defaultText = "Dear {NAME}, your internet connection has been successfully re-activated. Thank you for your payment. Happy browsing! - {COMPANY}"
+            title = "সংযোগ পুনঃসচল বার্তা",
+            description = "বিল পরিশোধের পর লাইন সচল হলে পাঠানো হয়",
+            defaultText = "প্রিয় {NAME}, আপনার ইন্টারনেট সংযোগ পুনরায় সফলভাবে চালু করা হয়েছে। বিল পরিশোধের জন্য আপনাকে ধন্যবাদ। শুভ ব্রাউজিং! - {COMPANY}"
         ),
         SmsTemplateItem(
             key = "welcome_customer",
-            title = "New Customer Welcome",
-            description = "Sent when a new customer is registered",
-            defaultText = "Welcome to {COMPANY}! Your PPPoE ID: {PPPOE}, Package: {PACKAGE}. Helpline: {PHONE}. Thank you for choosing us!"
+            title = "নতুন গ্রাহক স্বাগতম বার্তা",
+            description = "নতুন গ্রাহক নিবন্ধন করার পর পাঠানো হয়",
+            defaultText = "{COMPANY}-তে আপনাকে স্বাগতম! আপনার ইউজার আইডি: {PPPOE}, প্যাকেজ: {PACKAGE}। যেকোনো প্রয়োজনে হেল্পলাইন: {PHONE}। আমাদের বেছে নেওয়ার জন্য ধন্যবাদ!"
         ),
         SmsTemplateItem(
             key = "maintenance_alert",
-            title = "Maintenance / Down Alert",
-            description = "Sent during fiber / upstream maintenance",
-            defaultText = "Dear Customer, internet service will be temporarily interrupted on {DATE} from {TIME} due to upstream fiber maintenance. - {COMPANY}"
+            title = "রক্ষণাবেক্ষণ ও ডাউন নোটিশ",
+            description = "ফাইবার বা আপস্ট্রিম মেইনটেন্যান্স চলাকালীন পাঠানো হয়",
+            defaultText = "সম্মানিত গ্রাহক, আপস্ট্রিম ফাইবার রক্ষণাবেক্ষণের জন্য {DATE} তারিখে {TIME} পর্যন্ত ইন্টারনেট সেবা সাময়িকভাবে বিঘ্নিত হতে পারে। সাময়িক অসুবিধার জন্য আমরা আন্তরিকভাবে দুঃখিত। - {COMPANY}"
         ),
         SmsTemplateItem(
             key = "festive_greeting",
-            title = "Festive & Eid Greetings",
-            description = "Holiday / Eid / New Year wishes",
-            defaultText = "Wishing you and your family a joyful Eid Mubarak and best wishes from {COMPANY}!"
+            title = "ঈদ ও উৎসবের শুভেচ্ছা",
+            description = "ঈদ, নববর্ষ বা বিশেষ দিবসের শুভেচ্ছা বার্তা",
+            defaultText = "আপনাকে ও আপনার পরিবারের সবাইকে জানাই আন্তরিক শুভেচ্ছা ও ঈদ মোবারক! সবসময় আপনার পাশে - {COMPANY}।"
         ),
         SmsTemplateItem(
             key = "custom_notice",
-            title = "General Custom Notice",
-            description = "Custom message for all or selected users",
-            defaultText = "Dear Customer, {MESSAGE}. Helpline: {PHONE}. - {COMPANY}"
+            title = "সাধারণ নোটিশ বার্তা",
+            description = "সকল বা নির্দিষ্ট গ্রাহকদের জন্য সাধারণ নোটিশ",
+            defaultText = "সম্মানিত গ্রাহক, {MESSAGE}। যেকোনো প্রয়োজনে যোগাযোগ করুন: {PHONE}। - {COMPANY}"
         )
     )
 
@@ -137,12 +137,39 @@ object AutoSmsManager {
     fun getTemplateText(key: String, context: Context): String {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val defaultText = defaultTemplates.firstOrNull { it.key == key }?.defaultText ?: ""
-        return prefs.getString(TEMPLATE_PREFIX + key, defaultText) ?: defaultText
+        val savedText = prefs.getString(TEMPLATE_PREFIX + key, null) ?: return defaultText
+
+        // Auto-migrate if the saved template is an old English template
+        val isOldEnglish = savedText.startsWith("Dear {NAME}") ||
+                           savedText.startsWith("Dear Customer") ||
+                           savedText.startsWith("Welcome to {COMPANY}") ||
+                           savedText.startsWith("Wishing you and your family")
+        if (isOldEnglish) {
+            prefs.edit().putString(TEMPLATE_PREFIX + key, defaultText).apply()
+            return defaultText
+        }
+        return savedText
     }
 
     fun saveTemplateText(key: String, text: String, context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putString(TEMPLATE_PREFIX + key, text).apply()
+    }
+
+    private fun getBanglaMonth(monthYear: String): String {
+        return monthYear
+            .replace("January", "জানুয়ারি", ignoreCase = true)
+            .replace("February", "ফেব্রুয়ারি", ignoreCase = true)
+            .replace("March", "মার্চ", ignoreCase = true)
+            .replace("April", "এপ্রিল", ignoreCase = true)
+            .replace("May", "মে", ignoreCase = true)
+            .replace("June", "জুন", ignoreCase = true)
+            .replace("July", "জুলাই", ignoreCase = true)
+            .replace("August", "আগস্ট", ignoreCase = true)
+            .replace("September", "সেপ্টেম্বর", ignoreCase = true)
+            .replace("October", "অক্টোবর", ignoreCase = true)
+            .replace("November", "নভেম্বর", ignoreCase = true)
+            .replace("December", "ডিসেম্বর", ignoreCase = true)
     }
 
     fun formatMessage(
@@ -153,9 +180,10 @@ object AutoSmsManager {
         extraAmount: Double = 0.0,
         extraMessage: String = ""
     ): String {
-        val currentMonth = extraMonth.ifBlank {
-            SimpleDateFormat("MMMM yyyy", Locale.ENGLISH).format(Date())
+        val currentMonthRaw = extraMonth.ifBlank {
+            SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
         }
+        val currentMonth = getBanglaMonth(currentMonthRaw)
         val company = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager"
         val phone = ispSettings?.phone?.takeIf { it.isNotBlank() && it != "01700000000" } ?: ""
 

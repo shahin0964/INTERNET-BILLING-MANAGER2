@@ -12,7 +12,7 @@ data class IspSettings(
     val phone: String = "",
     val address: String = "",
     val currencySymbol: String = "৳",
-    val smsTemplate: String = "Dear {NAME}, your ISP bill for {MONTH} is {DUE} ৳. Please pay on time. Thank you.",
+    val smsTemplate: String = "প্রিয় {NAME}, আপনার {MONTH} মাসের ইন্টারনেট বিল ৳{DUE} টাকা। সময়মতো পরিশোধের অনুরোধ রইল। ধন্যবাদ - {COMPANY}.",
     val bandwidthBill: Double = 0.0,
     val discount: Double = 0.0,
     val email: String = "",

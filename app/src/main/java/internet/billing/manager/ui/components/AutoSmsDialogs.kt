@@ -363,6 +363,8 @@ fun EditTemplateDialog(
         mutableStateOf(AutoSmsManager.getTemplateText(template.key, context))
     }
 
+    val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
+
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             shape = RoundedCornerShape(14.dp),
@@ -378,14 +380,15 @@ fun EditTemplateDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Edit Template: ${template.title}",
+                    text = if (isBangla) "টেমপ্লেট এডিট: ${template.title}" else "Edit Template: ${template.title}",
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.5.sp
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
+                    text = if (isBangla) "ভেরিয়েবলসমূহ: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}"
+                           else "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
                     color = AccentCyan,
                     fontSize = 10.5.sp
                 )
@@ -421,7 +424,7 @@ fun EditTemplateDialog(
                         shape = RoundedCornerShape(8.dp),
                         border = BorderStroke(1.dp, CardBorder)
                     ) {
-                        Text("Reset Default", color = TextSecondary, fontSize = 11.5.sp)
+                        Text(if (isBangla) "ডিফল্ট রিসেট" else "Reset Default", color = TextSecondary, fontSize = 11.5.sp)
                     }
 
                     Button(
@@ -432,7 +435,7 @@ fun EditTemplateDialog(
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
                     ) {
-                        Text("Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text(if (isBangla) "সংরক্ষণ করুন" else "Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                 }
             }
@@ -887,6 +890,7 @@ fun AutoSmsHubDialog(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
 
     var activeTab by remember { mutableStateOf(0) } // 0: Templates & Automation, 1: Send Bulk SMS
     var editingTemplateItem by remember { mutableStateOf<SmsTemplateItem?>(null) }
@@ -907,9 +911,9 @@ fun AutoSmsHubDialog(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            Toast.makeText(context, "SMS Permission granted!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (isBangla) "এসএমএস অনুমতি দেওয়া হয়েছে!" else "SMS Permission granted!", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(context, "SMS Permission required to send via SIM", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, if (isBangla) "সিম থেকে এসএমএস পাঠানোর জন্য অনুমতি প্রয়োজন" else "SMS Permission required to send via SIM", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -921,7 +925,7 @@ fun AutoSmsHubDialog(
             onDismiss = { editingTemplateItem = null },
             onSave = { newText ->
                 AutoSmsManager.saveTemplateText(item.key, newText, context)
-                Toast.makeText(context, "Template saved!", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, if (isBangla) "টেমপ্লেট সফলভাবে সংরক্ষিত হয়েছে!" else "Template saved!", Toast.LENGTH_SHORT).show()
                 editingTemplateItem = null
             }
         )
@@ -1331,7 +1335,7 @@ fun AutoSmsHubDialog(
 
                         // Template Library
                         Text(
-                            text = "Ready-made ISP SMS Templates (${AutoSmsManager.defaultTemplates.size})",
+                            text = if (isBangla) "আইএসপি এসএমএস টেমপ্লেটসমূহ (${AutoSmsManager.defaultTemplates.size}টি)" else "Ready-made ISP SMS Templates (${AutoSmsManager.defaultTemplates.size})",
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.sp
@@ -1411,7 +1415,8 @@ fun AutoSmsHubDialog(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Select template and recipients. SMS will be dispatched safely with ${AutoSmsManager.smsDelaySeconds}s delay.",
+                            text = if (isBangla) "টেমপ্লেট ও প্রাপক নির্বাচন করুন। প্রতি এসএমএসের মাঝে ${AutoSmsManager.smsDelaySeconds} সেকেন্ড বিরতি দিয়ে পাঠানো হবে।"
+                                   else "Select template and recipients. SMS will be dispatched safely with ${AutoSmsManager.smsDelaySeconds}s delay.",
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
