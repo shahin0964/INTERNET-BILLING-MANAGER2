@@ -5,8 +5,8 @@ import internet.billing.manager.data.model.Expense
 import kotlinx.coroutines.flow.Flow
 
 data class CategorySum(
-    val category: String,
-    val total: Double
+    @ColumnInfo(name = "category") val category: String = "",
+    @ColumnInfo(name = "total") val total: Double = 0.0
 )
 
 @Dao

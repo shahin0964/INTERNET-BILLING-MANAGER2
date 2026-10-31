@@ -34,18 +34,25 @@ jobs:
 
       - name: Build Android APK
         run: |
-          ./gradlew assembleRelease --stacktrace || ./gradlew assembleDebug --stacktrace
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee build_output.log
+
+      - name: Print Error on Failure
+        if: failure()
+        run: |
+          echo "::error::Build Failed!"
+          tail -n 150 build_output.log
+
+      - name: Upload Build Log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build_output.log
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
-            cp app/build/outputs/apk/release/app-release.apk release-artifacts/IBM-latest.apk
-          elif [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/IBM-latest.apk
-          else
-            find app/build/outputs/apk -name "*.apk" -exec cp {} release-artifacts/IBM-latest.apk \;
-          fi
+          find app/build/outputs/apk -name "*.apk" | head -n 1 | xargs -I {} cp {} release-artifacts/IBM-latest.apk
           echo "Listing release artifacts:"
           ls -lh release-artifacts/
 
