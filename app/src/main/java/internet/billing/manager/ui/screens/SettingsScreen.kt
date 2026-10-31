@@ -7,8 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -272,9 +274,11 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 4.dp)
             ) {
+                val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .verticalScroll(scrollState)
                         .padding(horizontal = 18.dp, vertical = 20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -410,6 +414,27 @@ fun SettingsScreen(
                                 iconColor = AccentPurple,
                                 title = if (isBangla) "অটো এসএমএস নোটিফিকেশন" else "Instant SMS Alerts",
                                 subtitle = if (isBangla) "বিলিং ও পেমেন্টে গ্রাহককে অটো মেসেজ" else "Automated billing & payment SMS"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.CalendarMonth,
+                                iconColor = AccentCyan,
+                                title = if (isBangla) "বিলিং সাইকেল ও সময়সূচী" else "Billing Cycle & Schedule",
+                                subtitle = if (isBangla) "প্রতি মাসের ১ তারিখে বিল তৈরি এবং ১০ তারিখে বকেয়া সময়সীমা" else "Monthly bill generation on 1st, payment due date 10th"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.Storage,
+                                iconColor = AccentOrange,
+                                title = if (isBangla) "অফলাইন SQLite ডাটাবেজ" else "Offline SQLite Storage",
+                                subtitle = if (isBangla) "ক্লাউডহীন নিরাপদ ডাটা স্টোরেজ, সম্পূর্ণ ফোনের ভেতরে সংরক্ষিত" else "Zero cloud dependency, all data stays securely on your phone"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.Security,
+                                iconColor = AccentGreen,
+                                title = if (isBangla) "ডাটা সুরক্ষা ও ট্রানজ্যাকশন" else "Data Safety & Protection",
+                                subtitle = if (isBangla) "অটোমেটিক Room ডাটাবেজ ট্রানজ্যাকশন রোলব্যাক ও সেফটি" else "Automatic Room database transaction rollback & safe keeping"
                             )
                         }
                     }

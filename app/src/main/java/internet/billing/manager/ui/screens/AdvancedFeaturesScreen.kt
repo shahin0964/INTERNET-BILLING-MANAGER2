@@ -98,48 +98,6 @@ fun AdvancedFeaturesScreen(
                     onClick = onNavigateToAutoSms
                 )
             }
-
-            // Row 2: Billing Cycle & Schedule
-            item {
-                AdvancedFeatureRowCard(
-                    icon = Icons.Default.CalendarMonth,
-                    iconTint = AccentBlue,
-                    title = if (isBangla) "বিলিং সাইকেল ও সময়সূচী" else "Billing Cycle & Schedule",
-                    subtitle = if (isBangla) "প্রতি মাসের ১ তারিখে বিল তৈরি এবং ১০ তারিখে বকেয়া সময়সীমা" else "Monthly bill generation on 1st, payment due date 10th",
-                    badgeText = "Auto",
-                    badgeColor = AccentBlue,
-                    showChevron = false,
-                    onClick = {}
-                )
-            }
-
-            // Row 3: Offline SQLite Storage
-            item {
-                AdvancedFeatureRowCard(
-                    icon = Icons.Default.Storage,
-                    iconTint = AccentOrange,
-                    title = if (isBangla) "অফলাইন SQLite ডাটাবেজ" else "Offline SQLite Storage",
-                    subtitle = if (isBangla) "ক্লাউডহীন নিরাপদ ডাটা স্টোরেজ, সম্পূর্ণ ফোনের ভেতরে সংরক্ষিত" else "Zero cloud dependency, all data stays securely on your phone",
-                    badgeText = "Local",
-                    badgeColor = AccentOrange,
-                    showChevron = false,
-                    onClick = {}
-                )
-            }
-
-            // Row 4: Data Protection & Integrity
-            item {
-                AdvancedFeatureRowCard(
-                    icon = Icons.Default.Security,
-                    iconTint = AccentGreen,
-                    title = if (isBangla) "ডাটা সুরক্ষা ও ট্রানজ্যাকশন" else "Data Safety & Protection",
-                    subtitle = if (isBangla) "অটোমেটিক Room ডাটাবেজ ট্রানজ্যাকশন রোলব্যাক ও সেফটি" else "Automatic Room database transaction rollback & safe keeping",
-                    badgeText = "Active",
-                    badgeColor = AccentGreen,
-                    showChevron = false,
-                    onClick = {}
-                )
-            }
         }
     }
 }
