@@ -33,7 +33,18 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Android APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: |
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/build_log.txt
+
+      - name: Report Error on Failure
+        if: failure()
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "latest"
+          name: "BUILD FAILED - Error Log"
+          bodyFile: "/tmp/build_log.txt"
+          allowUpdates: true
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Prepare APK for Release
         run: |
