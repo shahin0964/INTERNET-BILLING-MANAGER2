@@ -1,4 +1,4 @@
-# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.41
+# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.42
 
 🌟 কি কি নতুন ও আপডেট করা হয়েছে (What's New & Upgraded):
 • স্লিম ও কম্প্যাক্ট বিলিং অ্যানালিটিক্স কার্ড (Compact & Pixel-Perfect Design Matching Mockup):

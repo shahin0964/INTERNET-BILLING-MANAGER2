@@ -14,10 +14,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.graphics.BitmapFactory
@@ -30,7 +35,6 @@ import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -785,6 +789,8 @@ fun ModernBillingAnalyticsCard(
                     ) {
                         val flareX = shimmerProgress * size.width
                         val flareY = size.height * 0.5f
+                        val flareRadius = 14.dp.toPx()
+                        val flareCenter = Offset(flareX, flareY)
 
                         drawCircle(
                             brush = Brush.radialGradient(
@@ -794,11 +800,11 @@ fun ModernBillingAnalyticsCard(
                                     Color(0xFF00B0FF).copy(alpha = 0.3f),
                                     Color.Transparent
                                 ),
-                                center = Offset(flareX, flareY),
-                                radius = 14.dp.toPx()
+                                center = flareCenter,
+                                radius = flareRadius
                             ),
-                            center = Offset(flareX, flareY),
-                            radius = 14.dp.toPx()
+                            radius = flareRadius,
+                            center = flareCenter
                         )
                     }
                 }
@@ -973,7 +979,7 @@ fun ModernBillingAnalyticsCard(
  * Animated Cyan/White LED light on router front panel
  */
 @Composable
-private fun BoxScope.RouterLedDot(
+private fun RouterLedDot(
     x: Dp,
     y: Dp,
     isLit: Boolean
