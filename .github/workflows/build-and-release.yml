@@ -1,0 +1,76 @@
+name: Build and Update Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build & Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+
+      - name: Build Android Release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Prepare APK for Release
+        run: |
+          mkdir -p release-artifacts
+          if [ -f app/build/outputs/apk/release/app-release.apk ]; then
+            cp app/build/outputs/apk/release/app-release.apk release-artifacts/IBM-latest.apk
+          elif [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/IBM-latest.apk
+          fi
+          echo "Listing release artifacts:"
+          ls -lh release-artifacts/
+
+      - name: Update Single GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: "latest"
+          commit: ${{ github.sha }}
+          name: "INTERNET BILLING MANAGER (IBM) - Latest Release"
+          body: |
+            ## 📱 INTERNET BILLING MANAGER (IBM)
+            **সর্বশেষ রিলিজ (Latest APK Update)**
+
+            এই রিলিজটি প্রতিটি আপডেটে স্বয়ংক্রিয়ভাবে প্রতিস্থাপন ও আপডেট করা হয়। নিচের লিঙ্ক থেকে সরাসরি লেটেস্ট APK ফাইলটি ডাউনলোড করে ফোনে ইনস্টল করতে পারবেন।
+
+            ### 📋 বিল্ড বিবরণ:
+            - **App Name**: INTERNET BILLING MANAGER
+            - **Short / Launcher Name**: `IBM`
+            - **Package**: `internet.billing.manager`
+            - **সর্বশেষ আপডেট**: ${{ github.event.head_commit.timestamp }}
+            - **কমিট**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
+            - **কমিট বার্তা**: ${{ github.event.head_commit.message }}
+
+            ---
+            ### 📥 ডাউনলোড লিঙ্ক:
+            নিচের **`IBM-latest.apk`** ফাইলে ক্লিক করে আপনার ফোনে ইনস্টল করুন।
+          artifacts: "release-artifacts/IBM-latest.apk"
+          allowUpdates: true
+          replacesArtifacts: true
+          makeLatest: true
+          token: ${{ secrets.GITHUB_TOKEN }}
