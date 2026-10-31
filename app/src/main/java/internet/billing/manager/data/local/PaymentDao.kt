@@ -10,7 +10,7 @@ interface PaymentDao {
     fun getAllPayments(): Flow<List<PaymentTransaction>>
 
     @Query("SELECT * FROM payments ORDER BY dateMillis DESC LIMIT :limit")
-    fun getRecentPayments(limit: Int = 10): Flow<List<PaymentTransaction>>
+    fun getRecentPayments(limit: Int): Flow<List<PaymentTransaction>>
 
     @Query("SELECT * FROM payments WHERE monthYear = :monthYear ORDER BY dateMillis DESC")
     fun getPaymentsForMonth(monthYear: String): Flow<List<PaymentTransaction>>

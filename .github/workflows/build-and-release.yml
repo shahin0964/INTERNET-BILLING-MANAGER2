@@ -39,6 +39,7 @@ jobs:
         run: |
           mkdir -p release-artifacts
           echo "=== Searching for generated APK ==="
+          find . -type f -name "*.apk" || true
           APK_FILE=$(find . -type f -name "*.apk" 2>/dev/null | head -n 1)
           echo "Found APK: $APK_FILE"
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
