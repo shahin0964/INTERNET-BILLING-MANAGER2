@@ -122,6 +122,8 @@ class BillingRepository(
     }
 
     // Bills
+    suspend fun insertBill(bill: BillEntry): Long = billDao.insertBill(bill)
+
     fun getAllBills(): Flow<List<BillEntry>> = billDao.getAllBills()
 
     fun getBillsForMonth(monthYear: String): Flow<List<BillEntry>> =

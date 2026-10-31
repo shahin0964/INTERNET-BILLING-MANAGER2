@@ -19,6 +19,8 @@ data class Customer(
     val status: String = STATUS_ACTIVE, // "Active", "Suspended", "Inactive"
     val connectionType: String = "Fiber",
     val address: String = "",
+    val staticIp: String = "",
+    val notes: String = "",
     val createdDateMillis: Long = System.currentTimeMillis()
 ) {
     companion object {
@@ -27,3 +29,9 @@ data class Customer(
         const val STATUS_INACTIVE = "Inactive"
     }
 }
+
+data class PreviousDueItem(
+    val month: String,
+    val year: String,
+    val amount: Double
+)

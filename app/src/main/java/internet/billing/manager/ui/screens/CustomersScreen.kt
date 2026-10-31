@@ -332,11 +332,35 @@ fun CustomerCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             // PPPoE Info & Package info
+            val pppoeLine = buildString {
+                append("PPPoE: ${customer.pppoeUsername}")
+                if (customer.staticIp.isNotBlank()) {
+                    append(" • IP: ${customer.staticIp}")
+                }
+            }
             Text(
-                text = "PPPoE: ${customer.pppoeUsername}",
+                text = pppoeLine,
                 color = TextSecondary,
                 fontSize = 11.sp
             )
+            if (customer.address.isNotBlank()) {
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    text = customer.address,
+                    color = TextMuted,
+                    fontSize = 10.sp,
+                    maxLines = 1
+                )
+            }
+            if (customer.notes.isNotBlank()) {
+                Spacer(modifier = Modifier.height(1.dp))
+                Text(
+                    text = "Note: ${customer.notes}",
+                    color = TextMuted,
+                    fontSize = 10.sp,
+                    maxLines = 1
+                )
+            }
             Spacer(modifier = Modifier.height(1.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),

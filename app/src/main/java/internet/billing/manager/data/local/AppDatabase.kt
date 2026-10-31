@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import internet.billing.manager.data.model.*
 import kotlinx.coroutines.CoroutineScope
@@ -19,7 +20,7 @@ import kotlinx.coroutines.launch
         Expense::class,
         IspSettings::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -34,6 +35,13 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE customers ADD COLUMN staticIp TEXT NOT NULL DEFAULT ''")
+                db.execSQL("ALTER TABLE customers ADD COLUMN notes TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -41,6 +49,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "internet_billing_manager.db"
                 )
+                    .addMigrations(MIGRATION_1_2)
+                    .fallbackToDestructiveMigration()
                     .addCallback(AppDatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

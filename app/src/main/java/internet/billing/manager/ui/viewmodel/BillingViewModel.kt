@@ -197,13 +197,42 @@ class BillingViewModel(
         _selectedCalendar.value = cal
     }
 
-    fun saveCustomer(customer: Customer) {
+    fun saveCustomer(customer: Customer, previousDues: List<PreviousDueItem> = emptyList()) {
         viewModelScope.launch {
-            if (customer.id == 0L) {
+            val customerId = if (customer.id == 0L) {
                 repository.insertCustomer(customer)
             } else {
                 repository.updateCustomer(customer)
+                customer.id
             }
+
+            if (previousDues.isNotEmpty()) {
+                val monthMap = mapOf(
+                    "January" to "01", "February" to "02", "March" to "03", "April" to "04",
+                    "May" to "05", "June" to "06", "July" to "07", "August" to "08",
+                    "September" to "09", "October" to "10", "November" to "11", "December" to "12"
+                )
+                for (item in previousDues) {
+                    if (item.amount > 0) {
+                        val mNum = monthMap[item.month] ?: "01"
+                        val key = "${item.year}-$mNum"
+                        repository.insertBill(
+                            BillEntry(
+                                customerId = customerId,
+                                customerName = customer.name.ifBlank { customer.pppoeUsername },
+                                customerCode = customer.customerCode,
+                                monthYear = key,
+                                billAmount = item.amount,
+                                paidAmount = 0.0,
+                                dueAmount = item.amount,
+                                isPaid = false,
+                                notes = "Previous Due (${item.month} ${item.year})"
+                            )
+                        )
+                    }
+                }
+            }
+
             showAddCustomerDialog = false
             customerToEdit = null
         }

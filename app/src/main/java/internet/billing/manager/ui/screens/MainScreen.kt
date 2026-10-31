@@ -145,8 +145,8 @@ fun MainScreen(
                 viewModel.showAddCustomerDialog = false
                 viewModel.customerToEdit = null
             },
-            onSave = { customer ->
-                viewModel.saveCustomer(customer)
+            onSave = { customer, previousDues ->
+                viewModel.saveCustomer(customer, previousDues)
             }
         )
     }

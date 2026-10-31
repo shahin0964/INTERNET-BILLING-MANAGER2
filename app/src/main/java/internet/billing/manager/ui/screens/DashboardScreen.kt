@@ -46,9 +46,6 @@ fun DashboardScreen(
     val recentPayments by viewModel.recentPayments.collectAsState()
     val monthDisplay by viewModel.currentMonthYearDisplay.collectAsState()
 
-    val todayStr = remember {
-        SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()).format(Date())
-    }
     val shortTodayStr = remember {
         SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
     }
@@ -66,107 +63,48 @@ fun DashboardScreen(
         contentPadding = PaddingValues(top = 12.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(11.dp)
     ) {
-        // 1. Top Header: Company Name, Date & Notification Bell
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager",
-                        color = TextPrimary,
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = todayStr,
-                        color = TextMuted,
-                        fontSize = 11.sp
-                    )
-                }
-
-                // Notification Bell with Badge
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(BgCard)
-                        .clickable { /* Notification clicked */ },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Notifications,
-                        contentDescription = "Notifications",
-                        tint = TextPrimary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(top = 6.dp, end = 6.dp)
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(AccentRed)
-                    )
-                }
-            }
-        }
-
-        // 2. Brand Wi-Fi Card
+        // Top Brand Header Card
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                borderColor = AccentCyan.copy(alpha = 0.3f),
-                onClick = onNavigateToMore
+                borderColor = AccentCyan.copy(alpha = 0.3f)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(AccentCyan.copy(alpha = 0.15f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Wifi,
-                                contentDescription = null,
-                                tint = AccentCyan,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager",
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                            Spacer(modifier = Modifier.height(1.dp))
-                            Text(
-                                text = ispSettings?.tagline?.takeIf { it.isNotBlank() && !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: "Internet Billing Management",
-                                color = TextSecondary,
-                                fontSize = 11.sp
-                            )
-                        }
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(AccentCyan.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Wifi,
+                            contentDescription = null,
+                            tint = AccentCyan,
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "Open Settings",
-                        tint = TextMuted,
-                        modifier = Modifier.size(18.dp)
-                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager",
+                            color = TextPrimary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(1.dp))
+                        Text(
+                            text = ispSettings?.tagline?.takeIf { it.isNotBlank() && !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: "Internet Billing Management",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                    }
                 }
             }
         }
