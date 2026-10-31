@@ -32,6 +32,7 @@ import androidx.core.content.ContextCompat
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.data.model.IspSettings
 import internet.billing.manager.ui.theme.*
+import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.util.AutoSmsManager
 import internet.billing.manager.util.SmsSendSummary
@@ -363,7 +364,7 @@ fun EditTemplateDialog(
         mutableStateOf(AutoSmsManager.getTemplateText(template.key, context))
     }
 
-    val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
+    val isBangla = LanguageManager.isBengali()
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -890,7 +891,7 @@ fun AutoSmsHubDialog(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
+    val isBangla = LanguageManager.isBengali()
 
     var activeTab by remember { mutableStateOf(0) } // 0: Templates & Automation, 1: Send Bulk SMS
     var editingTemplateItem by remember { mutableStateOf<SmsTemplateItem?>(null) }

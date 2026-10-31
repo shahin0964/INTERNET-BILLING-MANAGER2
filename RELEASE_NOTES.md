@@ -1,4 +1,4 @@
-# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.32
+# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.33
 
 🌟 কি কি নতুন ও সুন্দর করা হয়েছে (What's New & Upgraded):
 • সম্পূর্ণ বাংলায় ৯টি অটো এসএমএস টেমপ্লেট (All 9 Auto SMS Templates in Pure Bengali) - অটো এসএমএস সিস্টেমের সকল টেমপ্লেট এখন সম্পূর্ণ বাংলায় রূপান্তরিত। কোনো ইংরেজি টেমপ্লেট রাখা হয়নি:
