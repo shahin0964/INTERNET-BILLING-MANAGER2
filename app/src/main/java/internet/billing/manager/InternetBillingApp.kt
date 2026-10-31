@@ -7,10 +7,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 
 class InternetBillingApp : Application() {
+    companion object {
+        lateinit var instance: InternetBillingApp
+            private set
+    }
+
     private val applicationScope = CoroutineScope(SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
+        instance = this
         internet.billing.manager.ui.theme.ThemeManager.initialize(this)
         internet.billing.manager.ui.localization.LanguageManager.initialize(this)
         internet.billing.manager.util.AutoSmsManager.initialize(this)

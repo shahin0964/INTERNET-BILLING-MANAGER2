@@ -38,6 +38,8 @@ import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.data.model.IspSettings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.localization.appStrings
+import internet.billing.manager.ui.localization.LanguageManager
+import androidx.compose.ui.window.Dialog
 import java.text.SimpleDateFormat
 import java.util.*
 

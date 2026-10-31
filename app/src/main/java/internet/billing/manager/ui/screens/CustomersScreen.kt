@@ -135,11 +135,12 @@ fun CustomersScreen(
         Spacer(modifier = Modifier.height(10.dp))
 
         // 3. Status Filter Tabs (Pills)
+        data class FilterTabItem(val filterKey: String, val label: String, val count: Int, val color: Color)
         val filterTabs = listOf(
-            Triple("All", appStrings.filterAll, totalCount, AccentPurple),
-            Triple("Active", appStrings.filterActive, activeCount, AccentGreen),
-            Triple("Suspended", appStrings.filterSuspended, suspendedCount, AccentOrange),
-            Triple("Inactive", appStrings.filterInactive, inactiveCount, AccentRed)
+            FilterTabItem("All", appStrings.filterAll, totalCount, AccentPurple),
+            FilterTabItem("Active", appStrings.filterActive, activeCount, AccentGreen),
+            FilterTabItem("Suspended", appStrings.filterSuspended, suspendedCount, AccentOrange),
+            FilterTabItem("Inactive", appStrings.filterInactive, inactiveCount, AccentRed)
         )
 
         Row(

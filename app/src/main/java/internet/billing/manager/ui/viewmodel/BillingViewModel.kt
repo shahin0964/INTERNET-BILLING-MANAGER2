@@ -273,11 +273,13 @@ class BillingViewModel(
                 val targets = customers.filter { it.status == "Active" && it.phone.isNotBlank() }
                 if (targets.isNotEmpty()) {
                     val rawTpl = AutoSmsManager.getTemplateText("bill_generated", InternetBillingApp.instance)
-                    val items = targets.map { c ->
-                        val text = AutoSmsManager.formatMessage(rawTpl, c, ispSettings.value)
-                        Pair(c.phone, text)
-                    }
-                    AutoSmsManager.sendBatchSms(InternetBillingApp.instance, items)
+                    AutoSmsManager.sendBatchSms(
+                        context = InternetBillingApp.instance,
+                        customers = targets,
+                        template = rawTpl,
+                        ispSettings = ispSettings.value,
+                        onProgress = { _, _, _, _ -> }
+                    )
                 }
             }
             showGenerateBillDialog = false

@@ -157,9 +157,10 @@ fun DashboardScreen(
                                 fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Medium
                             )
-                            if (!ispSettings?.phone.isNullOrBlank() && ispSettings?.phone != "01700000000") {
+                            val phone = ispSettings?.phone
+                            if (!phone.isNullOrBlank() && phone != "01700000000") {
                                 Text(
-                                    text = " • ${ispSettings.phone}",
+                                    text = " • $phone",
                                     color = TextMuted,
                                     fontSize = 10.5.sp
                                 )
