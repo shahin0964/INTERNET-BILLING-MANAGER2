@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -27,7 +27,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
@@ -57,7 +57,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -o pipefail
-          ./gradlew :app:assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }} --stacktrace 2>&1 | tee build_log.txt
+          ./gradlew :app:assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }} --no-daemon --stacktrace 2>&1 | tee build_log.txt
 
       - name: Verify APK Signature
         run: |
