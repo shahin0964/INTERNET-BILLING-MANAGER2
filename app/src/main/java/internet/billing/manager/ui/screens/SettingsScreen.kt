@@ -17,12 +17,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.components.AppUpdateDialog
 import internet.billing.manager.ui.components.GlassCard
@@ -257,32 +261,178 @@ fun SettingsScreen(
     // About Dialog
     if (showAboutDialog) {
         val appVersionName = AppUpdateManager.getCurrentVersionName(context)
-        AlertDialog(
-            onDismissRequest = { showAboutDialog = false },
-            title = { Text("INTERNET BILLING MANAGER (IBM)", color = TextPrimary) },
-            text = {
-                Column {
-                    Text("Short Name: IBM", color = AccentCyan, fontWeight = FontWeight.Bold)
-                    Text("Package: internet.billing.manager", color = TextSecondary, fontSize = 12.sp)
-                    Text("Version: v$appVersionName", color = TextSecondary, fontSize = 12.sp)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        "Professional ISP Customer, Billing, Daily Bill Collection, and Expense Management System built with Modern Android Jetpack Compose & Room Database.",
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-                }
-            },
-            containerColor = BgCard,
-            confirmButton = {
-                Button(
-                    onClick = { showAboutDialog = false },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+        Dialog(onDismissRequest = { showAboutDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = BgCard,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("OK", color = BgDark)
+                    // App Logo with gradient background
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(
+                                Brush.linearGradient(
+                                    listOf(AccentCyan, AccentBlue, AccentPurple)
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Wifi,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(34.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // App Title
+                    Text(
+                        text = "Internet Billing Manager",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    // Version & Status Badges
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AccentCyan.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = "v$appVersionName",
+                                color = AccentCyan,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AccentGreen.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(AccentGreen)
+                                )
+                                Text(
+                                    text = "Active & Stable",
+                                    color = AccentGreen,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // App Overview / Description
+                    Text(
+                        text = if (LanguageManager.isBengali())
+                            "আইএসপি ব্যবসার গ্রাহক ব্যবস্থাপনা, স্বয়ংক্রিয় বিলিং, কালেকশন ও হিসাবের আধুনিক ডিজিটাল সমাধান।"
+                        else
+                            "Complete Smart Billing, Customer, Daily Collection & Accounts Solution for Internet Service Providers.",
+                        color = TextSecondary,
+                        fontSize = 11.5.sp,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 16.sp,
+                        modifier = Modifier.padding(horizontal = 4.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Feature Highlights Card
+                    GlassCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        borderColor = CardBorderSubtle,
+                        backgroundColor = BgCardLight.copy(alpha = 0.5f)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(10.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            AboutFeatureRow(
+                                icon = Icons.Default.ReceiptLong,
+                                iconColor = AccentCyan,
+                                title = if (LanguageManager.isBengali()) "স্বয়ংক্রিয় মাসিক বিলিং" else "Automated Monthly Billing",
+                                subtitle = if (LanguageManager.isBengali()) "১ তারিখ রাত ১২টায় অটো বিল জেনারেশন" else "Auto bill generation at midnight"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.Payments,
+                                iconColor = AccentGreen,
+                                title = if (LanguageManager.isBengali()) "সহজ আদায় ও ক্যাশ ট্র্যাকিং" else "Collection & Cash Flow",
+                                subtitle = if (LanguageManager.isBengali()) "ক্যাশ, বিকাশ, নগদ ও ব্যাংকে দ্রুত হিসাব" else "Track payments with instant receipts"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.Speed,
+                                iconColor = AccentBlue,
+                                title = if (LanguageManager.isBengali()) "ব্যান্ডউইথ বিল ও লাভ হিসাব" else "Bandwidth & Profit Tracker",
+                                subtitle = if (LanguageManager.isBengali()) "মোট বিল থেকে খরচ বাদ দিয়ে নিট লাভ" else "Calculate exact monthly margins"
+                            )
+                            Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
+                            AboutFeatureRow(
+                                icon = Icons.Default.Sms,
+                                iconColor = AccentPurple,
+                                title = if (LanguageManager.isBengali()) "অটো এসএমএস নোটিফিকেশন" else "Instant SMS Alerts",
+                                subtitle = if (LanguageManager.isBengali()) "বিলিং ও পেমেন্টে গ্রাহককে অটো মেসেজ" else "Automated billing & payment SMS"
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Close / Confirm Button
+                    Button(
+                        onClick = { showAboutDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp)
+                    ) {
+                        Text(
+                            text = if (LanguageManager.isBengali()) "ঠিক আছে" else "Got It",
+                            color = BgDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
     if (showThemeDialog) {
@@ -417,3 +567,46 @@ fun PackageCardItem(
         }
     }
 }
+
+@Composable
+private fun AboutFeatureRow(
+    icon: ImageVector,
+    iconColor: Color,
+    title: String,
+    subtitle: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(iconColor.copy(alpha = 0.15f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier.size(15.dp)
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(
+                text = title,
+                color = TextPrimary,
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+            Text(
+                text = subtitle,
+                color = TextSecondary,
+                fontSize = 9.5.sp
+            )
+        }
+    }
+}
+
