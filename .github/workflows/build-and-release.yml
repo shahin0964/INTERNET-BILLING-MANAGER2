@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Android APK
         run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee build_output.log
+          ./gradlew assembleRelease --stacktrace 2>&1 | tee build_output.log || ./gradlew assembleDebug --stacktrace 2>&1 | tee -a build_output.log
 
       - name: Print Error on Failure
         if: failure()
@@ -52,8 +52,17 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          find app/build/outputs/apk -name "*.apk" | head -n 1 | xargs -I {} cp {} release-artifacts/IBM-latest.apk
-          echo "Listing release artifacts:"
+          echo "Searching for built APKs..."
+          find . -name "*.apk"
+          APK_FILE=$(find . -name "*.apk" -not -path "*/intermediates/*" | head -n 1)
+          echo "Selected APK: $APK_FILE"
+          if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
+            cp "$APK_FILE" release-artifacts/IBM-latest.apk
+          else
+            echo "::error::No APK file was found!"
+            exit 1
+          fi
+          echo "Listing release-artifacts:"
           ls -lh release-artifacts/
 
       - name: Update Single GitHub Release
