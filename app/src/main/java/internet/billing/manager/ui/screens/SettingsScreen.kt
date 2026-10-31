@@ -33,6 +33,7 @@ import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.LanguageSelectionDialog
 import internet.billing.manager.ui.components.ThemeSelectionDialog
 import internet.billing.manager.util.AppUpdateManager
+import internet.billing.manager.ui.localization.AppLanguage
 import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
@@ -48,6 +49,7 @@ fun SettingsScreen(
     val ispSettings by viewModel.ispSettings.collectAsState()
     val packages by viewModel.allPackages.collectAsState()
     val allCustomers by viewModel.allCustomers.collectAsState()
+    val isBangla = LanguageManager.currentLanguage == AppLanguage.BANGLA
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
@@ -358,7 +360,7 @@ fun SettingsScreen(
 
                     // App Overview / Description
                     Text(
-                        text = if (LanguageManager.isBengali())
+                        text = if (isBangla)
                             "আইএসপি ব্যবসার গ্রাহক ব্যবস্থাপনা, স্বয়ংক্রিয় বিলিং, কালেকশন ও হিসাবের আধুনিক ডিজিটাল সমাধান।"
                         else
                             "Complete Smart Billing, Customer, Daily Collection & Accounts Solution for Internet Service Providers.",
@@ -385,29 +387,29 @@ fun SettingsScreen(
                             AboutFeatureRow(
                                 icon = Icons.Default.ReceiptLong,
                                 iconColor = AccentCyan,
-                                title = if (LanguageManager.isBengali()) "স্বয়ংক্রিয় মাসিক বিলিং" else "Automated Monthly Billing",
-                                subtitle = if (LanguageManager.isBengali()) "১ তারিখ রাত ১২টায় অটো বিল জেনারেশন" else "Auto bill generation at midnight"
+                                title = if (isBangla) "স্বয়ংক্রিয় মাসিক বিলিং" else "Automated Monthly Billing",
+                                subtitle = if (isBangla) "১ তারিখ রাত ১২টায় অটো বিল জেনারেশন" else "Auto bill generation at midnight"
                             )
                             Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
                             AboutFeatureRow(
                                 icon = Icons.Default.Payments,
                                 iconColor = AccentGreen,
-                                title = if (LanguageManager.isBengali()) "সহজ আদায় ও ক্যাশ ট্র্যাকিং" else "Collection & Cash Flow",
-                                subtitle = if (LanguageManager.isBengali()) "ক্যাশ, বিকাশ, নগদ ও ব্যাংকে দ্রুত হিসাব" else "Track payments with instant receipts"
+                                title = if (isBangla) "সহজ আদায় ও ক্যাশ ট্র্যাকিং" else "Collection & Cash Flow",
+                                subtitle = if (isBangla) "ক্যাশ, বিকাশ, নগদ ও ব্যাংকে দ্রুত হিসাব" else "Track payments with instant receipts"
                             )
                             Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
                             AboutFeatureRow(
                                 icon = Icons.Default.Speed,
                                 iconColor = AccentBlue,
-                                title = if (LanguageManager.isBengali()) "ব্যান্ডউইথ বিল ও লাভ হিসাব" else "Bandwidth & Profit Tracker",
-                                subtitle = if (LanguageManager.isBengali()) "মোট বিল থেকে খরচ বাদ দিয়ে নিট লাভ" else "Calculate exact monthly margins"
+                                title = if (isBangla) "ব্যান্ডউইথ বিল ও লাভ হিসাব" else "Bandwidth & Profit Tracker",
+                                subtitle = if (isBangla) "মোট বিল থেকে খরচ বাদ দিয়ে নিট লাভ" else "Calculate exact monthly margins"
                             )
                             Divider(color = CardBorder.copy(alpha = 0.3f), thickness = 0.6.dp)
                             AboutFeatureRow(
                                 icon = Icons.Default.Sms,
                                 iconColor = AccentPurple,
-                                title = if (LanguageManager.isBengali()) "অটো এসএমএস নোটিফিকেশন" else "Instant SMS Alerts",
-                                subtitle = if (LanguageManager.isBengali()) "বিলিং ও পেমেন্টে গ্রাহককে অটো মেসেজ" else "Automated billing & payment SMS"
+                                title = if (isBangla) "অটো এসএমএস নোটিফিকেশন" else "Instant SMS Alerts",
+                                subtitle = if (isBangla) "বিলিং ও পেমেন্টে গ্রাহককে অটো মেসেজ" else "Automated billing & payment SMS"
                             )
                         }
                     }
@@ -424,7 +426,7 @@ fun SettingsScreen(
                             .height(40.dp)
                     ) {
                         Text(
-                            text = if (LanguageManager.isBengali()) "ঠিক আছে" else "Got It",
+                            text = if (isBangla) "ঠিক আছে" else "Got It",
                             color = BgDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp

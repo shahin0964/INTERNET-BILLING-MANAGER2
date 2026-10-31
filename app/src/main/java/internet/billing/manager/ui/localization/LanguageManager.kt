@@ -12,6 +12,8 @@ object LanguageManager {
     var currentLanguage: AppLanguage by mutableStateOf(AppLanguage.ENGLISH)
         private set
 
+    fun isBengali(): Boolean = currentLanguage == AppLanguage.BANGLA
+
     val strings: AppStrings
         get() = if (currentLanguage == AppLanguage.BANGLA) BanglaStrings else EnglishStrings
 
