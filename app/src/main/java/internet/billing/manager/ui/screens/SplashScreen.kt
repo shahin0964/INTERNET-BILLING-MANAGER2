@@ -24,14 +24,30 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.sin
 
+import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+
 @Composable
 fun AnimatedSplashScreen(
     onAnimationFinished: () -> Unit
 ) {
+    val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     var isDismissing by remember { mutableStateOf(false) }
 
-    // Smooth cinematic entrance (fade and scale from 0.94f to exactly 1.0f)
+    // Dynamic app version name
+    val appVersion = remember {
+        try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.0.43"
+        } catch (e: Exception) {
+            "1.0.43"
+        }
+    }
+
+    // Smooth cinematic entrance (fade and scale from 0.96f to exactly 1.0f)
     val entranceAnim = remember { Animatable(0f) }
 
     // Glowing aura pulse for central globe
@@ -84,104 +100,98 @@ fun AnimatedSplashScreen(
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xFF01589B),
-                        Color(0xFF003770),
-                        Color(0xFF001F47),
-                        Color(0xFF001F47),
-                        Color(0xFF003770),
-                        Color(0xFF02569E)
-                    )
-                )
-            )
+            .background(Color(0xFF021B3C))
             .alpha(entranceAnim.value)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null
             ) {
                 dismissSplash()
-            },
-        contentAlignment = Alignment.Center
+            }
     ) {
-        // Image aspect ratio: 941px width by 1672px height (~0.5628)
-        val imageAspectRatio = 941f / 1672f
+        val entranceScale = 0.96f + (0.04f * entranceAnim.value)
 
-        // Fit image perfectly so it NEVER extends or clips outside screen bounds
-        val posterWidth: Dp
-        val posterHeight: Dp
+        // 1. High-resolution full-bleed 20:9 artwork (1080x2400 native)
+        // Completely fills the screen edge-to-edge without letterbox bars or cutoffs
+        Image(
+            painter = painterResource(id = R.drawable.app_splash),
+            contentDescription = "Internet Billing Manager Splash",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .fillMaxSize()
+                .scale(entranceScale)
+        )
 
-        if (maxWidth / maxHeight > imageAspectRatio) {
-            // Screen is wider than poster (e.g. tablet or landscape)
-            posterHeight = maxHeight
-            posterWidth = maxHeight * imageAspectRatio
-        } else {
-            // Screen is taller than poster (standard phone 20:9 or 19.5:9)
-            posterWidth = maxWidth
-            posterHeight = maxWidth / imageAspectRatio
-        }
-
-        val entranceScale = 0.94f + (0.06f * entranceAnim.value)
-
-        // Poster Box container matching exact dimensions of the artwork
+        // 2. Central Cyan Ambient Light Pulse behind the central globe
         Box(
             modifier = Modifier
-                .size(posterWidth, posterHeight)
-                .scale(entranceScale)
-        ) {
-            // 1. High-resolution poster image (fitted 100% inside container, no text clipped)
-            Image(
-                painter = painterResource(id = R.drawable.app_splash),
-                contentDescription = "Internet Billing Manager Splash",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // 2. Central Cyan Ambient Light Pulse behind the central globe
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .padding(top = posterHeight * 0.21f)
-                    .size(posterWidth * 0.68f)
-                    .alpha(globeGlowAlpha)
-                    .background(
-                        brush = Brush.radialGradient(
-                            colors = listOf(
-                                AccentCyan.copy(alpha = 0.5f),
-                                Color(0xFF0099FF).copy(alpha = 0.2f),
-                                Color.Transparent
-                            )
+                .align(Alignment.TopCenter)
+                .padding(top = maxHeight * 0.22f)
+                .size(maxWidth * 0.72f)
+                .alpha(globeGlowAlpha)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            AccentCyan.copy(alpha = 0.5f),
+                            Color(0xFF0099FF).copy(alpha = 0.2f),
+                            Color.Transparent
                         )
-                    )
+                    ),
+                    shape = CircleShape
+                )
+        )
+
+        // 3. Cyber Animated Glow directly on the 3 Dots in the artwork:
+        // Positioned using exact proportional coordinates:
+        // Left Dot: x = 43.89%, y = 69.11%
+        // Middle Dot: x = 49.95%, y = 69.11%
+        // Right Dot: x = 56.00%, y = 69.11%
+        val yOffset = maxHeight * 0.6911f
+        val xOffsetDot1 = maxWidth * 0.4389f
+        val xOffsetDot2 = maxWidth * 0.4995f
+        val xOffsetDot3 = maxWidth * 0.5600f
+
+        ArtworkDotGlow(
+            xOffset = xOffsetDot1,
+            yOffset = yOffset,
+            intensity = calculateDotIntensity(dotPhase, 0)
+        )
+
+        ArtworkDotGlow(
+            xOffset = xOffsetDot2,
+            yOffset = yOffset,
+            intensity = calculateDotIntensity(dotPhase, 1)
+        )
+
+        ArtworkDotGlow(
+            xOffset = xOffsetDot3,
+            yOffset = yOffset,
+            intensity = calculateDotIntensity(dotPhase, 2)
+        )
+
+        // 4. Bottom Version & App Branding Tag
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "⚡ Internet Billing Manager",
+                color = AccentCyan.copy(alpha = 0.92f),
+                fontSize = 11.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp
             )
-
-            // 3. Cyber Animated Glow directly on the 3 Dots in the artwork:
-            // Measured exact pixel coordinates in 941x1672 image:
-            // Left Dot: x = 413, y = 1236 (x = 43.89%, y = 73.92%)
-            // Middle Dot: x = 470, y = 1236 (x = 49.95%, y = 73.92%)
-            // Right Dot: x = 527, y = 1236 (x = 56.00%, y = 73.92%)
-            val yOffset = posterHeight * (1236f / 1672f)
-            val xOffsetDot1 = posterWidth * (413f / 941f)
-            val xOffsetDot2 = posterWidth * (470f / 941f)
-            val xOffsetDot3 = posterWidth * (527f / 941f)
-
-            ArtworkDotGlow(
-                xOffset = xOffsetDot1,
-                yOffset = yOffset,
-                intensity = calculateDotIntensity(dotPhase, 0)
-            )
-
-            ArtworkDotGlow(
-                xOffset = xOffsetDot2,
-                yOffset = yOffset,
-                intensity = calculateDotIntensity(dotPhase, 1)
-            )
-
-            ArtworkDotGlow(
-                xOffset = xOffsetDot3,
-                yOffset = yOffset,
-                intensity = calculateDotIntensity(dotPhase, 2)
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = "v$appVersion",
+                color = Color.White.copy(alpha = 0.7f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                letterSpacing = 0.5.sp
             )
         }
     }
