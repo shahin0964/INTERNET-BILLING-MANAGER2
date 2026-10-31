@@ -33,7 +33,20 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Android APK
-        run: ./gradlew :app:assembleDebug --stacktrace
+        run: |
+          set -o pipefail
+          ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee build_log.txt
+
+      - name: Push Error Log on Failure
+        if: failure()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B build-log
+          cp build_log.txt BUILD_ERROR.txt
+          git add -f BUILD_ERROR.txt
+          git commit -m "Auto-capture Gradle build error" || true
+          git push origin build-log -f || true
 
       - name: Prepare APK for Release
         run: |
