@@ -58,9 +58,9 @@ fun ExpenseScreen(
         modifier = modifier
             .fillMaxSize()
             .background(BgDark)
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(horizontal = 12.dp),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 1. Top Header
         item {
@@ -70,25 +70,29 @@ fun ExpenseScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) {
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(32.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextPrimary
+                            tint = TextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.width(4.dp))
                     Column {
                         Text(
                             text = "Expense Management",
                             color = TextPrimary,
-                            fontSize = 18.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "Track office, maintenance & other costs",
                             color = TextSecondary,
-                            fontSize = 11.sp
+                            fontSize = 10.5.sp
                         )
                     }
                 }
@@ -96,19 +100,19 @@ fun ExpenseScreen(
                 // "+ Add" Button
                 Button(
                     onClick = { viewModel.showAddExpenseDialog = true },
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                    modifier = Modifier.height(36.dp)
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                    modifier = Modifier.height(30.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Add", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("Add", color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -117,23 +121,23 @@ fun ExpenseScreen(
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 tabs.forEach { tab ->
                     val isSelected = activeTab == tab
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(if (isSelected) AccentCyan.copy(alpha = 0.25f) else BgCard)
                             .clickable { activeTab = tab }
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = tab,
                             color = if (isSelected) AccentCyan else TextSecondary,
-                            fontSize = 12.sp,
+                            fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                         )
                     }
@@ -143,27 +147,27 @@ fun ExpenseScreen(
 
         // 3. Stats Rows 1 & 2
         item {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // This Month Outflow
                     GlassCard(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         borderColor = CardBorderSubtle
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("This Month Outflow", color = TextSecondary, fontSize = 11.sp)
+                                Text("This Month Outflow", color = TextSecondary, fontSize = 10.5.sp)
                                 Box(
                                     modifier = Modifier
-                                        .size(22.dp)
+                                        .size(20.dp)
                                         .clip(CircleShape)
                                         .background(AccentRed.copy(alpha = 0.2f)),
                                     contentAlignment = Alignment.Center
@@ -172,15 +176,15 @@ fun ExpenseScreen(
                                         imageVector = Icons.Default.ArrowDownward,
                                         contentDescription = null,
                                         tint = AccentRed,
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(12.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "৳${outflow.toInt()}",
                                 color = TextPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -189,19 +193,19 @@ fun ExpenseScreen(
                     // Vouchers Logged
                     GlassCard(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         borderColor = CardBorderSubtle
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Vouchers Logged", color = TextSecondary, fontSize = 11.sp)
+                                Text("Vouchers Logged", color = TextSecondary, fontSize = 10.5.sp)
                                 Box(
                                     modifier = Modifier
-                                        .size(22.dp)
+                                        .size(20.dp)
                                         .clip(CircleShape)
                                         .background(AccentBlue.copy(alpha = 0.2f)),
                                     contentAlignment = Alignment.Center
@@ -210,15 +214,15 @@ fun ExpenseScreen(
                                         imageVector = Icons.Default.Receipt,
                                         contentDescription = null,
                                         tint = AccentBlue,
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(12.dp)
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "$vouchersCount",
                                 color = TextPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -227,69 +231,69 @@ fun ExpenseScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Highest Expense
                     GlassCard(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         borderColor = CardBorderSubtle
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Highest Expense", color = TextSecondary, fontSize = 11.sp)
+                                Text("Highest Expense", color = TextSecondary, fontSize = 10.5.sp)
                                 Icon(
                                     imageVector = Icons.Default.Star,
                                     contentDescription = null,
                                     tint = AccentGold,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "৳${highestExpense.toInt()}",
                                 color = TextPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Single Largest Cost", color = TextMuted, fontSize = 10.sp)
+                            Spacer(modifier = Modifier.height(1.dp))
+                            Text("Single Largest Cost", color = TextMuted, fontSize = 9.5.sp)
                         }
                     }
 
                     // Average Expense
                     GlassCard(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(12.dp),
                         borderColor = CardBorderSubtle
                     ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
+                        Column(modifier = Modifier.padding(10.dp)) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("Average Expense", color = TextSecondary, fontSize = 11.sp)
+                                Text("Average Expense", color = TextSecondary, fontSize = 10.5.sp)
                                 Icon(
                                     imageVector = Icons.Default.BarChart,
                                     contentDescription = null,
                                     tint = AccentGreen,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "৳${avgExpense.toInt()}",
                                 color = TextPrimary,
-                                fontSize = 18.sp,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text("Per Transaction Avg", color = TextMuted, fontSize = 10.sp)
+                            Spacer(modifier = Modifier.height(1.dp))
+                            Text("Per Transaction Avg", color = TextMuted, fontSize = 9.5.sp)
                         }
                     }
                 }
@@ -300,10 +304,10 @@ fun ExpenseScreen(
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 borderColor = CardBorder
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                Column(modifier = Modifier.padding(12.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -312,7 +316,7 @@ fun ExpenseScreen(
                         Text(
                             text = "Expense Breakdown",
                             color = TextPrimary,
-                            fontSize = 14.sp,
+                            fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Row(
@@ -322,18 +326,18 @@ fun ExpenseScreen(
                             Text(
                                 text = monthDisplay,
                                 color = AccentCyan,
-                                fontSize = 12.sp
+                                fontSize = 11.sp
                             )
                             Icon(
                                 imageVector = Icons.Default.ChevronRight,
                                 contentDescription = null,
                                 tint = AccentCyan,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(14.dp)
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -342,11 +346,11 @@ fun ExpenseScreen(
                     ) {
                         // Donut Chart Graphic
                         Box(
-                            modifier = Modifier.size(120.dp),
+                            modifier = Modifier.size(100.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Canvas(modifier = Modifier.size(110.dp)) {
-                                val strokeWidth = 18.dp.toPx()
+                            Canvas(modifier = Modifier.size(90.dp)) {
+                                val strokeWidth = 14.dp.toPx()
                                 if (outflow <= 0 || categorySums.isEmpty()) {
                                     // Empty state ring
                                     drawCircle(
@@ -373,15 +377,15 @@ fun ExpenseScreen(
                                 Text(
                                     text = "৳${outflow.toInt()}",
                                     color = TextPrimary,
-                                    fontSize = 15.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Text("Total", color = TextMuted, fontSize = 10.sp)
+                                Text("Total", color = TextMuted, fontSize = 9.sp)
                             }
                         }
 
                         // Category Legends List
-                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Expense.ALL_CATEGORIES.forEach { category ->
                                 val sumItem = categorySums.firstOrNull { it.category == category }
                                 val percent = if (outflow > 0 && sumItem != null) {
@@ -391,27 +395,27 @@ fun ExpenseScreen(
 
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier.width(140.dp),
+                                    modifier = Modifier.width(130.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Box(
                                             modifier = Modifier
-                                                .size(8.dp)
+                                                .size(7.dp)
                                                 .clip(CircleShape)
                                                 .background(color)
                                         )
-                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Spacer(modifier = Modifier.width(5.dp))
                                         Text(
                                             text = category,
                                             color = TextSecondary,
-                                            fontSize = 11.sp
+                                            fontSize = 10.sp
                                         )
                                     }
                                     Text(
                                         text = "$percent%",
                                         color = TextMuted,
-                                        fontSize = 11.sp,
+                                        fontSize = 10.sp,
                                         fontWeight = FontWeight.SemiBold
                                     )
                                 }
@@ -432,19 +436,19 @@ fun ExpenseScreen(
                 Text(
                     text = "Recent Expenses",
                     color = TextPrimary,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Button(
                     onClick = { viewModel.showAddExpenseDialog = true },
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(6.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                    modifier = Modifier.height(30.dp)
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    modifier = Modifier.height(26.dp)
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = null, tint = BgDark, modifier = Modifier.size(14.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("New", color = BgDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Icon(Icons.Default.Add, contentDescription = null, tint = BgDark, modifier = Modifier.size(12.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text("New", color = BgDark, fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -453,31 +457,31 @@ fun ExpenseScreen(
             item {
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(28.dp),
+                            .padding(20.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
                             imageVector = Icons.Default.Description,
                             contentDescription = null,
                             tint = TextMuted,
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(32.dp)
                         )
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "No expenses recorded for $monthDisplay",
                             color = TextSecondary,
-                            fontSize = 13.sp
+                            fontSize = 12.sp
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = "Tap '+ Add' to record office, fiber, or router expenses",
                             color = TextMuted,
-                            fontSize = 11.sp
+                            fontSize = 10.sp
                         )
                     }
                 }
@@ -489,20 +493,20 @@ fun ExpenseScreen(
                 }
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = RoundedCornerShape(10.dp),
                     borderColor = CardBorderSubtle
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(12.dp),
+                            .padding(9.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
+                                    .size(28.dp)
                                     .clip(CircleShape)
                                     .background(AccentPurple.copy(alpha = 0.15f)),
                                 contentAlignment = Alignment.Center
@@ -511,22 +515,22 @@ fun ExpenseScreen(
                                     imageVector = Icons.Default.Receipt,
                                     contentDescription = null,
                                     tint = AccentPurple,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(15.dp)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
                                     text = expense.title,
                                     color = TextPrimary,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp
+                                    fontSize = 12.sp
                                 )
-                                Spacer(modifier = Modifier.height(2.dp))
+                                Spacer(modifier = Modifier.height(1.dp))
                                 Text(
                                     text = "${expense.category} • $dateStr",
                                     color = TextSecondary,
-                                    fontSize = 11.sp
+                                    fontSize = 10.sp
                                 )
                             }
                         }
@@ -535,15 +539,18 @@ fun ExpenseScreen(
                             Text(
                                 text = "৳${expense.amount.toInt()}",
                                 color = AccentRed,
-                                fontSize = 13.sp,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            IconButton(onClick = { viewModel.deleteExpense(expense) }) {
+                            IconButton(
+                                onClick = { viewModel.deleteExpense(expense) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Delete",
                                     tint = TextMuted,
-                                    modifier = Modifier.size(16.dp)
+                                    modifier = Modifier.size(14.dp)
                                 )
                             }
                         }

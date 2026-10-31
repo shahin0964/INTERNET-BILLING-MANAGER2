@@ -44,9 +44,9 @@ fun SettingsScreen(
         modifier = modifier
             .fillMaxSize()
             .background(BgDark)
-            .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
+            .padding(horizontal = 12.dp),
+        contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         // 1. Top Header
         item {
@@ -56,7 +56,7 @@ fun SettingsScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(42.dp)
+                        .size(34.dp)
                         .clip(CircleShape)
                         .background(AccentBlue.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
@@ -65,22 +65,21 @@ fun SettingsScreen(
                         imageVector = Icons.Default.Person,
                         contentDescription = null,
                         tint = AccentBlue,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
                         text = "Settings",
                         color = TextPrimary,
-                        fontSize = 20.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "App settings and preferences",
                         color = TextSecondary,
-                        fontSize = 12.sp
+                        fontSize = 11.sp
                     )
                 }
             }
@@ -90,10 +89,10 @@ fun SettingsScreen(
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 borderColor = CardBorderSubtle
             ) {
-                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(vertical = 2.dp)) {
                     // Item 1: ISP Business Info
                     SettingsRowItem(
                         icon = Icons.Default.Business,
@@ -102,7 +101,7 @@ fun SettingsScreen(
                         iconTint = AccentCyan,
                         onClick = { viewModel.showEditBusinessInfoDialog = true }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 2: Bulk SMS Template
                     SettingsRowItem(
@@ -112,7 +111,7 @@ fun SettingsScreen(
                         iconTint = AccentGreen,
                         onClick = { showSmsTemplateDialog = true }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 3: Internet Packages
                     SettingsRowItem(
@@ -125,7 +124,7 @@ fun SettingsScreen(
                             viewModel.showAddPackageDialog = true
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 4: Advanced Features
                     SettingsRowItem(
@@ -137,7 +136,7 @@ fun SettingsScreen(
                             Toast.makeText(context, "Advanced Features Configured", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 5: Language
                     SettingsRowItem(
@@ -149,7 +148,7 @@ fun SettingsScreen(
                             Toast.makeText(context, "English / Bengali supported", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 6: Theme
                     SettingsRowItem(
@@ -161,7 +160,7 @@ fun SettingsScreen(
                             Toast.makeText(context, "Dark AMOLED Theme Active", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 7: Backup & Restore
                     SettingsRowItem(
@@ -173,7 +172,7 @@ fun SettingsScreen(
                             Toast.makeText(context, "Local Room Database Saved", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 8: App Update
                     SettingsRowItem(
@@ -185,7 +184,7 @@ fun SettingsScreen(
                             Toast.makeText(context, "You are on the latest version v1.0.0", Toast.LENGTH_SHORT).show()
                         }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 9: About
                     SettingsRowItem(
@@ -195,7 +194,7 @@ fun SettingsScreen(
                         iconTint = AccentCyan,
                         onClick = { showAboutDialog = true }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 14.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
                     // Item 10: Security
                     SettingsRowItem(
@@ -221,7 +220,7 @@ fun SettingsScreen(
                 Text(
                     text = "Internet Packages",
                     color = TextPrimary,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Row(
@@ -234,7 +233,7 @@ fun SettingsScreen(
                     Text(
                         text = "+ Add",
                         color = AccentCyan,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -243,8 +242,8 @@ fun SettingsScreen(
 
         item {
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(vertical = 4.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(vertical = 2.dp)
             ) {
                 items(packages, key = { it.id }) { pkg ->
                     PackageCardItem(
@@ -351,15 +350,15 @@ fun SettingsRowItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 10.dp, vertical = 7.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
                     .background(iconTint.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
@@ -367,22 +366,21 @@ fun SettingsRowItem(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(15.dp)
                 )
             }
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(9.dp))
             Column {
                 Text(
                     text = title,
                     color = TextPrimary,
-                    fontSize = 13.sp,
+                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold
                 )
-                Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = subtitle,
                     color = TextSecondary,
-                    fontSize = 11.sp
+                    fontSize = 10.sp
                 )
             }
         }
@@ -391,7 +389,7 @@ fun SettingsRowItem(
             imageVector = Icons.Default.ChevronRight,
             contentDescription = null,
             tint = TextMuted,
-            modifier = Modifier.size(18.dp)
+            modifier = Modifier.size(15.dp)
         )
     }
 }
@@ -411,19 +409,19 @@ fun PackageCardItem(
 
     GlassCard(
         modifier = Modifier
-            .width(105.dp)
+            .width(90.dp)
             .clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(10.dp),
         borderColor = accentColor.copy(alpha = 0.4f),
         backgroundColor = BgCardLight.copy(alpha = 0.8f)
     ) {
         Column(
-            modifier = Modifier.padding(10.dp),
+            modifier = Modifier.padding(8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(26.dp)
                     .clip(CircleShape)
                     .background(accentColor.copy(alpha = 0.2f)),
                 contentAlignment = Alignment.Center
@@ -432,21 +430,21 @@ fun PackageCardItem(
                     imageVector = Icons.Default.Wifi,
                     contentDescription = null,
                     tint = accentColor,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(14.dp)
                 )
             }
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(5.dp))
             Text(
                 text = "${pkg.speedMbps} Mbps",
                 color = TextPrimary,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(1.dp))
             Text(
                 text = "৳${pkg.monthlyPrice.toInt()}/mo",
                 color = accentColor,
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.SemiBold
             )
         }

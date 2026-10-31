@@ -91,20 +91,34 @@ class BillingRepository(
         val newDue = (customer.dueAmount - amount).coerceAtLeast(0.0)
         customerDao.updateDue(customerId, newDue)
 
-        // Also record a daily bill / payment entry
-        val billEntry = BillEntry(
-            customerId = customerId,
-            customerName = customer.name.ifBlank { customer.pppoeUsername },
-            customerCode = customer.customerCode,
-            monthYear = currentMonthYear,
-            billAmount = amount,
-            paidAmount = amount,
-            dueAmount = 0.0,
-            isPaid = true,
-            billDateMillis = System.currentTimeMillis(),
-            notes = "$method Payment"
-        )
-        billDao.insertBill(billEntry)
+        // If customer has an unpaid monthly bill, update it
+        val unpaidBill = billDao.getLatestUnpaidBillForCustomer(customerId)
+        if (unpaidBill != null) {
+            val newBillPaid = unpaidBill.paidAmount + amount
+            val newBillDue = (unpaidBill.billAmount - newBillPaid).coerceAtLeast(0.0)
+            billDao.updateBill(
+                unpaidBill.copy(
+                    paidAmount = newBillPaid,
+                    dueAmount = newBillDue,
+                    isPaid = newBillDue <= 0.0
+                )
+            )
+        } else {
+            // Also record a payment entry
+            val billEntry = BillEntry(
+                customerId = customerId,
+                customerName = customer.name.ifBlank { customer.pppoeUsername },
+                customerCode = customer.customerCode,
+                monthYear = currentMonthYear,
+                billAmount = amount,
+                paidAmount = amount,
+                dueAmount = 0.0,
+                isPaid = true,
+                billDateMillis = System.currentTimeMillis(),
+                notes = "$method Payment"
+            )
+            billDao.insertBill(billEntry)
+        }
     }
 
     // Bills
@@ -142,10 +156,12 @@ class BillingRepository(
 
     suspend fun generateMonthlyBills(monthYear: String, customers: List<Customer>) {
         val activeCustomers = customers.filter { it.status == Customer.STATUS_ACTIVE }
+        val alreadyBilledIds = billDao.getBilledCustomerIdsForMonth(monthYear).toSet()
+        val toBill = activeCustomers.filter { it.id !in alreadyBilledIds }
         val entries = mutableListOf<BillEntry>()
         val currentTime = System.currentTimeMillis()
 
-        for (cust in activeCustomers) {
+        for (cust in toBill) {
             val updatedDue = cust.dueAmount + cust.monthlyBill
             customerDao.updateDue(cust.id, updatedDue)
             entries.add(

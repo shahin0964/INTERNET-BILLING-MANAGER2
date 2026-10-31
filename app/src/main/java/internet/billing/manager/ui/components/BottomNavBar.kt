@@ -48,7 +48,7 @@ fun BottomNavBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp, horizontal = 12.dp),
+                .padding(vertical = 4.dp, horizontal = 6.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -58,9 +58,9 @@ fun BottomNavBar(
 
                 Column(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .clickable { onScreenSelected(screen) }
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -68,13 +68,13 @@ fun BottomNavBar(
                         imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
                         contentDescription = screen.title,
                         tint = tint,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(19.dp)
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = screen.title,
                         color = tint,
-                        fontSize = 11.sp,
+                        fontSize = 10.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
                     )
                 }

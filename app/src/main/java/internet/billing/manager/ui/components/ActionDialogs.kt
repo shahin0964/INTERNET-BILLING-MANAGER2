@@ -48,14 +48,14 @@ fun CollectPaymentDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(
@@ -65,43 +65,51 @@ fun CollectPaymentDialog(
                 ) {
                     Text(
                         text = "Collect Payment",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Select Customer", color = TextSecondary, fontSize = 12.sp)
+                Text("Select Customer", color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // Customer Selection Dropdown or List
                 if (customers.isEmpty()) {
-                    Text("No customers found. Please add a customer first.", color = AccentRed, fontSize = 13.sp)
+                    Text("No customers found. Please add a customer first.", color = AccentRed, fontSize = 12.sp)
                 } else {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(8.dp))
                             .background(BgCardLight)
-                            .padding(8.dp)
+                            .padding(6.dp)
                     ) {
                         customers.take(5).forEach { cust ->
                             val isSelected = selectedCustomer?.id == cust.id
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(6.dp))
                                     .background(if (isSelected) AccentCyan.copy(alpha = 0.2f) else BgCardLight)
                                     .clickable {
                                         selectedCustomer = cust
                                         amountText = if (cust.dueAmount > 0) cust.dueAmount.toInt().toString() else cust.monthlyBill.toInt().toString()
                                     }
-                                    .padding(8.dp),
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -110,18 +118,18 @@ fun CollectPaymentDialog(
                                         text = cust.name.ifBlank { cust.pppoeUsername },
                                         color = TextPrimary,
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 13.sp
+                                        fontSize = 12.sp
                                     )
                                     Text(
                                         text = "${cust.customerCode} • ${cust.packageName}",
                                         color = TextSecondary,
-                                        fontSize = 11.sp
+                                        fontSize = 10.sp
                                     )
                                 }
                                 Text(
                                     text = "Due: ৳${cust.dueAmount.toInt()}",
                                     color = if (cust.dueAmount > 0) AccentOrange else AccentGreen,
-                                    fontSize = 12.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -129,7 +137,7 @@ fun CollectPaymentDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = amountText,
@@ -146,36 +154,36 @@ fun CollectPaymentDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Payment Method", color = TextSecondary, fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(6.dp))
+                Text("Payment Method", color = TextSecondary, fontSize = 11.sp)
+                Spacer(modifier = Modifier.height(5.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     paymentMethods.forEach { method ->
                         val isSelected = selectedMethod == method
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(RoundedCornerShape(6.dp))
                                 .background(if (isSelected) AccentGreen.copy(alpha = 0.25f) else BgCardLight)
                                 .clickable { selectedMethod = method }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = method,
                                 color = if (isSelected) AccentGreen else TextSecondary,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = note,
@@ -191,7 +199,7 @@ fun CollectPaymentDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
@@ -203,8 +211,8 @@ fun CollectPaymentDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
                     enabled = selectedCustomer != null && (amountText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
@@ -212,7 +220,7 @@ fun CollectPaymentDialog(
                         text = "Confirm & Collect ৳${amountText.ifBlank { "0" }}",
                         color = BgDark,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 13.5.sp
                     )
                 }
             }
@@ -235,14 +243,14 @@ fun AddExpenseDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(
@@ -252,16 +260,24 @@ fun AddExpenseDialog(
                 ) {
                     Text(
                         text = "Add Business Expense",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = title,
@@ -277,28 +293,28 @@ fun AddExpenseDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Expense Category", color = TextSecondary, fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text("Expense Category", color = TextSecondary, fontSize = 11.sp)
+                Spacer(modifier = Modifier.height(5.dp))
+                Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Expense.ALL_CATEGORIES.chunked(2).forEach { rowCats ->
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             rowCats.forEach { cat ->
                                 val isSelected = selectedCategory == cat
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(8.dp))
+                                        .clip(RoundedCornerShape(6.dp))
                                         .background(if (isSelected) AccentPurple.copy(alpha = 0.25f) else BgCardLight)
                                         .clickable { selectedCategory = cat }
-                                        .padding(vertical = 8.dp),
+                                        .padding(vertical = 6.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = cat,
                                         color = if (isSelected) AccentPurple else TextSecondary,
-                                        fontSize = 11.sp,
+                                        fontSize = 10.5.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                     )
                                 }
@@ -310,7 +326,7 @@ fun AddExpenseDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = amountText,
@@ -327,7 +343,7 @@ fun AddExpenseDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = note,
@@ -343,7 +359,7 @@ fun AddExpenseDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
@@ -363,8 +379,8 @@ fun AddExpenseDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
                     enabled = title.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
@@ -372,7 +388,7 @@ fun AddExpenseDialog(
                         text = "Save Expense",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 13.5.sp
                     )
                 }
             }
@@ -390,77 +406,77 @@ fun GenerateBillDialog(
 ) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = "Generate Monthly Bills",
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Generate bill entries for $monthYear for all active customers. This will update customer due balances and create daily billing entries.",
-                    fontSize = 13.sp,
+                    fontSize = 11.5.sp,
                     color = TextSecondary,
-                    lineHeight = 18.sp
+                    lineHeight = 16.sp
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
+                        .clip(RoundedCornerShape(10.dp))
                         .background(BgCardLight)
-                        .padding(14.dp)
+                        .padding(10.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Active Customers to Bill:", color = TextSecondary, fontSize = 13.sp)
-                        Text("$activeCustomerCount users", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Active Customers to Bill:", color = TextSecondary, fontSize = 11.5.sp)
+                        Text("$activeCustomerCount users", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Estimated Total Bill:", color = TextSecondary, fontSize = 13.sp)
-                        Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                        Text("Estimated Total Bill:", color = TextSecondary, fontSize = 11.5.sp)
+                        Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     OutlinedButton(
                         onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(46.dp),
-                        shape = RoundedCornerShape(10.dp)
+                        modifier = Modifier.weight(1f).height(38.dp),
+                        shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Cancel", color = TextSecondary)
+                        Text("Cancel", color = TextSecondary, fontSize = 12.sp)
                     }
                     Button(
                         onClick = onConfirm,
-                        modifier = Modifier.weight(1.5f).height(46.dp),
-                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.weight(1.5f).height(38.dp),
+                        shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
                     ) {
-                        Text("Generate Now", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("Generate Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                     }
                 }
             }
@@ -483,14 +499,14 @@ fun EditBusinessInfoDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(
@@ -500,16 +516,24 @@ fun EditBusinessInfoDialog(
                 ) {
                     Text(
                         text = "ISP Business Information",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = companyName,
@@ -525,7 +549,7 @@ fun EditBusinessInfoDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = tagline,
@@ -541,7 +565,7 @@ fun EditBusinessInfoDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = phone,
@@ -557,7 +581,7 @@ fun EditBusinessInfoDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = address,
@@ -573,13 +597,13 @@ fun EditBusinessInfoDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = bandwidthBillText,
                         onValueChange = { bandwidthBillText = it },
-                        label = { Text("Upstream Bandwidth Bill (৳)") },
+                        label = { Text("Upstream Bill (৳)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -593,7 +617,7 @@ fun EditBusinessInfoDialog(
                     OutlinedTextField(
                         value = discountText,
                         onValueChange = { discountText = it },
-                        label = { Text("Monthly Discount (৳)") },
+                        label = { Text("Discount (৳)") },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -606,7 +630,7 @@ fun EditBusinessInfoDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
@@ -620,11 +644,11 @@ fun EditBusinessInfoDialog(
                         )
                         onSave(updated)
                     },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
                 ) {
-                    Text("Save Business Settings", color = BgDark, fontWeight = FontWeight.Bold)
+                    Text("Save Business Settings", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
                 }
             }
         }

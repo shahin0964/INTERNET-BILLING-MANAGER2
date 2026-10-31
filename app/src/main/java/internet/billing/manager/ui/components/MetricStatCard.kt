@@ -29,14 +29,14 @@ fun MetricStatCard(
 ) {
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         borderColor = CardBorderSubtle,
         onClick = onClick
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(14.dp)
+                .padding(10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -45,7 +45,7 @@ fun MetricStatCard(
                 if (icon != null) {
                     Box(
                         modifier = Modifier
-                            .size(24.dp)
+                            .size(20.dp)
                             .clip(CircleShape)
                             .background(accentColor.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
@@ -54,35 +54,35 @@ fun MetricStatCard(
                             imageVector = icon,
                             contentDescription = null,
                             tint = accentColor,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(12.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                 }
                 Text(
                     text = title,
                     color = TextSecondary,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = value,
                 color = TextPrimary,
-                fontSize = 19.sp,
+                fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 0.3.sp
+                letterSpacing = 0.2.sp
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(2.dp))
 
             Text(
                 text = subtitle,
                 color = TextMuted,
-                fontSize = 11.sp,
+                fontSize = 10.sp,
                 fontWeight = FontWeight.Normal
             )
         }
@@ -99,34 +99,34 @@ fun GlowStatCard(
 ) {
     GlassCard(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         borderColor = accentColor.copy(alpha = 0.4f),
         backgroundColor = BgCardLight.copy(alpha = 0.6f)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp)
+                .padding(9.dp)
         ) {
             Text(
                 text = title,
                 color = TextSecondary,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 fontWeight = FontWeight.Medium
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = value,
                 color = TextPrimary,
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
             )
             if (subtitle != null) {
-                Spacer(modifier = Modifier.height(3.dp))
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     color = TextMuted,
-                    fontSize = 10.sp
+                    fontSize = 9.5.sp
                 )
             }
         }

@@ -38,12 +38,12 @@ fun AddPackageDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(16.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            Column(modifier = Modifier.padding(20.dp)) {
+            Column(modifier = Modifier.padding(14.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -51,16 +51,24 @@ fun AddPackageDialog(
                 ) {
                     Text(
                         text = if (packageToEdit == null) "Add Internet Package" else "Edit Package",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = name,
@@ -76,7 +84,7 @@ fun AddPackageDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -109,20 +117,20 @@ fun AddPackageDialog(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Theme Accent Color", color = TextSecondary, fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(8.dp))
+                Text("Theme Accent Color", color = TextSecondary, fontSize = 11.sp)
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     colorOptions.forEach { hex ->
                         val color = Color(android.graphics.Color.parseColor(hex))
                         val isSelected = selectedColor == hex
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(28.dp)
                                 .clip(CircleShape)
                                 .background(color)
                                 .clickable { selectedColor = hex },
@@ -131,7 +139,7 @@ fun AddPackageDialog(
                             if (isSelected) {
                                 Box(
                                     modifier = Modifier
-                                        .size(12.dp)
+                                        .size(10.dp)
                                         .clip(CircleShape)
                                         .background(Color.White)
                                 )
@@ -140,7 +148,7 @@ fun AddPackageDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
@@ -156,15 +164,16 @@ fun AddPackageDialog(
                             )
                         )
                     },
-                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
                     enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text(
                         text = if (packageToEdit == null) "Save Package" else "Update Package",
                         color = BgDark,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.5.sp
                     )
                 }
             }

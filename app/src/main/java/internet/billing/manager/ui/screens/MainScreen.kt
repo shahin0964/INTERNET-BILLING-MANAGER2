@@ -15,6 +15,7 @@ enum class ActiveScreen {
     DASHBOARD,
     CUSTOMERS,
     BILLING,
+    COLLECTION,
     DAILY_ENTRY,
     EXPENSE,
     SETTINGS
@@ -37,8 +38,8 @@ fun MainScreen(
 
     // Handle back button when inside nested sub-screens
     BackHandler(enabled = currentScreen == ActiveScreen.DAILY_ENTRY || currentScreen == ActiveScreen.EXPENSE) {
-        currentScreen = ActiveScreen.BILLING
-        selectedNavTab = BottomNavScreen.BILLING
+        currentScreen = ActiveScreen.COLLECTION
+        selectedNavTab = BottomNavScreen.COLLECTION
     }
 
     Scaffold(
@@ -53,7 +54,7 @@ fun MainScreen(
                         BottomNavScreen.DASHBOARD -> ActiveScreen.DASHBOARD
                         BottomNavScreen.CUSTOMERS -> ActiveScreen.CUSTOMERS
                         BottomNavScreen.BILLING -> ActiveScreen.BILLING
-                        BottomNavScreen.COLLECTION -> ActiveScreen.DAILY_ENTRY
+                        BottomNavScreen.COLLECTION -> ActiveScreen.COLLECTION
                         BottomNavScreen.MORE -> ActiveScreen.SETTINGS
                     }
                 }
@@ -79,7 +80,7 @@ fun MainScreen(
                         },
                         onNavigateToCollection = {
                             selectedNavTab = BottomNavScreen.COLLECTION
-                            currentScreen = ActiveScreen.DAILY_ENTRY
+                            currentScreen = ActiveScreen.COLLECTION
                         },
                         onNavigateToMore = {
                             selectedNavTab = BottomNavScreen.MORE
@@ -93,10 +94,13 @@ fun MainScreen(
                 }
 
                 ActiveScreen.BILLING -> {
-                    BillingScreen(
+                    BillingScreen(viewModel = viewModel)
+                }
+
+                ActiveScreen.COLLECTION -> {
+                    CollectionScreen(
                         viewModel = viewModel,
                         onNavigateToDailyEntry = {
-                            selectedNavTab = BottomNavScreen.COLLECTION
                             currentScreen = ActiveScreen.DAILY_ENTRY
                         },
                         onNavigateToExpense = {
@@ -109,8 +113,8 @@ fun MainScreen(
                     DailyBillEntryScreen(
                         viewModel = viewModel,
                         onBack = {
-                            selectedNavTab = BottomNavScreen.DASHBOARD
-                            currentScreen = ActiveScreen.DASHBOARD
+                            selectedNavTab = BottomNavScreen.COLLECTION
+                            currentScreen = ActiveScreen.COLLECTION
                         }
                     )
                 }
@@ -119,8 +123,8 @@ fun MainScreen(
                     ExpenseScreen(
                         viewModel = viewModel,
                         onBack = {
-                            selectedNavTab = BottomNavScreen.BILLING
-                            currentScreen = ActiveScreen.BILLING
+                            selectedNavTab = BottomNavScreen.COLLECTION
+                            currentScreen = ActiveScreen.COLLECTION
                         }
                     )
                 }

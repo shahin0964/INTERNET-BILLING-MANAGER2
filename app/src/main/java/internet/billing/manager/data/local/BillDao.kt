@@ -21,6 +21,12 @@ interface BillDao {
     @Query("SELECT SUM(dueAmount) FROM bill_entries WHERE monthYear = :monthYear")
     fun getTotalDueForMonth(monthYear: String): Flow<Double?>
 
+    @Query("SELECT customerId FROM bill_entries WHERE monthYear = :monthYear")
+    suspend fun getBilledCustomerIdsForMonth(monthYear: String): List<Long>
+
+    @Query("SELECT * FROM bill_entries WHERE customerId = :customerId AND isPaid = 0 ORDER BY billDateMillis DESC LIMIT 1")
+    suspend fun getLatestUnpaidBillForCustomer(customerId: Long): BillEntry?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBill(bill: BillEntry): Long
 

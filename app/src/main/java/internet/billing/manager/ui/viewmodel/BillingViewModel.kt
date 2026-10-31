@@ -118,6 +118,11 @@ class BillingViewModel(
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // All Monthly Bills for selected month (User Generated Bills)
+    val monthlyBills: StateFlow<List<BillEntry>> = currentMonthYearKey.flatMapLatest { monthKey ->
+        repository.getBillsForMonth(monthKey)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Expenses
     val monthlyExpenses: StateFlow<List<Expense>> = currentMonthYearKey.flatMapLatest { monthKey ->
         repository.getExpensesForMonth(monthKey)

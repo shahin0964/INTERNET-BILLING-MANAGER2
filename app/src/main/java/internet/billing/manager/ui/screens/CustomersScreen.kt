@@ -53,9 +53,9 @@ fun CustomersScreen(
         modifier = modifier
             .fillMaxSize()
             .background(BgDark)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 12.dp)
     ) {
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 1. Header with Add Customer button
         Row(
@@ -67,22 +67,22 @@ fun CustomersScreen(
                 Text(
                     text = "Customers",
                     color = TextPrimary,
-                    fontSize = 20.sp,
+                    fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(1.dp))
                 Text(
                     text = "Manage your ISP customers",
                     color = TextSecondary,
-                    fontSize = 12.sp
+                    fontSize = 11.sp
                 )
             }
 
             // Blue '+' button
             Box(
                 modifier = Modifier
-                    .size(42.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(10.dp))
                     .background(AccentBlue)
                     .clickable {
                         viewModel.customerToEdit = null
@@ -94,33 +94,33 @@ fun CustomersScreen(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Customer",
                     tint = Color.White,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(20.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // 2. Search Bar
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { viewModel.setCustomerSearchQuery(it) },
             placeholder = {
-                Text("Search name, phone, PPPoE user...", color = TextMuted, fontSize = 13.sp)
+                Text("Search name, phone, PPPoE user...", color = TextMuted, fontSize = 12.sp)
             },
             leadingIcon = {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = TextMuted)
+                Icon(Icons.Default.Search, contentDescription = "Search", tint = TextMuted, modifier = Modifier.size(18.dp))
             },
             trailingIcon = {
                 if (searchQuery.isNotEmpty()) {
                     IconButton(onClick = { viewModel.setCustomerSearchQuery("") }) {
-                        Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted)
+                        Icon(Icons.Default.Clear, contentDescription = "Clear", tint = TextMuted, modifier = Modifier.size(18.dp))
                     }
                 }
             },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
                 focusedContainerColor = BgCard,
                 unfocusedContainerColor = BgCard,
@@ -131,7 +131,7 @@ fun CustomersScreen(
             )
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         // 3. Status Filter Tabs (Pills)
         val filterTabs = listOf(
@@ -143,23 +143,23 @@ fun CustomersScreen(
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             filterTabs.forEach { (title, count, color) ->
                 val isSelected = statusFilter.equals(title, ignoreCase = true)
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
                         .background(if (isSelected) color.copy(alpha = 0.25f) else BgCard)
                         .clickable { viewModel.setCustomerStatusFilter(title) }
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "$title ($count)",
                         color = if (isSelected) color else TextSecondary,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                     )
                 }
@@ -201,8 +201,8 @@ fun CustomersScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                contentPadding = PaddingValues(bottom = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(customers, key = { it.id }) { customer ->
                     CustomerCard(
@@ -284,11 +284,11 @@ fun CustomerCard(
 
     GlassCard(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         borderColor = CardBorderSubtle,
         onClick = onCollect
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
+        Column(modifier = Modifier.padding(10.dp)) {
             // Top Row: Avatar + Name + Status Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -298,7 +298,7 @@ fun CustomerCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(avatarBg),
                         contentAlignment = Alignment.Center
@@ -307,21 +307,21 @@ fun CustomerCard(
                             text = initial,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
+                            fontSize = 14.sp
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
                             text = customer.name.ifBlank { customer.pppoeUsername },
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp
+                            fontSize = 13.sp
                         )
                         Text(
                             text = "Code: ${customer.customerCode}",
                             color = TextSecondary,
-                            fontSize = 11.sp
+                            fontSize = 10.5.sp
                         )
                     }
                 }
@@ -329,15 +329,15 @@ fun CustomerCard(
                 CustomerStatusBadge(status = customer.status)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(6.dp))
 
             // PPPoE Info & Package info
             Text(
                 text = "PPPoE: ${customer.pppoeUsername}",
                 color = TextSecondary,
-                fontSize = 12.sp
+                fontSize = 11.sp
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(1.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -345,20 +345,20 @@ fun CustomerCard(
                 Text(
                     text = "${customer.speedMbps} Mbps • ৳${customer.monthlyBill.toInt()}/mo",
                     color = AccentCyan,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
                     text = "Due: ৳${customer.dueAmount.toInt()}",
                     color = if (customer.dueAmount > 0) AccentRed else AccentGreen,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
             Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Footer Row: Phone Number + Quick Actions (Call, SMS, WhatsApp, Edit, Delete)
             Row(
@@ -374,17 +374,17 @@ fun CustomerCard(
                         imageVector = Icons.Default.Phone,
                         contentDescription = null,
                         tint = AccentCyan,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(13.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = customer.phone.ifBlank { "No phone" },
                         color = TextSecondary,
-                        fontSize = 12.sp
+                        fontSize = 11.sp
                     )
                 }
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     // Call Button
                     ActionButtonCircle(
                         icon = Icons.Default.Phone,
@@ -435,7 +435,7 @@ fun ActionButtonCircle(
 ) {
     Box(
         modifier = Modifier
-            .size(30.dp)
+            .size(26.dp)
             .clip(CircleShape)
             .background(bgColor)
             .clickable { onClick() },
@@ -445,7 +445,7 @@ fun ActionButtonCircle(
             imageVector = icon,
             contentDescription = null,
             tint = tint,
-            modifier = Modifier.size(16.dp)
+            modifier = Modifier.size(13.dp)
         )
     }
 }

@@ -56,16 +56,16 @@ fun AddEditCustomerDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
-            shape = RoundedCornerShape(20.dp),
+            shape = RoundedCornerShape(14.dp),
             color = BgCard,
             border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 16.dp)
+                .padding(vertical = 8.dp)
         ) {
             Column(
                 modifier = Modifier
-                    .padding(20.dp)
+                    .padding(14.dp)
                     .verticalScroll(rememberScrollState())
             ) {
                 Row(
@@ -75,16 +75,24 @@ fun AddEditCustomerDialog(
                 ) {
                     Text(
                         text = if (customerToEdit == null) "Add New Customer" else "Edit Customer",
-                        fontSize = 18.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
-                    IconButton(onClick = onDismiss) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedTextField(
                     value = name,
@@ -231,23 +239,23 @@ fun AddEditCustomerDialog(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(8.dp))
                                 .background(if (isSelected) activeColor.copy(alpha = 0.2f) else BgCardLight)
                                 .clickable { status = item }
-                                .padding(vertical = 8.dp),
+                                .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = item,
                                 color = if (isSelected) activeColor else TextSecondary,
-                                fontSize = 12.sp,
+                                fontSize = 11.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = address,
@@ -263,7 +271,7 @@ fun AddEditCustomerDialog(
                     )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Button(
                     onClick = {
@@ -287,15 +295,15 @@ fun AddEditCustomerDialog(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = RoundedCornerShape(12.dp),
+                        .height(42.dp),
+                    shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
                 ) {
                     Text(
                         text = if (customerToEdit == null) "Add Customer" else "Update Customer",
                         color = BgDark,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 13.5.sp
                     )
                 }
             }
