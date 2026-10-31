@@ -3,6 +3,8 @@ package internet.billing.manager.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,7 +44,7 @@ fun AddEditCustomerDialog(
         mutableStateOf(packages.firstOrNull { it.id == customerToEdit?.packageId } ?: packages.firstOrNull())
     }
     var monthlyBillText by remember {
-        mutableStateOf(customerToEdit?.monthlyBill?.toInt()?.toString() ?: selectedPackage?.monthlyPrice?.toInt()?.toString() ?: "500")
+        mutableStateOf(customerToEdit?.monthlyBill?.toInt()?.toString() ?: selectedPackage?.monthlyPrice?.toInt()?.toString() ?: "")
     }
     var dueAmountText by remember {
         mutableStateOf(customerToEdit?.dueAmount?.toInt()?.toString() ?: "0")
@@ -158,37 +160,37 @@ fun AddEditCustomerDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Text("Internet Package", color = TextSecondary, fontSize = 12.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    packages.take(4).forEach { pkg ->
-                        val isSelected = selectedPackage?.id == pkg.id
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) AccentCyan.copy(alpha = 0.25f) else BgCardLight)
-                                .clickable {
-                                    selectedPackage = pkg
-                                    monthlyBillText = pkg.monthlyPrice.toInt().toString()
-                                }
-                                .padding(vertical = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = pkg.name,
-                                color = if (isSelected) AccentCyan else TextSecondary,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                            )
+                if (packages.isNotEmpty()) {
+                    Text("Internet Package", color = TextSecondary, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(packages) { pkg ->
+                            val isSelected = selectedPackage?.id == pkg.id
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSelected) AccentCyan.copy(alpha = 0.25f) else BgCardLight)
+                                    .clickable {
+                                        selectedPackage = pkg
+                                        monthlyBillText = pkg.monthlyPrice.toInt().toString()
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = pkg.name,
+                                    color = if (isSelected) AccentCyan else TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
                         }
                     }
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
@@ -275,7 +277,7 @@ fun AddEditCustomerDialog(
 
                 Button(
                     onClick = {
-                        val monthlyPrice = monthlyBillText.toDoubleOrNull() ?: 500.0
+                        val monthlyPrice = monthlyBillText.toDoubleOrNull() ?: 0.0
                         val due = dueAmountText.toDoubleOrNull() ?: 0.0
                         val customer = (customerToEdit ?: Customer()).copy(
                             name = name,
@@ -283,8 +285,8 @@ fun AddEditCustomerDialog(
                             pppoeUsername = pppoeUsername.ifBlank { name.lowercase().replace(" ", "") },
                             phone = phone,
                             packageId = selectedPackage?.id ?: 0,
-                            packageName = selectedPackage?.name ?: "10 Mbps",
-                            speedMbps = selectedPackage?.speedMbps ?: 10,
+                            packageName = selectedPackage?.name ?: if (monthlyPrice > 0) "Custom Plan" else "",
+                            speedMbps = selectedPackage?.speedMbps ?: 0,
                             monthlyBill = monthlyPrice,
                             dueAmount = due,
                             status = status,

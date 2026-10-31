@@ -7,12 +7,12 @@ import androidx.room.PrimaryKey
 data class IspSettings(
     @PrimaryKey
     val id: Int = 1,
-    val companyName: String = "U-turn Technologies",
-    val tagline: String = "Connect People Better Tomorrow",
-    val phone: String = "01700000000",
-    val address: String = "Dhaka, Bangladesh",
+    val companyName: String = "",
+    val tagline: String = "",
+    val phone: String = "",
+    val address: String = "",
     val currencySymbol: String = "৳",
-    val smsTemplate: String = "Dear {NAME}, your ISP bill for {MONTH} is {DUE} ৳. Please pay on time. Thank you, {COMPANY}.",
+    val smsTemplate: String = "Dear {NAME}, your ISP bill for {MONTH} is {DUE} ৳. Please pay on time. Thank you.",
     val bandwidthBill: Double = 0.0,
     val discount: Double = 0.0
 )

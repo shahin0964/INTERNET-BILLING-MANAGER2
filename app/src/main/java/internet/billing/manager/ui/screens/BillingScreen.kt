@@ -32,6 +32,19 @@ import internet.billing.manager.data.model.Customer
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+private fun formatBillMonth(monthYear: String): String {
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        val date = parser.parse(monthYear)
+        if (date != null) formatter.format(date) else monthYear
+    } catch (e: Exception) {
+        monthYear
+    }
+}
 
 @Composable
 fun BillingScreen(
@@ -39,18 +52,18 @@ fun BillingScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val monthDisplay by viewModel.currentMonthYearDisplay.collectAsState()
-    val monthKey by viewModel.currentMonthYearKey.collectAsState()
     val allCustomers by viewModel.allCustomers.collectAsState()
+    val allBills by viewModel.allBills.collectAsState()
     val monthlyBills by viewModel.monthlyBills.collectAsState()
+    val billsToDisplay = if (allBills.isNotEmpty()) allBills else monthlyBills
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All Due Bills") }
-    val filters = listOf("All Due Bills", "Previous Due", "Active Lines", "Suspended", "All Bills")
+    var selectedFilter by remember { mutableStateOf("All Bills") }
+    val filters = listOf("All Bills", "Previous Due", "Active Lines", "Suspended")
 
     // Filter logic
-    val filteredBills = remember(monthlyBills, allCustomers, searchQuery, selectedFilter) {
-        monthlyBills.filter { bill ->
+    val filteredBills = remember(billsToDisplay, allCustomers, searchQuery, selectedFilter) {
+        billsToDisplay.filter { bill ->
             val customer = allCustomers.firstOrNull { it.id == bill.customerId }
             val name = customer?.name ?: bill.customerName
             val pppoe = customer?.pppoeUsername ?: ""
@@ -65,7 +78,6 @@ fun BillingScreen(
                     bill.id.toString().contains(searchQuery)
 
             val matchesFilter = when (selectedFilter) {
-                "All Due Bills" -> bill.dueAmount > 0 || !bill.isPaid
                 "Previous Due" -> previousDue > 0
                 "Active Lines" -> status.equals(Customer.STATUS_ACTIVE, ignoreCase = true)
                 "Suspended" -> status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
@@ -138,55 +150,7 @@ fun BillingScreen(
             }
         }
 
-        // 2. Month Selector Navigation (< October 2026 >)
-        item {
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                borderColor = CardBorderSubtle
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = { viewModel.previousMonth() },
-                        modifier = Modifier.size(30.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ChevronLeft,
-                            contentDescription = "Previous Month",
-                            tint = AccentCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-
-                    Text(
-                        text = monthDisplay,
-                        color = TextPrimary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    IconButton(
-                        onClick = { viewModel.nextMonth() },
-                        modifier = Modifier.size(30.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = "Next Month",
-                            tint = AccentCyan,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // 3. Search Bar
+        // 2. Search Bar
         item {
             OutlinedTextField(
                 value = searchQuery,
@@ -240,7 +204,7 @@ fun BillingScreen(
             )
         }
 
-        // 4. Filter Pills (All Due Bills, Previous Due, Active Lines, Suspended, All Bills)
+        // 3. Filter Pills (All Bills, Previous Due, Active Lines, Suspended)
         item {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -267,8 +231,8 @@ fun BillingScreen(
             }
         }
 
-        // 5. Customer Bills List
-        if (monthlyBills.isEmpty()) {
+        // 4. Customer Bills List
+        if (billsToDisplay.isEmpty()) {
             item {
                 val activeCount = allCustomers.count { it.status == Customer.STATUS_ACTIVE }
                 GlassCard(
@@ -289,7 +253,7 @@ fun BillingScreen(
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No bills generated for $monthDisplay yet",
+                            text = "No bills generated yet",
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp
@@ -436,10 +400,12 @@ fun BillingScreen(
                             }
                         }
 
+                        val billMonth = remember(bill.monthYear) { formatBillMonth(bill.monthYear) }
+
                         // Bill Reference and Month tag
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "BILL-${monthKey.replace("-", "")}-${bill.id} • $monthDisplay",
+                            text = "BILL-${bill.monthYear.replace("-", "")}-${bill.id} • $billMonth",
                             color = TextMuted,
                             fontSize = 10.sp
                         )
@@ -474,7 +440,7 @@ fun BillingScreen(
                             ) {
                                 Column {
                                     Text("Current Bill", color = TextSecondary, fontSize = 10.5.sp)
-                                    Text(monthDisplay, color = TextMuted, fontSize = 9.sp)
+                                    Text(billMonth, color = TextMuted, fontSize = 9.sp)
                                 }
                                 Text("৳${currentBill.toInt()}", color = TextPrimary, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
                             }
@@ -572,7 +538,7 @@ fun BillingScreen(
                                 onClick = {
                                     val phone = customer?.phone?.replace("+", "")?.replace("-", "")?.replace(" ", "") ?: ""
                                     val formattedPhone = if (phone.startsWith("0")) "88$phone" else phone
-                                    val msg = "Dear $displayName, your ISP bill for $monthDisplay is ৳${dueAmount.toInt()}. Total Payable: ৳${totalPayable.toInt()}. Please pay your bill on time. Thank you."
+                                    val msg = "Dear $displayName, your ISP bill for $billMonth is ৳${dueAmount.toInt()}. Total Payable: ৳${totalPayable.toInt()}. Please pay your bill on time. Thank you."
                                     if (phone.isNotBlank()) {
                                         val uri = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(msg)}")
                                         val intent = Intent(Intent.ACTION_VIEW, uri)

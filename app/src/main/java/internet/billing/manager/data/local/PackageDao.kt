@@ -24,6 +24,9 @@ interface PackageDao {
     @Delete
     suspend fun deletePackage(pkg: InternetPackage)
 
+    @Query("DELETE FROM packages WHERE name IN ('3 Mbps', '5 Mbps', '10 Mbps', '15 Mbps')")
+    suspend fun deleteLegacyDefaultPackages()
+
     @Query("SELECT COUNT(*) FROM packages")
     suspend fun getPackageCount(): Int
 }

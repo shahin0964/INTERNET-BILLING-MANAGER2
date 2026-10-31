@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +27,8 @@ import internet.billing.manager.ui.theme.*
 fun AddPackageDialog(
     packageToEdit: InternetPackage? = null,
     onDismiss: () -> Unit,
-    onSave: (InternetPackage) -> Unit
+    onSave: (InternetPackage) -> Unit,
+    onDelete: ((InternetPackage) -> Unit)? = null
 ) {
     var name by remember { mutableStateOf(packageToEdit?.name ?: "") }
     var speedText by remember { mutableStateOf(packageToEdit?.speedMbps?.toString() ?: "") }
@@ -150,31 +152,120 @@ fun AddPackageDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Button(
-                    onClick = {
-                        val speed = speedText.toIntOrNull() ?: 10
-                        val price = priceText.toDoubleOrNull() ?: 500.0
-                        onSave(
-                            (packageToEdit ?: InternetPackage(name = name, speedMbps = speed, monthlyPrice = price)).copy(
-                                name = name.ifBlank { "$speed Mbps" },
-                                speedMbps = speed,
-                                monthlyPrice = price,
-                                description = description,
-                                colorHex = selectedColor
+                if (packageToEdit != null && onDelete != null) {
+                    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showDeleteConfirm = true },
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, AccentRed),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = AccentRed.copy(alpha = 0.12f)
+                            ),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = AccentRed,
+                                modifier = Modifier.size(15.dp)
                             )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Delete",
+                                color = AccentRed,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.5.sp
+                            )
+                        }
+
+                        Button(
+                            onClick = {
+                                val speed = speedText.toIntOrNull() ?: 10
+                                val price = priceText.toDoubleOrNull() ?: 500.0
+                                onSave(
+                                    packageToEdit.copy(
+                                        name = name.ifBlank { "$speed Mbps" },
+                                        speedMbps = speed,
+                                        monthlyPrice = price,
+                                        description = description,
+                                        colorHex = selectedColor
+                                    )
+                                )
+                            },
+                            modifier = Modifier
+                                .weight(1.4f)
+                                .height(42.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                            enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
+                        ) {
+                            Text(
+                                text = "Update Package",
+                                color = BgDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    if (showDeleteConfirm) {
+                        AlertDialog(
+                            onDismissRequest = { showDeleteConfirm = false },
+                            title = { Text("Delete Package?", color = TextPrimary) },
+                            text = { Text("Are you sure you want to delete ${packageToEdit.name}?", color = TextSecondary) },
+                            containerColor = BgCard,
+                            confirmButton = {
+                                Button(
+                                    onClick = {
+                                        showDeleteConfirm = false
+                                        onDelete(packageToEdit)
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
+                                ) {
+                                    Text("Delete", color = Color.White)
+                                }
+                            },
+                            dismissButton = {
+                                OutlinedButton(onClick = { showDeleteConfirm = false }) {
+                                    Text("Cancel", color = TextSecondary)
+                                }
+                            }
                         )
-                    },
-                    modifier = Modifier.fillMaxWidth().height(42.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                    enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
-                ) {
-                    Text(
-                        text = if (packageToEdit == null) "Save Package" else "Update Package",
-                        color = BgDark,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.5.sp
-                    )
+                    }
+                } else {
+                    Button(
+                        onClick = {
+                            val speed = speedText.toIntOrNull() ?: 10
+                            val price = priceText.toDoubleOrNull() ?: 500.0
+                            onSave(
+                                InternetPackage(
+                                    name = name.ifBlank { "$speed Mbps" },
+                                    speedMbps = speed,
+                                    monthlyPrice = price,
+                                    description = description,
+                                    colorHex = selectedColor
+                                )
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth().height(42.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                        enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
+                    ) {
+                        Text(
+                            text = "Save Package",
+                            color = BgDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.5.sp
+                        )
+                    }
                 }
             }
         }

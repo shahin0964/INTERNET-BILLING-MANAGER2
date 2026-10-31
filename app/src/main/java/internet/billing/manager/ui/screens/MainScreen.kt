@@ -182,6 +182,21 @@ fun MainScreen(
         )
     }
 
+    if (viewModel.showPackagesManagerDialog) {
+        InternetPackagesManagerDialog(
+            packages = allPackages,
+            onDismiss = { viewModel.showPackagesManagerDialog = false },
+            onAddPackage = {
+                viewModel.packageToEdit = null
+                viewModel.showAddPackageDialog = true
+            },
+            onEditPackage = { pkg ->
+                viewModel.packageToEdit = pkg
+                viewModel.showAddPackageDialog = true
+            }
+        )
+    }
+
     if (viewModel.showAddPackageDialog) {
         AddPackageDialog(
             packageToEdit = viewModel.packageToEdit,
@@ -189,7 +204,16 @@ fun MainScreen(
                 viewModel.showAddPackageDialog = false
                 viewModel.packageToEdit = null
             },
-            onSave = { pkg -> viewModel.savePackage(pkg) }
+            onSave = { pkg ->
+                viewModel.savePackage(pkg)
+                viewModel.showAddPackageDialog = false
+                viewModel.packageToEdit = null
+            },
+            onDelete = { pkg ->
+                viewModel.deletePackage(pkg)
+                viewModel.showAddPackageDialog = false
+                viewModel.packageToEdit = null
+            }
         )
     }
 

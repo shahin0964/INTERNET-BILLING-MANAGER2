@@ -12,9 +12,9 @@ data class Customer(
     val pppoeUsername: String = "",
     val phone: String = "",
     val packageId: Long = 0,
-    val packageName: String = "10 Mbps",
-    val speedMbps: Int = 10,
-    val monthlyBill: Double = 600.0,
+    val packageName: String = "",
+    val speedMbps: Int = 0,
+    val monthlyBill: Double = 0.0,
     val dueAmount: Double = 0.0,
     val status: String = STATUS_ACTIVE, // "Active", "Suspended", "Inactive"
     val connectionType: String = "Fiber",

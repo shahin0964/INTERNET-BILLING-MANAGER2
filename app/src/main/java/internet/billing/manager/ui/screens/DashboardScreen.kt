@@ -75,7 +75,7 @@ fun DashboardScreen(
             ) {
                 Column {
                     Text(
-                        text = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies",
+                        text = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager",
                         color = TextPrimary,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
@@ -148,14 +148,14 @@ fun DashboardScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = ispSettings?.companyName ?: "U-turn Technologies",
+                                text = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Internet Billing Manager",
                                 color = TextPrimary,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp
                             )
                             Spacer(modifier = Modifier.height(1.dp))
                             Text(
-                                text = "Internet Billing Management",
+                                text = ispSettings?.tagline?.takeIf { it.isNotBlank() && !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: "Internet Billing Management",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )

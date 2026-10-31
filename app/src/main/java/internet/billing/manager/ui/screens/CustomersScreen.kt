@@ -342,8 +342,15 @@ fun CustomerCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                val planText = if (customer.speedMbps > 0) {
+                    "${customer.speedMbps} Mbps • ৳${customer.monthlyBill.toInt()}/mo"
+                } else if (customer.packageName.isNotBlank()) {
+                    "${customer.packageName} • ৳${customer.monthlyBill.toInt()}/mo"
+                } else {
+                    "৳${customer.monthlyBill.toInt()}/mo"
+                }
                 Text(
-                    text = "${customer.speedMbps} Mbps • ৳${customer.monthlyBill.toInt()}/mo",
+                    text = planText,
                     color = AccentCyan,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.SemiBold

@@ -123,6 +123,10 @@ class BillingViewModel(
         repository.getBillsForMonth(monthKey)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // All Bills across all months
+    val allBills: StateFlow<List<BillEntry>> = repository.getAllBills()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Expenses
     val monthlyExpenses: StateFlow<List<Expense>> = currentMonthYearKey.flatMapLatest { monthKey ->
         repository.getExpensesForMonth(monthKey)
@@ -158,6 +162,7 @@ class BillingViewModel(
     var showGenerateBillDialog by mutableStateOf(false)
     var showAddExpenseDialog by mutableStateOf(false)
 
+    var showPackagesManagerDialog by mutableStateOf(false)
     var showAddPackageDialog by mutableStateOf(false)
     var packageToEdit by mutableStateOf<InternetPackage?>(null)
 

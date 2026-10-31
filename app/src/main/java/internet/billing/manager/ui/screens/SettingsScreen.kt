@@ -97,7 +97,7 @@ fun SettingsScreen(
                     SettingsRowItem(
                         icon = Icons.Default.Business,
                         title = "ISP Business Information",
-                        subtitle = ispSettings?.companyName ?: "U-turn Technologies",
+                        subtitle = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Tap to set business info",
                         iconTint = AccentCyan,
                         onClick = { viewModel.showEditBusinessInfoDialog = true }
                     )
@@ -117,11 +117,10 @@ fun SettingsScreen(
                     SettingsRowItem(
                         icon = Icons.Default.Wifi,
                         title = "Internet Packages",
-                        subtitle = "Manage Internet packages",
+                        subtitle = if (packages.isNotEmpty()) "${packages.size} packages • Tap to manage" else "Tap to manage packages",
                         iconTint = AccentPurple,
                         onClick = {
-                            viewModel.packageToEdit = null
-                            viewModel.showAddPackageDialog = true
+                            viewModel.showPackagesManagerDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
@@ -226,12 +225,11 @@ fun SettingsScreen(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable {
-                        viewModel.packageToEdit = null
-                        viewModel.showAddPackageDialog = true
+                        viewModel.showPackagesManagerDialog = true
                     }
                 ) {
                     Text(
-                        text = "+ Add",
+                        text = "Manage",
                         color = AccentCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold
@@ -240,19 +238,54 @@ fun SettingsScreen(
             }
         }
 
-        item {
-            LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 2.dp)
-            ) {
-                items(packages, key = { it.id }) { pkg ->
-                    PackageCardItem(
-                        pkg = pkg,
-                        onClick = {
-                            viewModel.packageToEdit = pkg
-                            viewModel.showAddPackageDialog = true
-                        }
-                    )
+        if (packages.isEmpty()) {
+            item {
+                GlassCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.showPackagesManagerDialog = true
+                        },
+                    shape = RoundedCornerShape(10.dp),
+                    borderColor = CardBorderSubtle
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = AccentCyan,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "No packages yet. Tap to create a package",
+                            color = TextSecondary,
+                            fontSize = 11.5.sp
+                        )
+                    }
+                }
+            }
+        } else {
+            item {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 2.dp)
+                ) {
+                    items(packages, key = { it.id }) { pkg ->
+                        PackageCardItem(
+                            pkg = pkg,
+                            onClick = {
+                                viewModel.packageToEdit = pkg
+                                viewModel.showAddPackageDialog = true
+                            }
+                        )
+                    }
                 }
             }
         }

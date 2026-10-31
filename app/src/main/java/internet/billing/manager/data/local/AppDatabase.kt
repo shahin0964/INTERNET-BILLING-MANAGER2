@@ -55,59 +55,43 @@ abstract class AppDatabase : RoomDatabase() {
                 super.onCreate(db)
                 INSTANCE?.let { database ->
                     scope.launch(Dispatchers.IO) {
-                        populateInitialConfig(
-                            database.packageDao(),
-                            database.settingsDao()
-                        )
+                        populateInitialConfig(database.settingsDao())
+                    }
+                }
+            }
+
+            override fun onOpen(db: SupportSQLiteDatabase) {
+                super.onOpen(db)
+                INSTANCE?.let { database ->
+                    scope.launch(Dispatchers.IO) {
+                        // Purge legacy fake settings & packages if present in existing database
+                        val settings = database.settingsDao().getSettingsSync()
+                        if (settings != null && (settings.companyName.equals("U-turn Technologies", ignoreCase = true) || settings.phone == "01700000000")) {
+                            database.settingsDao().insertOrUpdate(
+                                settings.copy(
+                                    companyName = "",
+                                    tagline = "",
+                                    phone = "",
+                                    address = ""
+                                )
+                            )
+                        }
+                        database.packageDao().deleteLegacyDefaultPackages()
                     }
                 }
             }
 
             suspend fun populateInitialConfig(
-                packageDao: PackageDao,
                 settingsDao: SettingsDao
             ) {
-                // Initialize default ISP Internet packages as shown in UI design
-                val defaultPackages = listOf(
-                    InternetPackage(
-                        name = "3 Mbps",
-                        speedMbps = 3,
-                        monthlyPrice = 300.0,
-                        description = "Starter fiber connection",
-                        colorHex = "#2979FF" // Blue
-                    ),
-                    InternetPackage(
-                        name = "5 Mbps",
-                        speedMbps = 5,
-                        monthlyPrice = 400.0,
-                        description = "Standard home internet",
-                        colorHex = "#00E676" // Green
-                    ),
-                    InternetPackage(
-                        name = "10 Mbps",
-                        speedMbps = 10,
-                        monthlyPrice = 600.0,
-                        description = "Ultra-fast streaming fiber",
-                        colorHex = "#7C4DFF" // Purple
-                    ),
-                    InternetPackage(
-                        name = "15 Mbps",
-                        speedMbps = 15,
-                        monthlyPrice = 800.0,
-                        description = "Gigabit pro business/gaming",
-                        colorHex = "#FF9100" // Orange
-                    )
-                )
-                packageDao.insertAll(defaultPackages)
-
-                // Initialize default ISP Settings (Customizable by user in Settings)
+                // Initialize clean ISP Settings (Customizable by user in Settings)
                 settingsDao.insertOrUpdate(
                     IspSettings(
                         id = 1,
-                        companyName = "U-turn Technologies",
-                        tagline = "Connect People Better Tomorrow",
-                        phone = "01700000000",
-                        address = "Dhaka, Bangladesh",
+                        companyName = "",
+                        tagline = "",
+                        phone = "",
+                        address = "",
                         currencySymbol = "৳"
                     )
                 )

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">IBM</string>
     <string name="full_app_name">INTERNET BILLING MANAGER</string>
-    <string name="company_default">U-turn Technologies</string>
-    <string name="tagline_default">Connect People Better Tomorrow</string>
+    <string name="company_default">Internet Billing Manager</string>
+    <string name="tagline_default">Internet Billing Management</string>
     <string name="currency_symbol">৳</string>
 </resources>

@@ -490,12 +490,17 @@ fun EditBusinessInfoDialog(
     onDismiss: () -> Unit,
     onSave: (IspSettings) -> Unit
 ) {
-    var companyName by remember { mutableStateOf(currentSettings?.companyName ?: "U-turn Technologies") }
-    var tagline by remember { mutableStateOf(currentSettings?.tagline ?: "Connect People Better Tomorrow") }
-    var phone by remember { mutableStateOf(currentSettings?.phone ?: "01700000000") }
-    var address by remember { mutableStateOf(currentSettings?.address ?: "Dhaka, Bangladesh") }
-    var bandwidthBillText by remember { mutableStateOf(currentSettings?.bandwidthBill?.toInt()?.toString() ?: "0") }
-    var discountText by remember { mutableStateOf(currentSettings?.discount?.toInt()?.toString() ?: "0") }
+    val initialName = currentSettings?.companyName?.takeIf { !it.equals("U-turn Technologies", ignoreCase = true) } ?: ""
+    val initialTagline = currentSettings?.tagline?.takeIf { !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: ""
+    val initialPhone = currentSettings?.phone?.takeIf { it != "01700000000" } ?: ""
+    val initialAddress = currentSettings?.address?.takeIf { !it.equals("Dhaka, Bangladesh", ignoreCase = true) } ?: ""
+
+    var companyName by remember { mutableStateOf(initialName) }
+    var tagline by remember { mutableStateOf(initialTagline) }
+    var phone by remember { mutableStateOf(initialPhone) }
+    var address by remember { mutableStateOf(initialAddress) }
+    var bandwidthBillText by remember { mutableStateOf(currentSettings?.bandwidthBill?.toInt()?.takeIf { it > 0 }?.toString() ?: "0") }
+    var discountText by remember { mutableStateOf(currentSettings?.discount?.toInt()?.takeIf { it > 0 }?.toString() ?: "0") }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
