@@ -39,10 +39,34 @@ jobs:
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
 
-      - name: Build Android APK
+      - name: Setup Release Keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > app/release.jks
+          echo "Keystore successfully decoded to app/release.jks"
+
+      - name: Build Android Release APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -o pipefail
-          ./gradlew :app:assembleDebug -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }} --stacktrace 2>&1 | tee build_log.txt
+          ./gradlew :app:assembleRelease -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }} --stacktrace 2>&1 | tee build_log.txt
+
+      - name: Verify APK Signature
+        run: |
+          echo "=== Verifying APK Signature ==="
+          APK_FILE=$(find app/build/outputs/apk/release -type f -name "*.apk" 2>/dev/null | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find . -type f -name "*.apk" 2>/dev/null | head -n 1)
+          fi
+          echo "Target APK: $APK_FILE"
+          BUILD_TOOLS_DIR=$(ls -d $ANDROID_HOME/build-tools/* 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$BUILD_TOOLS_DIR" ] && [ -f "$BUILD_TOOLS_DIR/apksigner" ]; then
+            echo "Using apksigner from $BUILD_TOOLS_DIR"
+            "$BUILD_TOOLS_DIR/apksigner" verify --verbose "$APK_FILE" || true
+          fi
 
       - name: Push Error Log on Failure
         if: failure()
@@ -58,9 +82,11 @@ jobs:
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          echo "=== Searching for generated APK ==="
-          find . -type f -name "*.apk" || true
-          APK_FILE=$(find . -type f -name "*.apk" 2>/dev/null | head -n 1)
+          echo "=== Searching for generated release APK ==="
+          APK_FILE=$(find app/build/outputs/apk/release -type f -name "*.apk" 2>/dev/null | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            APK_FILE=$(find . -type f -name "*.apk" 2>/dev/null | head -n 1)
+          fi
           echo "Found APK: $APK_FILE"
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             cp "$APK_FILE" release-artifacts/IBM-latest.apk

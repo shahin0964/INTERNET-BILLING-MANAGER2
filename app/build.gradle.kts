@@ -9,8 +9,8 @@ android {
     namespace = "internet.billing.manager"
     compileSdk = 35
 
-    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 34
-    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.34"
+    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 35
+    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.35"
 
     defaultConfig {
         applicationId = "internet.billing.manager"
@@ -22,10 +22,31 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val keystoreFile = if (file("release.jks").exists()) {
+                file("release.jks")
+            } else if (file("../release.jks").exists()) {
+                file("../release.jks")
+            } else {
+                null
+            }
+
+            if (keystoreFile != null) {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            } else {
+                initWith(getByName("debug"))
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
