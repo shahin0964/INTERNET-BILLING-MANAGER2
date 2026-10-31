@@ -20,6 +20,7 @@ interface AppStrings {
     val monthlyCollection: String
     val todayCollection: String
     val billingAnalytics: String
+    val monthlyCollectionOverview: String
     val totalGenerated: String
     val collected: String
     val outstanding: String
@@ -255,6 +256,7 @@ object EnglishStrings : AppStrings {
     override val monthlyCollection = "Monthly Collection"
     override val todayCollection = "Today Collection"
     override val billingAnalytics = "Billing Analytics"
+    override val monthlyCollectionOverview = "Monthly Collection Overview"
     override val totalGenerated = "Total Generated"
     override val collected = "Collected"
     override val outstanding = "Outstanding"
@@ -490,6 +492,7 @@ object BanglaStrings : AppStrings {
     override val monthlyCollection = "মাসিক আদায়"
     override val todayCollection = "আজকের আদায়"
     override val billingAnalytics = "বিলিং বিশ্লেষণ"
+    override val monthlyCollectionOverview = "মাসিক আদায়ের চিত্র"
     override val totalGenerated = "মোট বিল"
     override val collected = "আদায় হয়েছে"
     override val outstanding = "বকেয়া রয়েছে"

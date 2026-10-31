@@ -26,11 +26,22 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.painterResource
+import internet.billing.manager.R
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.MetricStatCard
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -352,109 +363,16 @@ fun DashboardScreen(
             }
         }
 
-        // 5. Billing Analytics Card
+        // 5. Modern Animated Billing Analytics Card
         item {
-            GlassCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                borderColor = CardBorder
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = appStrings.billingAnalytics,
-                            color = TextPrimary,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { onNavigateToBilling() }
-                        ) {
-                            Text(
-                                text = appStrings.viewAll,
-                                color = AccentCyan,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Icon(
-                                imageVector = Icons.Default.ChevronRight,
-                                contentDescription = null,
-                                tint = AccentCyan,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "${appStrings.totalGenerated}: ৳${totalGenerated.toInt()}",
-                        color = TextSecondary,
-                        fontSize = 12.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Two-Tone Progress Bar
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(8.dp)
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(AccentOrange.copy(alpha = 0.8f))
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth(if (collectedPercent > 0) collectedPercent / 100f else 0.01f)
-                                .fillMaxHeight()
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(AccentGreen)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Legend Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(AccentGreen)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "${appStrings.collected} ৳${monthlyCollection.toInt()} ($collectedPercent%)",
-                                color = TextSecondary,
-                                fontSize = 11.sp
-                            )
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(7.dp)
-                                    .clip(CircleShape)
-                                    .background(AccentOrange)
-                            )
-                            Spacer(modifier = Modifier.width(5.dp))
-                            Text(
-                                text = "${appStrings.outstanding} ৳${totalDue.toInt()} ($outstandingPercent%)",
-                                color = TextSecondary,
-                                fontSize = 11.sp
-                            )
-                        }
-                    }
-                }
-            }
+            ModernBillingAnalyticsCard(
+                totalGenerated = totalGenerated,
+                monthlyCollection = monthlyCollection,
+                totalDue = totalDue,
+                collectedPercent = collectedPercent,
+                outstandingPercent = outstandingPercent,
+                onNavigateToBilling = onNavigateToBilling
+            )
         }
 
         // 6. Recent Collections Card
@@ -577,3 +495,427 @@ fun DashboardScreen(
         }
     }
 }
+
+@Composable
+fun ModernBillingAnalyticsCard(
+    totalGenerated: Double,
+    monthlyCollection: Double,
+    totalDue: Double,
+    collectedPercent: Int,
+    outstandingPercent: Int,
+    onNavigateToBilling: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
+    // Smooth animation for Donut Chart progress
+    val targetProgress = if (totalGenerated > 0) (collectedPercent / 100f) else 0f
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (isVisible) targetProgress else 0f,
+        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        label = "DonutProgress"
+    )
+
+    // Infinite breathing & pulsing for 3D Router
+    val infiniteTransition = rememberInfiniteTransition(label = "RouterAnimation")
+    val routerGlowAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.85f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "RouterGlow"
+    )
+    val routerFloatOffset by infiniteTransition.animateFloat(
+        initialValue = -2f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "RouterFloat"
+    )
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                Brush.linearGradient(
+                    listOf(
+                        Color(0xFF0C1935),
+                        Color(0xFF081326),
+                        Color(0xFF050B16)
+                    )
+                )
+            )
+            .border(
+                BorderStroke(
+                    1.2.dp,
+                    Brush.linearGradient(
+                        listOf(
+                            Color(0xFF1E3A68),
+                            Color(0xFF00E5FF).copy(alpha = 0.4f),
+                            Color(0xFF132442)
+                        )
+                    )
+                ),
+                RoundedCornerShape(20.dp)
+            )
+            .padding(14.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(13.dp)
+        ) {
+            // 1. Top Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color(0xFF1E88E5), Color(0xFF0D47A1))
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.BarChart,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = appStrings.billingAnalytics,
+                            color = TextPrimary,
+                            fontSize = 16.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = appStrings.monthlyCollectionOverview,
+                            color = TextSecondary.copy(alpha = 0.8f),
+                            fontSize = 11.5.sp
+                        )
+                    }
+                }
+
+                // View All > Pill Button
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color(0xFF13223B).copy(alpha = 0.9f))
+                        .border(BorderStroke(1.dp, Color(0xFF243B63)), RoundedCornerShape(20.dp))
+                        .clickable { onNavigateToBilling() }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = appStrings.viewAll,
+                            color = Color.White.copy(alpha = 0.95f),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = Color.White.copy(alpha = 0.95f),
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+                }
+            }
+
+            // 2. Middle Row: Total Generated + Animated Router + Animated Donut Chart
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Left Block: Total Generated
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1.15f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF11213B))
+                            .border(BorderStroke(1.dp, Color(0xFF223A62)), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = null,
+                            tint = Color(0xFF64B5F6),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Wifi,
+                            contentDescription = null,
+                            tint = AccentCyan,
+                            modifier = Modifier
+                                .size(11.dp)
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 2.dp, bottom = 2.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Column {
+                        Text(
+                            text = appStrings.totalGenerated,
+                            color = TextSecondary.copy(alpha = 0.8f),
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "৳${formatAmount(totalGenerated)}",
+                            color = TextPrimary,
+                            fontSize = 17.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                // Center Block: Glowing Animated 3D Router
+                Box(
+                    modifier = Modifier
+                        .weight(0.95f)
+                        .height(68.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Cyan glow aura behind router
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .alpha(routerGlowAlpha * 0.65f)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(AccentCyan.copy(alpha = 0.5f), Color.Transparent)
+                                )
+                            )
+                    )
+
+                    // Subtle cyan horizon wave line
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth(0.85f)
+                            .height(1.dp)
+                            .background(
+                                Brush.horizontalGradient(
+                                    listOf(
+                                        Color.Transparent,
+                                        AccentCyan.copy(alpha = 0.5f * routerGlowAlpha),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                    )
+
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_analytics_router),
+                        contentDescription = "Wi-Fi Router",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .offset(y = routerFloatOffset.dp)
+                    )
+                }
+
+                // Right Block: Dual-color Donut Chart
+                Box(
+                    modifier = Modifier.size(84.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.fillMaxSize()) {
+                        val strokeWidth = 10.dp.toPx()
+
+                        // Orange arc (Outstanding)
+                        drawCircle(
+                            color = Color(0xFFFF9100),
+                            style = Stroke(width = strokeWidth)
+                        )
+
+                        // Green sweep arc (Collected)
+                        if (animatedProgress > 0f) {
+                            drawArc(
+                                brush = Brush.sweepGradient(
+                                    listOf(
+                                        Color(0xFF00E676),
+                                        Color(0xFF00C853),
+                                        Color(0xFF00E676)
+                                    )
+                                ),
+                                startAngle = -90f,
+                                sweepAngle = animatedProgress * 360f,
+                                useCenter = false,
+                                style = Stroke(
+                                    width = strokeWidth,
+                                    cap = if (animatedProgress in 0.02f..0.98f) StrokeCap.Round else StrokeCap.Butt
+                                )
+                            )
+                        }
+                    }
+
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "${(animatedProgress * 100).toInt()}%",
+                            color = TextPrimary,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        Text(
+                            text = appStrings.collected,
+                            color = TextSecondary.copy(alpha = 0.8f),
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // 3. Bottom Row: Collected & Outstanding Cards
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Collected Card
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF08261E), Color(0xFF041812))
+                            )
+                        )
+                        .border(
+                            BorderStroke(1.dp, Color(0xFF00C853).copy(alpha = 0.45f)),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .padding(horizontal = 9.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF00C853).copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Savings,
+                            contentDescription = null,
+                            tint = Color(0xFF00E676),
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(7.dp))
+
+                    Column {
+                        Text(
+                            text = appStrings.collected,
+                            color = Color(0xFF69F0AE),
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "৳${formatAmount(monthlyCollection)} ($collectedPercent%)",
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                    }
+                }
+
+                // Outstanding Card
+                Row(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(Color(0xFF331D08), Color(0xFF1E0F03))
+                            )
+                        )
+                        .border(
+                            BorderStroke(1.dp, Color(0xFFFF9100).copy(alpha = 0.45f)),
+                            RoundedCornerShape(14.dp)
+                        )
+                        .padding(horizontal = 9.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFFF9100).copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFFF9100),
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(7.dp))
+
+                    Column {
+                        Text(
+                            text = appStrings.outstanding,
+                            color = Color(0xFFFFB74D),
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                        Text(
+                            text = "৳${formatAmount(totalDue)} ($outstandingPercent%)",
+                            color = TextPrimary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatAmount(amount: Double): String {
+    return NumberFormat.getIntegerInstance(Locale.US).format(amount.toLong())
+}
+
