@@ -96,6 +96,10 @@ interface AppStrings {
     val todayCollectedCard: String
     val todayExpenseCard: String
     val netBalanceCard: String
+    val bandwidthBillTitle: String
+    val monthlyProfitTitle: String
+    val bandwidthBillSubtitle: String
+    val monthlyProfitSubtitle: String
     val paymentHistory: String
     val noHistoryFound: String
 
@@ -327,6 +331,10 @@ object EnglishStrings : AppStrings {
     override val todayCollectedCard = "Today's Collection"
     override val todayExpenseCard = "Today's Expense"
     override val netBalanceCard = "Net Balance"
+    override val bandwidthBillTitle = "Bandwidth Bill"
+    override val monthlyProfitTitle = "Monthly Profit"
+    override val bandwidthBillSubtitle = "Upstream cost (Tap to add)"
+    override val monthlyProfitSubtitle = "Total Bill - Expenses"
     override val paymentHistory = "Payment History"
     override val noHistoryFound = "No collection history found"
 
@@ -558,6 +566,10 @@ object BanglaStrings : AppStrings {
     override val todayCollectedCard = "আজকের আদায়"
     override val todayExpenseCard = "আজকের খরচ"
     override val netBalanceCard = "অবশিষ্ট ক্যাশ"
+    override val bandwidthBillTitle = "ব্যান্ডউইথ বিল"
+    override val monthlyProfitTitle = "মাসিক লাভ"
+    override val bandwidthBillSubtitle = "ব্যান্ডউইথ খরচ (যোগ করতে ট্যাপ করুন)"
+    override val monthlyProfitSubtitle = "মোট বিল - মোট খরচ"
     override val paymentHistory = "আদায়ের ইতিহাস"
     override val noHistoryFound = "কোনো আদায়ের ইতিহাস পাওয়া যায়নি"
 

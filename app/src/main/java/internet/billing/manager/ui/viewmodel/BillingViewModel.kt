@@ -213,6 +213,14 @@ class BillingViewModel(
         repository.getCategorySumsForMonth(monthKey)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val monthlyBandwidthBill: StateFlow<Double> = monthlyExpenses.map { expenses ->
+        expenses.filter {
+            it.category.equals(Expense.CAT_BANDWIDTH_BILL, ignoreCase = true) ||
+            it.category.contains("bandwidth", ignoreCase = true) ||
+            it.title.contains("bandwidth", ignoreCase = true)
+        }.sumOf { it.amount }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
     // UI Dialog States
     var showAddCustomerDialog by mutableStateOf(false)
     var customerToEdit by mutableStateOf<Customer?>(null)
@@ -226,6 +234,14 @@ class BillingViewModel(
     var showAddManualBillDialog by mutableStateOf(false)
     var paymentToDelete by mutableStateOf<PaymentTransaction?>(null)
     var showAddExpenseDialog by mutableStateOf(false)
+    var defaultExpenseCategory by mutableStateOf(Expense.CAT_BANDWIDTH_BILL)
+    var defaultExpenseTitle by mutableStateOf("")
+
+    fun openAddExpense(category: String = Expense.CAT_BANDWIDTH_BILL, title: String = "") {
+        defaultExpenseCategory = category
+        defaultExpenseTitle = title
+        showAddExpenseDialog = true
+    }
 
     var showPackagesManagerDialog by mutableStateOf(false)
     var showAddPackageDialog by mutableStateOf(false)
@@ -351,8 +367,14 @@ class BillingViewModel(
 
     fun saveExpense(expense: Expense) {
         viewModelScope.launch {
-            repository.insertExpense(expense)
+            val toSave = if (expense.monthYear.isBlank()) {
+                expense.copy(monthYear = currentMonthYearKey.value)
+            } else {
+                expense
+            }
+            repository.insertExpense(toSave)
             showAddExpenseDialog = false
+            defaultExpenseTitle = ""
         }
     }
 

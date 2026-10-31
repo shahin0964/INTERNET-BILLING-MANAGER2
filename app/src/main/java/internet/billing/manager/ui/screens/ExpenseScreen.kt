@@ -48,8 +48,9 @@ fun ExpenseScreen(
     val tabs = listOf("Dashboard", "Details", "Analytics")
 
     val categoryColors = mapOf(
+        Expense.CAT_BANDWIDTH_BILL to AccentBlue,
         Expense.CAT_OFFICE_RENT to AccentOrange,
-        Expense.CAT_MAINTENANCE to AccentBlue,
+        Expense.CAT_MAINTENANCE to AccentCyan,
         Expense.CAT_EQUIPMENT to AccentPurple,
         Expense.CAT_INTERNET to AccentGreen,
         Expense.CAT_OTHER to Color(0xFF90A4AE)

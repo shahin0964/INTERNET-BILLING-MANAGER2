@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import internet.billing.manager.data.model.Expense
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.GlowStatCard
 import internet.billing.manager.ui.localization.appStrings
@@ -39,12 +40,14 @@ fun CollectionScreen(
     val totalDue by viewModel.totalOutstandingDue.collectAsState()
     val outflow by viewModel.expenseOutflow.collectAsState()
     val ispSettings by viewModel.ispSettings.collectAsState()
+    val dynamicBandwidthBill by viewModel.monthlyBandwidthBill.collectAsState()
     val recentPayments by viewModel.recentPayments.collectAsState()
 
-    val bandwidthBill = ispSettings?.bandwidthBill ?: 0.0
+    val bandwidthBill = if (dynamicBandwidthBill > 0.0) dynamicBandwidthBill else (ispSettings?.bandwidthBill ?: 0.0)
     val discount = ispSettings?.discount ?: 0.0
     val previousDue = (totalDue - monthlyBill).coerceAtLeast(0.0)
-    val monthlyProfit = (totalCollected - bandwidthBill - outflow).coerceAtLeast(0.0)
+    val otherExpenses = (outflow - dynamicBandwidthBill).coerceAtLeast(0.0)
+    val monthlyProfit = (monthlyBill - bandwidthBill - otherExpenses).coerceAtLeast(0.0)
 
     LazyColumn(
         modifier = modifier
@@ -195,19 +198,26 @@ fun CollectionScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     GlowStatCard(
-                        title = "Bandwidth Bill",
+                        title = appStrings.bandwidthBillTitle,
                         value = "৳${bandwidthBill.toInt()}",
                         accentColor = AccentBlue,
                         icon = Icons.Default.Speed,
-                        subtitle = "Upstream cost",
-                        modifier = Modifier.weight(1f)
+                        subtitle = appStrings.bandwidthBillSubtitle,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                viewModel.openAddExpense(
+                                    category = Expense.CAT_BANDWIDTH_BILL,
+                                    title = "Bandwidth Bill"
+                                )
+                            }
                     )
                     GlowStatCard(
-                        title = "Monthly Profit",
+                        title = appStrings.monthlyProfitTitle,
                         value = "৳${monthlyProfit.toInt()}",
                         accentColor = AccentGold,
                         icon = Icons.Default.TrendingUp,
-                        subtitle = "Est. net profit",
+                        subtitle = appStrings.monthlyProfitSubtitle,
                         modifier = Modifier.weight(1f)
                     )
                 }

@@ -291,11 +291,14 @@ fun CollectPaymentDialog(
 
 @Composable
 fun AddExpenseDialog(
+    initialCategory: String = Expense.CAT_BANDWIDTH_BILL,
+    initialTitle: String = "",
+    currentMonthKey: String = "",
     onDismiss: () -> Unit,
     onSave: (Expense) -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf(Expense.CAT_MAINTENANCE) }
+    var title by remember { mutableStateOf(initialTitle.ifBlank { if (initialCategory == Expense.CAT_BANDWIDTH_BILL) "Bandwidth Bill" else "" }) }
+    var selectedCategory by remember { mutableStateOf(initialCategory) }
     var amountText by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
 
@@ -368,7 +371,12 @@ fun AddExpenseDialog(
                                         .weight(1f)
                                         .clip(RoundedCornerShape(6.dp))
                                         .background(if (isSelected) AccentPurple.copy(alpha = 0.25f) else BgCardLight)
-                                        .clickable { selectedCategory = cat }
+                                        .clickable {
+                                            selectedCategory = cat
+                                            if (cat == Expense.CAT_BANDWIDTH_BILL && (title.isBlank() || Expense.ALL_CATEGORIES.contains(title))) {
+                                                title = "Bandwidth Bill"
+                                            }
+                                        }
                                         .padding(vertical = 6.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -425,15 +433,16 @@ fun AddExpenseDialog(
                 Button(
                     onClick = {
                         val amount = amountText.toDoubleOrNull() ?: 0.0
-                        if (title.isNotBlank() && amount > 0) {
+                        val finalTitle = title.ifBlank { selectedCategory }
+                        if (finalTitle.isNotBlank() && amount > 0) {
                             onSave(
                                 Expense(
-                                    title = title,
+                                    title = finalTitle.trim(),
                                     category = selectedCategory,
                                     amount = amount,
                                     dateMillis = System.currentTimeMillis(),
-                                    monthYear = currentMonthYear,
-                                    note = note
+                                    monthYear = if (currentMonthKey.isNotBlank()) currentMonthKey else currentMonthYear,
+                                    note = note.trim()
                                 )
                             )
                         }
@@ -443,7 +452,7 @@ fun AddExpenseDialog(
                         .height(42.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = AccentPurple),
-                    enabled = title.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0
+                    enabled = (title.isNotBlank() || selectedCategory.isNotBlank()) && (amountText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text(
                         text = appStrings.saveExpense,

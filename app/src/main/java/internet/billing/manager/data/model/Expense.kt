@@ -15,6 +15,7 @@ data class Expense(
     val note: String = ""
 ) {
     companion object {
+        const val CAT_BANDWIDTH_BILL = "Bandwidth Bill"
         const val CAT_OFFICE_RENT = "Office Rent"
         const val CAT_MAINTENANCE = "Maintenance"
         const val CAT_EQUIPMENT = "Equipment"
@@ -22,6 +23,7 @@ data class Expense(
         const val CAT_OTHER = "Other"
 
         val ALL_CATEGORIES = listOf(
+            CAT_BANDWIDTH_BILL,
             CAT_OFFICE_RENT,
             CAT_MAINTENANCE,
             CAT_EQUIPMENT,

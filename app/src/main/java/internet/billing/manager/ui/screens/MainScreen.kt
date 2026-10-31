@@ -218,8 +218,15 @@ fun MainScreen(
     }
 
     if (viewModel.showAddExpenseDialog) {
+        val currentMonthKey by viewModel.currentMonthYearKey.collectAsState()
         AddExpenseDialog(
-            onDismiss = { viewModel.showAddExpenseDialog = false },
+            initialCategory = viewModel.defaultExpenseCategory,
+            initialTitle = viewModel.defaultExpenseTitle,
+            currentMonthKey = currentMonthKey,
+            onDismiss = {
+                viewModel.showAddExpenseDialog = false
+                viewModel.defaultExpenseTitle = ""
+            },
             onSave = { expense -> viewModel.saveExpense(expense) }
         )
     }
