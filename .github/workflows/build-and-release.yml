@@ -72,32 +72,27 @@ jobs:
             exit 1
           fi
 
+      - name: Prepare Release Notes
+        run: |
+          if [ -f RELEASE_NOTES.md ] && [ -s RELEASE_NOTES.md ]; then
+            cat RELEASE_NOTES.md > release_body.md
+          else
+            echo "# 📱 INTERNET BILLING MANAGER (IBM) - v${{ env.VERSION_NAME }}" > release_body.md
+            echo "⚡ Latest release build automatically generated and published via GitHub Actions." >> release_body.md
+          fi
+          echo "" >> release_body.md
+          echo "---" >> release_body.md
+          echo "**বিল্ড সংস্করণ**: \`v${{ env.VERSION_NAME }}\` (Build #${{ env.VERSION_CODE }})" >> release_body.md
+          echo "**কমিট**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> release_body.md
+          echo "**কমিট বার্তা**: ${{ github.event.head_commit.message }}" >> release_body.md
+
       - name: Update GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: "v${{ env.VERSION_NAME }}"
           commit: ${{ github.sha }}
           name: "v${{ env.VERSION_NAME }}"
-          body: |
-            ## 📱 INTERNET BILLING MANAGER (IBM)
-            **সর্বশেষ রিলিজ (v${{ env.VERSION_NAME }})**
-
-            এই রিলিজটি প্রতিটি আপডেটে স্বয়ংক্রিয়ভাবে প্রতিস্থাপন ও আপডেট করা হয়। নিচের লিঙ্ক থেকে সরাসরি লেটেস্ট APK ফাইলটি ডাউনলোড করে ফোনে ইনস্টল করতে পারবেন।
-
-            ### 📋 বিল্ড বিবরণ:
-            - **App Name**: INTERNET BILLING MANAGER
-            - **Short / Launcher Name**: `IBM`
-            - **App Version**: `v${{ env.VERSION_NAME }}` (Build #${{ env.VERSION_CODE }})
-            - **Package**: `internet.billing.manager`
-            - **Java / JDK Version**: JDK 21 (Latest LTS)
-            - **Gradle & Kotlin Toolchain**: Latest (Kotlin 2.0.21, Compose 2024.10, AGP 8.7)
-            - **সর্বশেষ আপডেট**: ${{ github.event.head_commit.timestamp }}
-            - **কমিট**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
-            - **কমিট বার্তা**: ${{ github.event.head_commit.message }}
-
-            ---
-            ### 📥 ডাউনলোড লিঙ্ক:
-            নিচের **`IBM-latest.apk`** বা **`IBM-v${{ env.VERSION_NAME }}.apk`** ফাইলে ক্লিক করে ডাউনলোড ও ইনস্টল করুন।
+          bodyFile: "release_body.md"
           artifacts: "release-artifacts/*"
           allowUpdates: true
           replacesArtifacts: true

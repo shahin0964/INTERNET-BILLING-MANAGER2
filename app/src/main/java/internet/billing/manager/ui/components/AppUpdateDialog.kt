@@ -399,18 +399,22 @@ fun AppUpdateDialog(
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(min = 70.dp, max = 150.dp)
-                                    .clip(RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(10.dp))
                                     .background(BgCardLight)
-                                    .border(1.dp, CardBorderSubtle, RoundedCornerShape(8.dp))
-                                    .padding(10.dp)
-                                    .verticalScroll(rememberScrollState())
+                                    .border(1.dp, CardBorderSubtle, RoundedCornerShape(10.dp))
+                                    .padding(12.dp)
                             ) {
+                                val changelogCleaned = remember(release.changelog) {
+                                    release.changelog
+                                        .replace(Regex("^#+\\s*", RegexOption.MULTILINE), "")
+                                        .replace("`", "")
+                                        .trim()
+                                }
                                 Text(
-                                    text = release.changelog.ifBlank { "Latest release build automatically generated and published via GitHub Actions." },
+                                    text = changelogCleaned.ifBlank { "Latest release build automatically generated and published via GitHub Actions." },
                                     color = TextSecondary,
-                                    fontSize = 11.sp,
-                                    lineHeight = 15.5.sp
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 17.sp
                                 )
                             }
 
