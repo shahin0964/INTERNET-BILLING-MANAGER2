@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.Customer
+import internet.billing.manager.ui.components.CustomerDetailsDialog
 import internet.billing.manager.ui.components.CustomerStatusBadge
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.localization.appStrings
@@ -47,8 +48,6 @@ fun CustomersScreen(
     val activeCount by viewModel.activeCustomerCount.collectAsState()
     val suspendedCount by viewModel.suspendedCustomerCount.collectAsState()
     val inactiveCount by viewModel.inactiveCustomerCount.collectAsState()
-
-    var customerToDelete by remember { mutableStateOf<Customer?>(null) }
 
     Column(
         modifier = modifier
@@ -203,6 +202,9 @@ fun CustomersScreen(
                 items(customers, key = { it.id }) { customer ->
                     CustomerCard(
                         customer = customer,
+                        onOpenDetails = {
+                            viewModel.selectedCustomerForDetails = customer
+                        },
                         onCall = { launchPhoneCall(context, customer.phone) },
                         onSms = { launchSms(context, customer.phone, customer.name, customer.dueAmount) },
                         onWhatsApp = { launchWhatsApp(context, customer.phone) },
@@ -211,7 +213,7 @@ fun CustomersScreen(
                             viewModel.showAddCustomerDialog = true
                         },
                         onDelete = {
-                            customerToDelete = customer
+                            viewModel.customerToDelete = customer
                         },
                         onCollect = {
                             viewModel.customerForPayment = customer
@@ -222,43 +224,12 @@ fun CustomersScreen(
             }
         }
     }
-
-    // Delete Confirmation Dialog
-    if (customerToDelete != null) {
-        val cust = customerToDelete!!
-        AlertDialog(
-            onDismissRequest = { customerToDelete = null },
-            title = { Text(appStrings.deleteBtn, color = TextPrimary) },
-            text = {
-                Text(
-                    "${appStrings.confirmDeleteCustomer}\n\n${cust.name.ifBlank { cust.pppoeUsername }} (${cust.customerCode})",
-                    color = TextSecondary
-                )
-            },
-            containerColor = BgCard,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.deleteCustomer(cust)
-                        customerToDelete = null
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
-                ) {
-                    Text(appStrings.deleteBtn, color = Color.White)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { customerToDelete = null }) {
-                    Text(appStrings.cancel, color = TextSecondary)
-                }
-            }
-        )
-    }
 }
 
 @Composable
 fun CustomerCard(
     customer: Customer,
+    onOpenDetails: () -> Unit,
     onCall: () -> Unit,
     onSms: () -> Unit,
     onWhatsApp: () -> Unit,
@@ -282,7 +253,7 @@ fun CustomerCard(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
         borderColor = CardBorderSubtle,
-        onClick = onCollect
+        onClick = onOpenDetails
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
             // Top Row: Avatar + Name + Status Badge

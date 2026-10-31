@@ -471,12 +471,28 @@ fun CollectionScreen(
                             }
                         }
 
-                        Text(
-                            text = "+৳${tx.amount.toInt()}",
-                            color = AccentGreen,
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "+৳${tx.amount.toInt()}",
+                                color = AccentGreen,
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            IconButton(
+                                onClick = { viewModel.paymentToDelete = tx },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "Delete Payment",
+                                    tint = AccentRed.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }

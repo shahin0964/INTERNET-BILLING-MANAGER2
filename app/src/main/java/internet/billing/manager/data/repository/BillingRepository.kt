@@ -121,7 +121,61 @@ class BillingRepository(
         }
     }
 
+    suspend fun deletePaymentAndReverse(payment: PaymentTransaction) {
+        paymentDao.deletePayment(payment)
+
+        val customer = customerDao.getCustomerById(payment.customerId)
+        if (customer != null) {
+            val restoredDue = customer.dueAmount + payment.amount
+            customerDao.updateDue(customer.id, restoredDue)
+        }
+
+        // Reverse corresponding bill payment
+        val bill = billDao.getBillForCustomerMonth(payment.customerId, payment.monthYear)
+            ?: billDao.getLatestUnpaidBillForCustomer(payment.customerId)
+        if (bill != null) {
+            val newPaid = (bill.paidAmount - payment.amount).coerceAtLeast(0.0)
+            val newDue = (bill.billAmount - newPaid).coerceAtLeast(0.0)
+            billDao.updateBill(
+                bill.copy(
+                    paidAmount = newPaid,
+                    dueAmount = newDue,
+                    isPaid = false
+                )
+            )
+        }
+    }
+
+    suspend fun addManualBill(customerId: Long, monthYear: String, amount: Double, notes: String): Long {
+        val customer = customerDao.getCustomerById(customerId) ?: return 0L
+        val updatedDue = customer.dueAmount + amount
+        customerDao.updateDue(customerId, updatedDue)
+        return billDao.insertBill(
+            BillEntry(
+                customerId = customerId,
+                customerName = customer.name.ifBlank { customer.pppoeUsername },
+                customerCode = customer.customerCode,
+                monthYear = monthYear,
+                billAmount = amount,
+                paidAmount = 0.0,
+                dueAmount = amount,
+                isPaid = false,
+                billDateMillis = System.currentTimeMillis(),
+                notes = notes.ifBlank { "Manual bill for $monthYear" }
+            )
+        )
+    }
+
+    suspend fun updateCustomerStatus(customerId: Long, status: String) {
+        customerDao.updateStatus(customerId, status)
+    }
+
+    suspend fun getUnpaidBillsForCustomer(customerId: Long): List<BillEntry> =
+        billDao.getUnpaidBillsForCustomer(customerId)
+
     // Bills
+    val unpaidBills: Flow<List<BillEntry>> = billDao.getUnpaidBills()
+
     suspend fun insertBill(bill: BillEntry): Long = billDao.insertBill(bill)
 
     fun getAllBills(): Flow<List<BillEntry>> = billDao.getAllBills()

@@ -27,12 +27,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import internet.billing.manager.data.model.BillEntry
 import internet.billing.manager.data.model.Customer
+import internet.billing.manager.ui.components.CustomerStatusBadge
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
+import internet.billing.manager.ui.viewmodel.CustomerBillingItem
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -53,35 +54,34 @@ fun BillingScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val customerBillingItems by viewModel.customerBillingItems.collectAsState()
     val allCustomers by viewModel.allCustomers.collectAsState()
-    val allBills by viewModel.allBills.collectAsState()
-    val monthlyBills by viewModel.monthlyBills.collectAsState()
-    val billsToDisplay = if (allBills.isNotEmpty()) allBills else monthlyBills
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedFilter by remember { mutableStateOf("All Bills") }
-    val filters = listOf("All Bills", "Previous Due", "Active Lines", "Suspended")
+    var selectedFilter by remember { mutableStateOf("All Dues") }
+    val filters = listOf("All Dues", "Previous Due", "Active Lines", "Suspended")
 
-    // Filter logic
-    val filteredBills = remember(billsToDisplay, allCustomers, searchQuery, selectedFilter) {
-        billsToDisplay.filter { bill ->
-            val customer = allCustomers.firstOrNull { it.id == bill.customerId }
-            val name = customer?.name ?: bill.customerName
-            val pppoe = customer?.pppoeUsername ?: ""
-            val code = customer?.customerCode ?: bill.customerCode
-            val status = customer?.status ?: Customer.STATUS_ACTIVE
-            val previousDue = if (customer != null) (customer.dueAmount - bill.dueAmount).coerceAtLeast(0.0) else 0.0
+    // Filter logic based on CustomerBillingItem
+    val filteredItems = remember(customerBillingItems, searchQuery, selectedFilter) {
+        customerBillingItems.filter { item ->
+            val customer = item.customer
+            val name = customer.name.ifBlank { customer.pppoeUsername }
+            val pppoe = customer.pppoeUsername
+            val code = customer.customerCode
+            val phone = customer.phone
+            val ip = customer.staticIp
 
             val matchesSearch = searchQuery.isBlank() ||
                     name.contains(searchQuery, ignoreCase = true) ||
                     pppoe.contains(searchQuery, ignoreCase = true) ||
                     code.contains(searchQuery, ignoreCase = true) ||
-                    bill.id.toString().contains(searchQuery)
+                    phone.contains(searchQuery, ignoreCase = true) ||
+                    ip.contains(searchQuery, ignoreCase = true)
 
             val matchesFilter = when (selectedFilter) {
-                "Previous Due" -> previousDue > 0
-                "Active Lines" -> status.equals(Customer.STATUS_ACTIVE, ignoreCase = true)
-                "Suspended" -> status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
+                "Previous Due" -> item.previousDue > 0
+                "Active Lines" -> customer.status.equals(Customer.STATUS_ACTIVE, ignoreCase = true)
+                "Suspended" -> customer.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
                 else -> true
             }
 
@@ -97,55 +97,112 @@ fun BillingScreen(
         contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // 1. Top Card: Monthly Billing Control
+        // 1. Top Card: Monthly Billing Controls & Manual Add
         item {
             GlassCard(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(14.dp),
                 borderColor = AccentCyan.copy(alpha = 0.35f)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(12.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = appStrings.billingTitle,
-                            color = TextPrimary,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = appStrings.generateMonthlyBills,
-                            color = TextSecondary,
-                            fontSize = 10.5.sp
-                        )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = appStrings.billingTitle,
+                                color = TextPrimary,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "প্রতি মাসের ১ তারিখ রাত ১২টায় স্বয়ংক্রিয় বিল তৈরি হয়",
+                                color = TextSecondary,
+                                fontSize = 10.5.sp
+                            )
+                        }
+
+                        // Status pill showing pending count
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AccentOrange.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "${customerBillingItems.size} জন বকেয়া",
+                                color = AccentOrange,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
 
-                    Button(
-                        onClick = { viewModel.showGenerateBillDialog = true },
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                        modifier = Modifier.height(34.dp)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Receipt,
-                            contentDescription = null,
-                            tint = BgDark,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = appStrings.generateBill.replace("\n", " "),
-                            color = BgDark,
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        // Button 1: Add Manual Bill (+ Add to Billing)
+                        OutlinedButton(
+                            onClick = { viewModel.showAddManualBillDialog = true },
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, AccentCyan),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = AccentCyan.copy(alpha = 0.10f)
+                            ),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = null,
+                                tint = AccentCyan,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "+ বিল যোগ করুন",
+                                color = AccentCyan,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        // Button 2: Auto Generate Monthly Bills
+                        Button(
+                            onClick = { viewModel.showGenerateBillDialog = true },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(34.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Receipt,
+                                contentDescription = null,
+                                tint = BgDark,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = appStrings.generateBill.replace("\n", " "),
+                                color = BgDark,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
@@ -205,7 +262,7 @@ fun BillingScreen(
             )
         }
 
-        // 3. Filter Pills (All Bills, Previous Due, Active Lines, Suspended)
+        // 3. Filter Pills (All Dues, Previous Due, Active Lines, Suspended)
         item {
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
@@ -213,6 +270,14 @@ fun BillingScreen(
             ) {
                 items(filters) { filter ->
                     val isSelected = selectedFilter == filter
+                    val filterCount = when (filter) {
+                        "All Dues" -> customerBillingItems.size
+                        "Previous Due" -> customerBillingItems.count { it.previousDue > 0 }
+                        "Active Lines" -> customerBillingItems.count { it.customer.status.equals(Customer.STATUS_ACTIVE, ignoreCase = true) }
+                        "Suspended" -> customerBillingItems.count { it.customer.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true) }
+                        else -> 0
+                    }
+
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -222,7 +287,7 @@ fun BillingScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = filter,
+                            text = "$filter ($filterCount)",
                             color = if (isSelected) AccentCyan else TextSecondary,
                             fontSize = 11.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -232,8 +297,8 @@ fun BillingScreen(
             }
         }
 
-        // 4. Customer Bills List
-        if (billsToDisplay.isEmpty()) {
+        // 4. Customer Billing Cards (Guaranteed 1 card per customer with dues)
+        if (customerBillingItems.isEmpty()) {
             item {
                 val activeCount = allCustomers.count { it.status == Customer.STATUS_ACTIVE }
                 GlassCard(
@@ -247,43 +312,50 @@ fun BillingScreen(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Icon(
-                            imageVector = Icons.Default.ReceiptLong,
+                            imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = AccentCyan,
-                            modifier = Modifier.size(36.dp)
+                            tint = AccentGreen,
+                            modifier = Modifier.size(40.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "No bills generated yet",
+                            text = "কোনো বকেয়া বিল নেই / All Dues Cleared",
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.5.sp
+                            fontSize = 14.sp
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = if (activeCount > 0)
-                                "$activeCount active subscribers ready to be billed."
+                                "$activeCount জন সক্রিয় গ্রাহকের বিল পরিশোধিত হয়েছে।"
                             else
-                                "Add customers first, then tap 'Generate' to create monthly bills.",
+                                "নতুন গ্রাহক যোগ করুন বা 'বিল তৈরি করুন' চাপুন।",
                             color = TextSecondary,
                             fontSize = 11.sp
                         )
                         Spacer(modifier = Modifier.height(14.dp))
-                        Button(
-                            onClick = { viewModel.showGenerateBillDialog = true },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                            modifier = Modifier.height(34.dp)
-                        ) {
-                            Icon(Icons.Default.Add, contentDescription = null, tint = BgDark, modifier = Modifier.size(15.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Generate Bills Now", color = BgDark, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { viewModel.showAddManualBillDialog = true },
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, AccentCyan),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("+ ম্যানুয়াল বিল যোগ", color = AccentCyan, fontSize = 11.sp)
+                            }
+                            Button(
+                                onClick = { viewModel.showGenerateBillDialog = true },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("Generate Bills Now", color = BgDark, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }
             }
-        } else if (filteredBills.isEmpty()) {
+        } else if (filteredItems.isEmpty()) {
             item {
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
@@ -303,7 +375,7 @@ fun BillingScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "No bills match the filter \"$selectedFilter\"",
+                            text = "\"$selectedFilter\" ফিল্টারে কোনো গ্রাহক পাওয়া যায়নি",
                             color = TextSecondary,
                             fontSize = 12.sp
                         )
@@ -311,189 +383,214 @@ fun BillingScreen(
                 }
             }
         } else {
-            items(filteredBills, key = { it.id }) { bill ->
-                val customer = remember(bill.customerId, allCustomers) {
-                    allCustomers.firstOrNull { it.id == bill.customerId }
-                }
-
-                val displayName = customer?.name?.ifBlank { customer.pppoeUsername } ?: bill.customerName
-                val pppoeName = customer?.pppoeUsername?.ifBlank { customer.customerCode } ?: bill.customerCode
-                val isPaid = bill.isPaid || bill.dueAmount <= 0.0
-
-                // Calculate Previous Due and Current Bill
-                val currentBill = bill.billAmount
-                val customerDue = customer?.dueAmount ?: bill.dueAmount
-                val previousDue = (customerDue - bill.dueAmount).coerceAtLeast(0.0)
-                val totalPayable = previousDue + currentBill
-                val paidAmount = bill.paidAmount
-                val dueAmount = (previousDue + bill.dueAmount).coerceAtLeast(0.0)
+            items(filteredItems, key = { it.customer.id }) { item ->
+                val customer = item.customer
+                val displayName = customer.name.ifBlank { customer.pppoeUsername }
+                val pppoeName = customer.pppoeUsername.ifBlank { customer.customerCode }
+                val formattedCurrentMonth = remember(item.currentMonthKey) { formatBillMonth(item.currentMonthKey) }
 
                 GlassCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            viewModel.selectedCustomerForDetails = customer
+                        },
                     shape = RoundedCornerShape(12.dp),
                     borderColor = CardBorderSubtle
                 ) {
                     Column(modifier = Modifier.padding(11.dp)) {
-                        // Card Top: Name + UNPAID/PAID badge + Edit icon
+                        // Card Top: Initial + Name + PPPoE + Status + Details Icon
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = displayName,
-                                    color = TextPrimary,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
-                                )
-                                Spacer(modifier = Modifier.height(1.dp))
-                                Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            when (customer.status) {
+                                                Customer.STATUS_ACTIVE -> AccentBlue.copy(alpha = 0.2f)
+                                                Customer.STATUS_SUSPENDED -> AccentOrange.copy(alpha = 0.2f)
+                                                else -> AccentRed.copy(alpha = 0.2f)
+                                            }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = "PPPoE: ",
-                                        color = AccentCyan,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Medium
+                                        text = if (customer.name.isNotBlank()) customer.name.first().uppercaseChar().toString() else "U",
+                                        color = when (customer.status) {
+                                            Customer.STATUS_ACTIVE -> AccentBlue
+                                            Customer.STATUS_SUSPENDED -> AccentOrange
+                                            else -> AccentRed
+                                        },
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
                                     )
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Column {
                                     Text(
-                                        text = pppoeName,
-                                        color = TextSecondary,
-                                        fontSize = 11.sp
+                                        text = displayName,
+                                        color = TextPrimary,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
                                     )
+                                    Spacer(modifier = Modifier.height(1.dp))
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "PPPoE: ",
+                                            color = AccentCyan,
+                                            fontSize = 10.5.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                        Text(
+                                            text = pppoeName,
+                                            color = TextSecondary,
+                                            fontSize = 10.5.sp
+                                        )
+                                        if (customer.staticIp.isNotBlank()) {
+                                            Text(
+                                                text = " • IP: ${customer.staticIp}",
+                                                color = TextMuted,
+                                                fontSize = 9.5.sp
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                // Status Pill (● UNPAID / ● PAID)
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(6.dp))
-                                        .background(if (isPaid) AccentGreen.copy(alpha = 0.15f) else AccentRed.copy(alpha = 0.15f))
-                                        .padding(horizontal = 8.dp, vertical = 3.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = if (isPaid) "● PAID" else "● UNPAID",
-                                        color = if (isPaid) AccentGreen else AccentRed,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-
+                                CustomerStatusBadge(status = customer.status)
                                 Spacer(modifier = Modifier.width(4.dp))
-
                                 IconButton(
                                     onClick = {
-                                        if (customer != null) {
-                                            viewModel.customerToEdit = customer
-                                            viewModel.showAddCustomerDialog = true
-                                        }
+                                        viewModel.selectedCustomerForDetails = customer
                                     },
-                                    modifier = Modifier.size(24.dp)
+                                    modifier = Modifier.size(28.dp)
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Edit Customer",
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Details",
                                         tint = AccentCyan,
-                                        modifier = Modifier.size(14.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
                                 }
                             }
                         }
 
-                        val billMonth = remember(bill.monthYear) { formatBillMonth(bill.monthYear) }
-
-                        // Bill Reference and Month tag
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "BILL-${bill.monthYear.replace("-", "")}-${bill.id} • $billMonth",
-                            color = TextMuted,
-                            fontSize = 10.sp
+                        // Middle Breakdown Section: Current Month Bill + Previous Due
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Divider(
+                            color = CardBorder.copy(alpha = 0.35f),
+                            thickness = 0.8.dp
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        // Middle Breakdown Section (if previous due exists)
-                        if (previousDue > 0) {
+                        if (item.previousDue > 0) {
+                            // Row 1: Previous Due with months
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "পূর্বের বকেয়া বিল / Previous Due",
+                                        color = TextSecondary,
+                                        fontSize = 10.5.sp
+                                    )
+                                    Text(
+                                        text = "বকেয়া মাস: ${item.dueMonthsText}",
+                                        color = AccentOrange,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                                Text(
+                                    text = "৳${item.previousDue.toInt()}",
+                                    color = AccentOrange,
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            // Row 2: Current Month Bill with plus indicator
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = "(+) চলতি মাসের বিল / Current Bill",
+                                        color = TextSecondary,
+                                        fontSize = 10.5.sp
+                                    )
+                                    Text(
+                                        text = "মাস: $formattedCurrentMonth",
+                                        color = TextMuted,
+                                        fontSize = 9.5.sp
+                                    )
+                                }
+                                Text(
+                                    text = "৳${item.currentMonthBill.toInt()}",
+                                    color = TextPrimary,
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
                             Divider(
-                                color = CardBorder.copy(alpha = 0.3f),
-                                modifier = Modifier.padding(vertical = 6.dp)
+                                color = CardBorder.copy(alpha = 0.35f),
+                                thickness = 0.8.dp
                             )
-
-                            // Row 1: Previous Due
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("Previous Due", color = TextSecondary, fontSize = 10.5.sp)
-                                    Text("Past Outstanding", color = TextMuted, fontSize = 9.sp)
-                                }
-                                Text("৳${previousDue.toInt()}", color = AccentOrange, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                            }
-
-                            Spacer(modifier = Modifier.height(3.dp))
-
-                            // Row 2: Current Bill
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text("Current Bill", color = TextSecondary, fontSize = 10.5.sp)
-                                    Text(billMonth, color = TextMuted, fontSize = 9.sp)
-                                }
-                                Text("৳${currentBill.toInt()}", color = TextPrimary, fontSize = 11.5.sp, fontWeight = FontWeight.Bold)
-                            }
+                            Spacer(modifier = Modifier.height(6.dp))
                         }
 
-                        Divider(
-                            color = CardBorder.copy(alpha = 0.3f),
-                            modifier = Modifier.padding(vertical = 6.dp)
-                        )
-
-                        // Amounts Row (Total Bill / Total Payable, Paid, Due)
+                        // Row 3: Total Payable (চলতি + পূর্বের বকেয়া = ২ টা প্লাস হবে বিল এ)
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AccentCyan.copy(alpha = 0.08f))
+                                .padding(horizontal = 10.dp, vertical = 7.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column {
                                 Text(
-                                    text = if (previousDue > 0) "Total Payable" else "Total Bill",
+                                    text = if (item.previousDue > 0)
+                                        "মোট প্রদেয় বিল (চলতি + বকেয়া)"
+                                    else
+                                        "চলতি মাসের মোট বিল",
                                     color = TextSecondary,
-                                    fontSize = 10.sp
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "৳${if (previousDue > 0) totalPayable.toInt() else currentBill.toInt()}",
-                                    color = TextPrimary,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
+                                    text = "Total Payable Amount",
+                                    color = TextMuted,
+                                    fontSize = 8.5.sp
                                 )
                             }
 
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text("Paid Amount", color = TextSecondary, fontSize = 10.sp)
-                                Text(
-                                    text = "৳${paidAmount.toInt()}",
-                                    color = AccentGreen,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = if (previousDue > 0) "Total Due" else "Due Amount",
-                                    color = TextSecondary,
-                                    fontSize = 10.sp
-                                )
-                                Text(
-                                    text = "৳${dueAmount.toInt()}",
-                                    color = if (dueAmount > 0) AccentRed else AccentGreen,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = "৳${item.totalPayable.toInt()}",
+                                color = AccentRed,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(9.dp))
@@ -506,14 +603,11 @@ fun BillingScreen(
                             // Button 1: Collect Payment
                             Button(
                                 onClick = {
-                                    if (customer != null) {
-                                        viewModel.customerForPayment = customer
-                                        viewModel.showCollectPaymentDialog = true
-                                    }
+                                    viewModel.customerForPayment = customer
+                                    viewModel.showCollectPaymentDialog = true
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                                enabled = dueAmount > 0,
                                 contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                                 modifier = Modifier
                                     .weight(1.5f)
@@ -527,26 +621,27 @@ fun BillingScreen(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Collect Payment (৳${dueAmount.toInt()})",
+                                    text = "Collect (৳${item.totalPayable.toInt()})",
                                     color = BgDark,
-                                    fontSize = 11.sp,
+                                    fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
 
-                            // Button 2: WhatsApp / Invoice
+                            // Button 2: WhatsApp / Invoice Reminder
                             OutlinedButton(
                                 onClick = {
-                                    val phone = customer?.phone?.replace("+", "")?.replace("-", "")?.replace(" ", "") ?: ""
+                                    val phone = customer.phone.replace("+", "").replace("-", "").replace(" ", "")
                                     val formattedPhone = if (phone.startsWith("0")) "88$phone" else phone
-                                    val msg = "Dear $displayName, your ISP bill for $billMonth is ৳${dueAmount.toInt()}. Total Payable: ৳${totalPayable.toInt()}. Please pay your bill on time. Thank you."
+                                    val msg = "Dear $displayName, your internet bill for $formattedCurrentMonth is ৳${item.currentMonthBill.toInt()}." +
+                                            (if (item.previousDue > 0) " Previous due (${item.dueMonthsText}): ৳${item.previousDue.toInt()}." else "") +
+                                            " Total Payable: ৳${item.totalPayable.toInt()}. Please pay your bill on time. Thank you."
                                     if (phone.isNotBlank()) {
                                         val uri = Uri.parse("https://api.whatsapp.com/send?phone=$formattedPhone&text=${Uri.encode(msg)}")
                                         val intent = Intent(Intent.ACTION_VIEW, uri)
                                         try {
                                             context.startActivity(intent)
                                         } catch (e: Exception) {
-                                            // Fallback to SMS
                                             val smsIntent = Intent(Intent.ACTION_VIEW, Uri.parse("sms:$phone")).apply {
                                                 putExtra("sms_body", msg)
                                             }

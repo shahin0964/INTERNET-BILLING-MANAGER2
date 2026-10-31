@@ -47,4 +47,13 @@ interface CustomerDao {
 
     @Query("SELECT SUM(dueAmount) FROM customers")
     fun getTotalOutstandingDue(): Flow<Double?>
+
+    @Query("SELECT * FROM customers WHERE status = :status ORDER BY id DESC")
+    suspend fun getCustomersByStatusList(status: String): List<Customer>
+
+    @Query("SELECT * FROM customers ORDER BY id DESC")
+    suspend fun getAllCustomersList(): List<Customer>
+
+    @Query("UPDATE customers SET status = :status WHERE id = :customerId")
+    suspend fun updateStatus(customerId: Long, status: String)
 }

@@ -129,6 +129,66 @@ class BillingViewModel(
     val allBills: StateFlow<List<BillEntry>> = repository.getAllBills()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Aggregated Single-Card Customer Billing List (Excludes fully paid customers)
+    val customerBillingItems: StateFlow<List<CustomerBillingItem>> = combine(
+        allCustomers,
+        allBills,
+        currentMonthYearKey
+    ) { customers, bills, monthKey ->
+        val list = mutableListOf<CustomerBillingItem>()
+        for (cust in customers) {
+            val custBills = bills.filter { it.customerId == cust.id }
+            val currentBill = custBills.firstOrNull { it.monthYear == monthKey }
+            val unpaidBills = custBills.filter { !it.isPaid && it.dueAmount > 0 }
+
+            val currentBillAmount = when {
+                currentBill != null -> currentBill.billAmount
+                cust.status == Customer.STATUS_ACTIVE -> cust.monthlyBill
+                else -> 0.0
+            }
+
+            val currentBillDue = currentBill?.dueAmount ?: if (cust.status == Customer.STATUS_ACTIVE) cust.monthlyBill else 0.0
+            val isCurrentPaid = currentBill != null && currentBill.isPaid && currentBill.dueAmount <= 0.0
+
+            val totalCustomerDue = cust.dueAmount
+            if (totalCustomerDue <= 0.0 && (currentBill == null || isCurrentPaid) && unpaidBills.isEmpty()) {
+                // Customer has no dues - automatically leaves Billing screen!
+                continue
+            }
+
+            val previousDue = (totalCustomerDue - currentBillDue).coerceAtLeast(0.0)
+
+            val pastMonths = unpaidBills
+                .filter { it.monthYear != monthKey }
+                .map { formatShortMonth(it.monthYear) }
+                .distinct()
+
+            val dueMonthsText = when {
+                pastMonths.isNotEmpty() -> pastMonths.joinToString(", ")
+                previousDue > 0 -> "Previous Dues"
+                else -> ""
+            }
+
+            val totalPayable = currentBillAmount + previousDue
+
+            if (totalPayable > 0 || totalCustomerDue > 0) {
+                list.add(
+                    CustomerBillingItem(
+                        customer = cust,
+                        currentMonthKey = monthKey,
+                        currentMonthBill = currentBillAmount,
+                        previousDue = previousDue,
+                        dueMonthsText = dueMonthsText,
+                        totalPayable = if (totalCustomerDue > 0) totalCustomerDue.coerceAtLeast(totalPayable) else totalPayable,
+                        isPaid = false,
+                        latestBillId = currentBill?.id ?: 0L
+                    )
+                )
+            }
+        }
+        list
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Expenses
     val monthlyExpenses: StateFlow<List<Expense>> = currentMonthYearKey.flatMapLatest { monthKey ->
         repository.getExpensesForMonth(monthKey)
@@ -157,11 +217,15 @@ class BillingViewModel(
     // UI Dialog States
     var showAddCustomerDialog by mutableStateOf(false)
     var customerToEdit by mutableStateOf<Customer?>(null)
+    var selectedCustomerForDetails by mutableStateOf<Customer?>(null)
+    var customerToDelete by mutableStateOf<Customer?>(null)
 
     var showCollectPaymentDialog by mutableStateOf(false)
     var customerForPayment by mutableStateOf<Customer?>(null)
 
     var showGenerateBillDialog by mutableStateOf(false)
+    var showAddManualBillDialog by mutableStateOf(false)
+    var paymentToDelete by mutableStateOf<PaymentTransaction?>(null)
     var showAddExpenseDialog by mutableStateOf(false)
 
     var showPackagesManagerDialog by mutableStateOf(false)
@@ -322,6 +386,51 @@ class BillingViewModel(
             repository.updateSettings(settings)
             showEditBusinessInfoDialog = false
         }
+    }
+
+    fun updateCustomerStatus(customer: Customer, newStatus: String) {
+        viewModelScope.launch {
+            repository.updateCustomerStatus(customer.id, newStatus)
+            if (selectedCustomerForDetails?.id == customer.id) {
+                selectedCustomerForDetails = customer.copy(status = newStatus)
+            }
+        }
+    }
+
+    fun deletePayment(payment: PaymentTransaction) {
+        viewModelScope.launch {
+            repository.deletePaymentAndReverse(payment)
+            paymentToDelete = null
+        }
+    }
+
+    fun addManualBill(customerId: Long, monthYear: String, amount: Double, notes: String) {
+        viewModelScope.launch {
+            repository.addManualBill(customerId, monthYear, amount, notes)
+            showAddManualBillDialog = false
+        }
+    }
+}
+
+data class CustomerBillingItem(
+    val customer: Customer,
+    val currentMonthKey: String,
+    val currentMonthBill: Double,
+    val previousDue: Double,
+    val dueMonthsText: String,
+    val totalPayable: Double,
+    val isPaid: Boolean,
+    val latestBillId: Long = 0L
+)
+
+private fun formatShortMonth(monthYear: String): String {
+    return try {
+        val parser = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+        val formatter = SimpleDateFormat("MMM", Locale.getDefault())
+        val date = parser.parse(monthYear)
+        if (date != null) formatter.format(date) else monthYear
+    } catch (e: Exception) {
+        monthYear
     }
 }
 

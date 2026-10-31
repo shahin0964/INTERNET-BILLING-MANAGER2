@@ -39,6 +39,18 @@ interface BillDao {
     @Delete
     suspend fun deleteBill(bill: BillEntry)
 
+    @Query("SELECT * FROM bill_entries WHERE isPaid = 0 ORDER BY billDateMillis DESC")
+    fun getUnpaidBills(): Flow<List<BillEntry>>
+
+    @Query("SELECT * FROM bill_entries WHERE customerId = :customerId AND isPaid = 0 ORDER BY monthYear ASC")
+    suspend fun getUnpaidBillsForCustomer(customerId: Long): List<BillEntry>
+
+    @Query("SELECT * FROM bill_entries WHERE customerId = :customerId ORDER BY monthYear DESC")
+    suspend fun getAllBillsForCustomer(customerId: Long): List<BillEntry>
+
+    @Query("SELECT * FROM bill_entries WHERE customerId = :customerId AND monthYear = :monthYear LIMIT 1")
+    suspend fun getBillForCustomerMonth(customerId: Long, monthYear: String): BillEntry?
+
     @Query("UPDATE bill_entries SET isPaid = 1, paidAmount = billAmount, dueAmount = 0 WHERE id = :billId")
     suspend fun markBillAsPaid(billId: Long)
 }

@@ -20,6 +20,7 @@ class InternetBillingApp : Application() {
         internet.billing.manager.ui.theme.ThemeManager.initialize(this)
         internet.billing.manager.ui.localization.LanguageManager.initialize(this)
         internet.billing.manager.util.AutoSmsManager.initialize(this)
+        internet.billing.manager.util.AutoBillingManager.checkAndRunAutoBilling(this)
     }
 
     val database by lazy { AppDatabase.getDatabase(this, applicationScope) }
