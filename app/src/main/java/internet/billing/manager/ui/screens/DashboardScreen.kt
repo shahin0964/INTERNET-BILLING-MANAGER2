@@ -31,6 +31,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -515,41 +517,56 @@ fun ModernBillingAnalyticsCard(
     val targetProgress = if (totalGenerated > 0) (collectedPercent / 100f) else 0f
     val animatedProgress by animateFloatAsState(
         targetValue = if (isVisible) targetProgress else 0f,
-        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
         label = "DonutProgress"
     )
 
-    // Infinite breathing & pulsing for 3D Router
-    val infiniteTransition = rememberInfiniteTransition(label = "RouterAnimation")
-    val routerGlowAlpha by infiniteTransition.animateFloat(
+    // Infinite transition for live animations
+    val infiniteTransition = rememberInfiniteTransition(label = "CardLiveAnimations")
+
+    // 1. "wifi icone ache" -> Radiating & pulsing neon cyan Wi-Fi icon waves
+    val wifiPulse by infiniteTransition.animateFloat(
         initialValue = 0.35f,
-        targetValue = 0.85f,
+        targetValue = 1.0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1800, easing = LinearEasing),
+            animation = tween(1200, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
-        label = "RouterGlow"
+        label = "WifiGlowPulse"
     )
-    val routerFloatOffset by infiniteTransition.animateFloat(
-        initialValue = -2f,
-        targetValue = 2f,
+
+    // 2. "router er 3 ta bati ache" -> 3 cyan LEDs on front panel blinking with network data activity
+    val ledBlinkPhase by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 4f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+            animation = tween(1100, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
         ),
-        label = "RouterFloat"
+        label = "RouterLedBlink"
+    )
+
+    // 3. "syning ache ekta" -> Shining laser shimmer sweep across the horizon wave
+    val shimmerProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2200, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "WaveShimmerSweep"
     )
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(18.dp))
             .background(
                 Brush.linearGradient(
                     listOf(
-                        Color(0xFF0C1935),
-                        Color(0xFF081326),
-                        Color(0xFF050B16)
+                        Color(0xFF0C172E),
+                        Color(0xFF071122),
+                        Color(0xFF040A15)
                     )
                 )
             )
@@ -558,21 +575,21 @@ fun ModernBillingAnalyticsCard(
                     1.2.dp,
                     Brush.linearGradient(
                         listOf(
-                            Color(0xFF1E3A68),
-                            Color(0xFF00E5FF).copy(alpha = 0.4f),
-                            Color(0xFF132442)
+                            Color(0xFF1E3862),
+                            Color(0xFF00E5FF).copy(alpha = 0.45f),
+                            Color(0xFF102038)
                         )
                     )
                 ),
-                RoundedCornerShape(20.dp)
+                RoundedCornerShape(18.dp)
             )
-            .padding(14.dp)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(13.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // 1. Top Header Row
+            // 1. Top Header Row: BarChart Icon + Title & Subtitle + View All Button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -580,12 +597,12 @@ fun ModernBillingAnalyticsCard(
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(12.dp))
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(9.dp))
                             .background(
                                 Brush.verticalGradient(
                                     listOf(Color(0xFF1E88E5), Color(0xFF0D47A1))
@@ -597,7 +614,7 @@ fun ModernBillingAnalyticsCard(
                             imageVector = Icons.Default.BarChart,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(19.dp)
                         )
                     }
 
@@ -605,13 +622,13 @@ fun ModernBillingAnalyticsCard(
                         Text(
                             text = appStrings.billingAnalytics,
                             color = TextPrimary,
-                            fontSize = 16.5.sp,
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             text = appStrings.monthlyCollectionOverview,
-                            color = TextSecondary.copy(alpha = 0.8f),
-                            fontSize = 11.5.sp
+                            color = TextSecondary.copy(alpha = 0.75f),
+                            fontSize = 10.5.sp
                         )
                     }
                 }
@@ -619,65 +636,65 @@ fun ModernBillingAnalyticsCard(
                 // View All > Pill Button
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(Color(0xFF13223B).copy(alpha = 0.9f))
-                        .border(BorderStroke(1.dp, Color(0xFF243B63)), RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFF14233D).copy(alpha = 0.9f))
+                        .border(BorderStroke(1.dp, Color(0xFF253E68)), RoundedCornerShape(16.dp))
                         .clickable { onNavigateToBilling() }
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(3.dp)
                     ) {
                         Text(
                             text = appStrings.viewAll,
                             color = Color.White.copy(alpha = 0.95f),
-                            fontSize = 11.5.sp,
+                            fontSize = 11.sp,
                             fontWeight = FontWeight.SemiBold
                         )
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = null,
                             tint = Color.White.copy(alpha = 0.95f),
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(13.dp)
                         )
                     }
                 }
             }
 
-            // 2. Middle Row: Total Generated + Animated Router + Animated Donut Chart
+            // 2. Middle Row: Total Generated + Live Animated 3D Router + Donut Chart
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 2.dp),
+                    .height(60.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left Block: Total Generated
+                // Left: Total Generated
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1.15f)
+                    modifier = Modifier.weight(1.1f)
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(42.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF11213B))
-                            .border(BorderStroke(1.dp, Color(0xFF223A62)), RoundedCornerShape(12.dp)),
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFF11213C))
+                            .border(BorderStroke(1.dp, Color(0xFF223B64)), RoundedCornerShape(10.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Description,
                             contentDescription = null,
                             tint = Color(0xFF64B5F6),
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Icon(
                             imageVector = Icons.Default.Wifi,
                             contentDescription = null,
                             tint = AccentCyan,
                             modifier = Modifier
-                                .size(11.dp)
+                                .size(10.dp)
                                 .align(Alignment.BottomEnd)
                                 .padding(end = 2.dp, bottom = 2.dp)
                         )
@@ -689,81 +706,118 @@ fun ModernBillingAnalyticsCard(
                         Text(
                             text = appStrings.totalGenerated,
                             color = TextSecondary.copy(alpha = 0.8f),
-                            fontSize = 10.5.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Medium
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             text = "৳${formatAmount(totalGenerated)}",
                             color = TextPrimary,
-                            fontSize = 17.5.sp,
+                            fontSize = 17.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
                     }
                 }
 
-                // Center Block: Glowing Animated 3D Router
+                // Center: 3D Router with Animated LEDs, Wi-Fi Pulse, and Shining Wave
+                val routerBoxWidth = 84.dp
+                val routerBoxHeight = 58.dp
                 Box(
                     modifier = Modifier
-                        .weight(0.95f)
-                        .height(68.dp),
+                        .size(routerBoxWidth, routerBoxHeight),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Cyan glow aura behind router
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .alpha(routerGlowAlpha * 0.65f)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(AccentCyan.copy(alpha = 0.5f), Color.Transparent)
-                                )
-                            )
-                    )
-
-                    // Subtle cyan horizon wave line
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth(0.85f)
-                            .height(1.dp)
-                            .background(
-                                Brush.horizontalGradient(
-                                    listOf(
-                                        Color.Transparent,
-                                        AccentCyan.copy(alpha = 0.5f * routerGlowAlpha),
-                                        Color.Transparent
-                                    )
-                                )
-                            )
-                    )
-
+                    // 1. Clean 3D router background image
                     Image(
-                        painter = painterResource(id = R.drawable.ic_analytics_router),
+                        painter = painterResource(id = R.drawable.ic_clean_router),
                         contentDescription = "Wi-Fi Router",
                         contentScale = ContentScale.Fit,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .offset(y = routerFloatOffset.dp)
+                        modifier = Modifier.fillMaxSize()
                     )
+
+                    // 2. Animated Wi-Fi radiating neon aura ("wifi icone ache")
+                    // Positioned right over the Wi-Fi icon atop the router
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .padding(top = 2.dp)
+                            .size(22.dp)
+                            .scale(0.85f + 0.25f * wifiPulse)
+                            .alpha(wifiPulse * 0.85f)
+                            .background(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        Color.White.copy(alpha = 0.9f),
+                                        AccentCyan.copy(alpha = 0.7f),
+                                        Color.Transparent
+                                    )
+                                ),
+                                shape = CircleShape
+                            )
+                    )
+
+                    // 3. Animated 3 LEDs on front panel ("router er 3 ta bati ache")
+                    val ledPhaseInt = ledBlinkPhase.toInt() % 4
+                    RouterLedDot(
+                        x = routerBoxWidth * 0.24f,
+                        y = routerBoxHeight * 0.71f,
+                        isLit = ledPhaseInt == 0 || ledPhaseInt == 3
+                    )
+                    RouterLedDot(
+                        x = routerBoxWidth * 0.30f,
+                        y = routerBoxHeight * 0.71f,
+                        isLit = ledPhaseInt == 1 || ledPhaseInt == 3
+                    )
+                    RouterLedDot(
+                        x = routerBoxWidth * 0.36f,
+                        y = routerBoxHeight * 0.72f,
+                        isLit = ledPhaseInt == 2 || ledPhaseInt == 3
+                    )
+
+                    // 4. Animated Shining Wave flare ("syning ache ekta")
+                    // Sweeping laser shimmer light flare along the curved horizon base
+                    Canvas(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(14.dp)
+                            .align(Alignment.BottomCenter)
+                    ) {
+                        val flareX = shimmerProgress * size.width
+                        val flareY = size.height * 0.5f
+
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.95f),
+                                    AccentCyan.copy(alpha = 0.75f),
+                                    Color(0xFF00B0FF).copy(alpha = 0.3f),
+                                    Color.Transparent
+                                ),
+                                center = Offset(flareX, flareY),
+                                radius = 14.dp.toPx()
+                            ),
+                            center = Offset(flareX, flareY),
+                            radius = 14.dp.toPx()
+                        )
+                    }
                 }
 
-                // Right Block: Dual-color Donut Chart
+                // Right: Dual-Color Donut Progress Chart
                 Box(
-                    modifier = Modifier.size(84.dp),
+                    modifier = Modifier.size(66.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Canvas(modifier = Modifier.fillMaxSize()) {
-                        val strokeWidth = 10.dp.toPx()
+                        val strokeWidth = 8.dp.toPx()
 
-                        // Orange arc (Outstanding)
+                        // Base Outstanding ring (Orange)
                         drawCircle(
                             color = Color(0xFFFF9100),
                             style = Stroke(width = strokeWidth)
                         )
 
-                        // Green sweep arc (Collected)
+                        // Collected sweep arc (Emerald Green)
                         if (animatedProgress > 0f) {
                             drawArc(
                                 brush = Brush.sweepGradient(
@@ -791,29 +845,29 @@ fun ModernBillingAnalyticsCard(
                         Text(
                             text = "${(animatedProgress * 100).toInt()}%",
                             color = TextPrimary,
-                            fontSize = 17.sp,
+                            fontSize = 14.5.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
                         Text(
                             text = appStrings.collected,
                             color = TextSecondary.copy(alpha = 0.8f),
-                            fontSize = 9.sp,
+                            fontSize = 8.5.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
                 }
             }
 
-            // 3. Bottom Row: Collected & Outstanding Cards
+            // 3. Bottom Row: Compact Status Cards (Collected & Outstanding)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Collected Card
+                // Left Pill: Collected
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(11.dp))
                         .background(
                             Brush.horizontalGradient(
                                 listOf(Color(0xFF08261E), Color(0xFF041812))
@@ -821,50 +875,50 @@ fun ModernBillingAnalyticsCard(
                         )
                         .border(
                             BorderStroke(1.dp, Color(0xFF00C853).copy(alpha = 0.45f)),
-                            RoundedCornerShape(14.dp)
+                            RoundedCornerShape(11.dp)
                         )
-                        .padding(horizontal = 9.dp, vertical = 9.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(26.dp)
+                            .clip(RoundedCornerShape(7.dp))
                             .background(Color(0xFF00C853).copy(alpha = 0.22f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Savings,
+                            imageVector = Icons.Default.Layers,
                             contentDescription = null,
                             tint = Color(0xFF00E676),
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(7.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     Column {
                         Text(
                             text = appStrings.collected,
                             color = Color(0xFF69F0AE),
-                            fontSize = 10.5.sp,
+                            fontSize = 9.5.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "৳${formatAmount(monthlyCollection)} ($collectedPercent%)",
                             color = TextPrimary,
-                            fontSize = 12.sp,
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
                     }
                 }
 
-                // Outstanding Card
+                // Right Pill: Outstanding
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(14.dp))
+                        .clip(RoundedCornerShape(11.dp))
                         .background(
                             Brush.horizontalGradient(
                                 listOf(Color(0xFF331D08), Color(0xFF1E0F03))
@@ -872,15 +926,15 @@ fun ModernBillingAnalyticsCard(
                         )
                         .border(
                             BorderStroke(1.dp, Color(0xFFFF9100).copy(alpha = 0.45f)),
-                            RoundedCornerShape(14.dp)
+                            RoundedCornerShape(11.dp)
                         )
-                        .padding(horizontal = 9.dp, vertical = 9.dp),
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(RoundedCornerShape(10.dp))
+                            .size(26.dp)
+                            .clip(RoundedCornerShape(7.dp))
                             .background(Color(0xFFFF9100).copy(alpha = 0.22f)),
                         contentAlignment = Alignment.Center
                     ) {
@@ -888,23 +942,23 @@ fun ModernBillingAnalyticsCard(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
                             tint = Color(0xFFFF9100),
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(16.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(7.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     Column {
                         Text(
                             text = appStrings.outstanding,
                             color = Color(0xFFFFB74D),
-                            fontSize = 10.5.sp,
+                            fontSize = 9.5.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = "৳${formatAmount(totalDue)} ($outstandingPercent%)",
                             color = TextPrimary,
-                            fontSize = 12.sp,
+                            fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
                         )
@@ -913,6 +967,48 @@ fun ModernBillingAnalyticsCard(
             }
         }
     }
+}
+
+/**
+ * Animated Cyan/White LED light on router front panel
+ */
+@Composable
+private fun BoxScope.RouterLedDot(
+    x: Dp,
+    y: Dp,
+    isLit: Boolean
+) {
+    val alpha by animateFloatAsState(
+        targetValue = if (isLit) 1.0f else 0.35f,
+        animationSpec = tween(140),
+        label = "LedBlinkAlpha"
+    )
+
+    // Outer aura
+    Box(
+        modifier = Modifier
+            .offset(x = x - 3.5.dp, y = y - 3.5.dp)
+            .size(7.dp)
+            .alpha(alpha)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color.White, AccentCyan, Color.Transparent)
+                ),
+                shape = CircleShape
+            )
+    )
+
+    // Core light
+    Box(
+        modifier = Modifier
+            .offset(x = x - 1.5.dp, y = y - 1.5.dp)
+            .size(3.dp)
+            .alpha(alpha)
+            .background(
+                color = if (isLit) Color.White else AccentCyan,
+                shape = CircleShape
+            )
+    )
 }
 
 private fun formatAmount(amount: Double): String {
