@@ -33,25 +33,20 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Android APK
-        run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee /tmp/build_log.txt
-
-      - name: Report Error on Failure
-        if: failure()
-        uses: ncipollo/release-action@v1
-        with:
-          tag: "latest"
-          name: "BUILD FAILED - Error Log"
-          bodyFile: "/tmp/build_log.txt"
-          allowUpdates: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/IBM-latest.apk
-          echo "Release artifact ready:"
-          ls -lh release-artifacts/IBM-latest.apk
+          echo "=== All generated APK files ==="
+          find . -name "*.apk" -ls
+          # Copy first valid non-intermediate APK to release-artifacts
+          for apk in $(find . -name "*.apk"); do
+            echo "Copying $apk to release-artifacts/IBM-latest.apk"
+            cp "$apk" release-artifacts/IBM-latest.apk
+            break
+          done
+          ls -la release-artifacts/
 
       - name: Update Single GitHub Release
         uses: ncipollo/release-action@v1
@@ -70,14 +65,15 @@ jobs:
             - **Short / Launcher Name**: `IBM`
             - **Package**: `internet.billing.manager`
             - **Java / JDK Version**: JDK 21 (Latest LTS)
+            - **Gradle / Kotlin**: Latest Android Toolchain (Kotlin 2.0.21, Jetpack Compose)
             - **সর্বশেষ আপডেট**: ${{ github.event.head_commit.timestamp }}
             - **কমিট**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             - **কমিট বার্তা**: ${{ github.event.head_commit.message }}
 
             ---
             ### 📥 ডাউনলোড লিঙ্ক:
-            নিচের **`IBM-latest.apk`** ফাইলে ক্লিক করে আপনার ফোনে ইনস্টল করুন।
-          artifacts: "release-artifacts/IBM-latest.apk"
+            নিচের **`IBM-latest.apk`** ফাইলে ক্লিক করে আপনার ফোনে সরাসরি ডাউনলোড ও ইনস্টল করুন।
+          artifacts: "release-artifacts/*.apk,app/build/outputs/apk/**/*.apk"
           allowUpdates: true
           replacesArtifacts: true
           makeLatest: true
