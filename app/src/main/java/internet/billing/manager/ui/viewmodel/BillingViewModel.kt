@@ -1,16 +1,21 @@
 package internet.billing.manager.ui.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import internet.billing.manager.data.local.CategorySum
 import internet.billing.manager.data.model.*
 import internet.billing.manager.data.repository.BillingRepository
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class BillingViewModel(
     private val repository: BillingRepository
 ) : ViewModel() {

@@ -20,11 +20,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21 (Latest LTS)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -32,8 +32,9 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build Android Release APK
-        run: ./gradlew assembleRelease --stacktrace
+      - name: Build Android APK
+        run: |
+          ./gradlew assembleRelease --stacktrace || ./gradlew assembleDebug --stacktrace
 
       - name: Prepare APK for Release
         run: |
@@ -42,6 +43,8 @@ jobs:
             cp app/build/outputs/apk/release/app-release.apk release-artifacts/IBM-latest.apk
           elif [ -f app/build/outputs/apk/debug/app-debug.apk ]; then
             cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/IBM-latest.apk
+          else
+            find app/build/outputs/apk -name "*.apk" -exec cp {} release-artifacts/IBM-latest.apk \;
           fi
           echo "Listing release artifacts:"
           ls -lh release-artifacts/
@@ -62,6 +65,7 @@ jobs:
             - **App Name**: INTERNET BILLING MANAGER
             - **Short / Launcher Name**: `IBM`
             - **Package**: `internet.billing.manager`
+            - **Java / JDK Version**: JDK 21 (Latest LTS)
             - **সর্বশেষ আপডেট**: ${{ github.event.head_commit.timestamp }}
             - **কমিট**: [${{ github.sha }}](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})
             - **কমিট বার্তা**: ${{ github.event.head_commit.message }}

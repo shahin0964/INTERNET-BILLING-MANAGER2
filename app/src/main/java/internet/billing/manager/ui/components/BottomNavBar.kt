@@ -26,7 +26,7 @@ enum class BottomNavScreen(
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
-    DASHBOARD("Dashboard", Icons.Filled.GridView, Icons.Outlined.GridView),
+    DASHBOARD("Dashboard", Icons.Filled.Dashboard, Icons.Outlined.Dashboard),
     CUSTOMERS("Customers", Icons.Filled.People, Icons.Outlined.People),
     BILLING("Billing", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
     COLLECTION("Collection", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
