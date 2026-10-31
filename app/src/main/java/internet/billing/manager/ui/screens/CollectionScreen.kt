@@ -149,7 +149,7 @@ fun CollectionScreen(
                 ) {
                     GlowStatCard(
                         title = "Total Bill",
-                        amount = "৳${monthlyBill.toInt()}",
+                        value = "৳${monthlyBill.toInt()}",
                         accentColor = AccentCyan,
                         icon = Icons.Default.Receipt,
                         subtitle = "Billed this month",
@@ -157,7 +157,7 @@ fun CollectionScreen(
                     )
                     GlowStatCard(
                         title = "Total Collected",
-                        amount = "৳${totalCollected.toInt()}",
+                        value = "৳${totalCollected.toInt()}",
                         accentColor = AccentGreen,
                         icon = Icons.Default.CheckCircle,
                         subtitle = "Payments received",
@@ -172,7 +172,7 @@ fun CollectionScreen(
                 ) {
                     GlowStatCard(
                         title = "Previous Due",
-                        amount = "৳${previousDue.toInt()}",
+                        value = "৳${previousDue.toInt()}",
                         accentColor = AccentPurple,
                         icon = Icons.Default.History,
                         subtitle = "Unpaid past balance",
@@ -180,7 +180,7 @@ fun CollectionScreen(
                     )
                     GlowStatCard(
                         title = "Total Due",
-                        amount = "৳${totalDue.toInt()}",
+                        value = "৳${totalDue.toInt()}",
                         accentColor = AccentOrange,
                         icon = Icons.Default.Warning,
                         subtitle = "Total pending",
@@ -195,7 +195,7 @@ fun CollectionScreen(
                 ) {
                     GlowStatCard(
                         title = "Bandwidth Bill",
-                        amount = "৳${bandwidthBill.toInt()}",
+                        value = "৳${bandwidthBill.toInt()}",
                         accentColor = AccentBlue,
                         icon = Icons.Default.Speed,
                         subtitle = "Upstream cost",
@@ -203,7 +203,7 @@ fun CollectionScreen(
                     )
                     GlowStatCard(
                         title = "Monthly Profit",
-                        amount = "৳${monthlyProfit.toInt()}",
+                        value = "৳${monthlyProfit.toInt()}",
                         accentColor = AccentGold,
                         icon = Icons.Default.TrendingUp,
                         subtitle = "Est. net profit",
@@ -218,7 +218,7 @@ fun CollectionScreen(
                 ) {
                     GlowStatCard(
                         title = "Discount",
-                        amount = "৳${discount.toInt()}",
+                        value = "৳${discount.toInt()}",
                         accentColor = Color(0xFFE0E0E0),
                         icon = Icons.Default.Discount,
                         subtitle = "Customer rebates",

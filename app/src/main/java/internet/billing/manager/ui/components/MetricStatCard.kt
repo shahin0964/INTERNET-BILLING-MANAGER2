@@ -92,11 +92,14 @@ fun MetricStatCard(
 @Composable
 fun GlowStatCard(
     title: String,
-    value: String,
+    value: String = "",
     accentColor: Color,
     modifier: Modifier = Modifier,
-    subtitle: String? = null
+    subtitle: String? = null,
+    icon: ImageVector? = null,
+    amount: String? = null
 ) {
+    val displayValue = if (value.isNotBlank()) value else (amount ?: "")
     GlassCard(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
@@ -108,15 +111,37 @@ fun GlowStatCard(
                 .fillMaxWidth()
                 .padding(9.dp)
         ) {
-            Text(
-                text = title,
-                color = TextSecondary,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Medium
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (icon != null) {
+                    Box(
+                        modifier = Modifier
+                            .size(18.dp)
+                            .clip(CircleShape)
+                            .background(accentColor.copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = accentColor,
+                            modifier = Modifier.size(11.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+                Text(
+                    text = title,
+                    color = TextSecondary,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = value,
+                text = displayValue,
                 color = TextPrimary,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold
