@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.BillEntry
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.ui.components.GlassCard
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 import java.text.SimpleDateFormat
@@ -112,14 +113,14 @@ fun BillingScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Monthly Billing Control",
+                            text = appStrings.billingTitle,
                             color = TextPrimary,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Generate bills for all active subscribers",
+                            text = appStrings.generateMonthlyBills,
                             color = TextSecondary,
                             fontSize = 10.5.sp
                         )
@@ -140,7 +141,7 @@ fun BillingScreen(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Generate",
+                            text = appStrings.generateBill.replace("\n", " "),
                             color = BgDark,
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Bold
@@ -157,7 +158,7 @@ fun BillingScreen(
                 onValueChange = { searchQuery = it },
                 placeholder = {
                     Text(
-                        text = "Search customer name, bill #, month...",
+                        text = appStrings.searchBillHint,
                         color = TextMuted,
                         fontSize = 12.sp
                     )

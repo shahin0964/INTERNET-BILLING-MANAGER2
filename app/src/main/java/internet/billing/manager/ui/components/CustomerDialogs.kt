@@ -28,6 +28,7 @@ import androidx.compose.ui.window.DialogProperties
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.data.model.PreviousDueItem
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -117,7 +118,7 @@ fun AddEditCustomerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (customerToEdit == null) "Add New Customer" else "Edit Customer",
+                        text = if (customerToEdit == null) appStrings.addCustomerTitle else appStrings.editCustomerTitle,
                         fontSize = 16.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -143,8 +144,8 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Customer Name *") },
-                    placeholder = { Text("Full name") },
+                    label = { Text("${appStrings.fullName} *") },
+                    placeholder = { Text(appStrings.fullName) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
@@ -169,7 +170,7 @@ fun AddEditCustomerDialog(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text("Phone Number *") },
+                        label = { Text("${appStrings.phoneNumber} *") },
                         placeholder = { Text("01XXXXXXXXX") },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -188,7 +189,7 @@ fun AddEditCustomerDialog(
                     OutlinedTextField(
                         value = customerCode,
                         onValueChange = { customerCode = it },
-                        label = { Text("Code") },
+                        label = { Text(appStrings.customerCode) },
                         placeholder = { Text("U001") },
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -211,8 +212,8 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = pppoeUsername,
                     onValueChange = { pppoeUsername = it },
-                    label = { Text("PPPoE Username / ID *") },
-                    placeholder = { Text("Username or user ID") },
+                    label = { Text("${appStrings.pppoeUsername} *") },
+                    placeholder = { Text(appStrings.pppoeUsername) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
@@ -233,7 +234,7 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = staticIp,
                     onValueChange = { staticIp = it },
-                    label = { Text("Static IP (Optional)") },
+                    label = { Text(appStrings.staticIp) },
                     placeholder = { Text("e.g. 192.168.1.100") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -255,8 +256,8 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text("Address / Location") },
-                    placeholder = { Text("Area, Road, House or Fiber Box") },
+                    label = { Text(appStrings.address) },
+                    placeholder = { Text(appStrings.address) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
@@ -277,7 +278,7 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = notes,
                     onValueChange = { notes = it },
-                    label = { Text("Notes (Optional)") },
+                    label = { Text(appStrings.notes) },
                     placeholder = { Text("Remarks, ONU MAC, etc.") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -301,12 +302,12 @@ fun AddEditCustomerDialog(
                     OutlinedTextField(
                         value = when {
                             selectedPackage != null -> "${selectedPackage!!.name} • ৳${selectedPackage!!.monthlyPrice.toInt()}/mo"
-                            packages.isNotEmpty() -> "Select Internet Package"
+                            packages.isNotEmpty() -> appStrings.selectPackage
                             else -> "Custom Package (Manual Price)"
                         },
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Internet Package *") },
+                        label = { Text("${appStrings.selectPackage} *") },
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
@@ -425,7 +426,7 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = monthlyBillText,
                     onValueChange = { monthlyBillText = it },
-                    label = { Text("Monthly Fee (৳) *") },
+                    label = { Text("${appStrings.monthlyFee} *") },
                     placeholder = { Text("e.g. 500") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
@@ -445,7 +446,7 @@ fun AddEditCustomerDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // 9. Connection Status
-                Text("Connection Status", color = TextSecondary, fontSize = 11.5.sp)
+                Text(appStrings.connectionStatus, color = TextSecondary, fontSize = 11.5.sp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -459,6 +460,11 @@ fun AddEditCustomerDialog(
                             Customer.STATUS_SUSPENDED -> AccentOrange
                             else -> AccentRed
                         }
+                        val statusLabel = when (item) {
+                            Customer.STATUS_ACTIVE -> appStrings.statusActive
+                            Customer.STATUS_SUSPENDED -> appStrings.statusSuspended
+                            else -> appStrings.statusInactive
+                        }
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -469,7 +475,7 @@ fun AddEditCustomerDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = item,
+                                text = statusLabel,
                                 color = if (isSelected) activeColor else TextSecondary,
                                 fontSize = 11.5.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -506,7 +512,7 @@ fun AddEditCustomerDialog(
                             Spacer(modifier = Modifier.width(6.dp))
                             Column {
                                 Text(
-                                    text = "Previous Due / Opening Due",
+                                    text = appStrings.previousDueTitle,
                                     color = TextPrimary,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -810,7 +816,7 @@ fun AddEditCustomerDialog(
                         border = BorderStroke(1.dp, CardBorder),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
                     ) {
-                        Text("Cancel", fontSize = 13.sp)
+                        Text(appStrings.cancel, fontSize = 13.sp)
                     }
 
                     Button(
@@ -853,7 +859,7 @@ fun AddEditCustomerDialog(
                         colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
                     ) {
                         Text(
-                            text = if (customerToEdit == null) "Save Customer" else "Update Customer",
+                            text = appStrings.saveCustomer,
                             color = BgDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp

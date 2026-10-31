@@ -20,8 +20,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.MetricStatCard
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 import java.text.SimpleDateFormat
@@ -76,19 +83,45 @@ fun DashboardScreen(
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    val context = LocalContext.current
+                    val logoUri = ispSettings?.logoUri.orEmpty()
+                    val logoBitmap = remember(logoUri) {
+                        if (logoUri.isNotBlank()) {
+                            try {
+                                val uri = Uri.parse(logoUri)
+                                context.contentResolver.openInputStream(uri)?.use { stream ->
+                                    BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                                }
+                            } catch (e: Exception) {
+                                null
+                            }
+                        } else null
+                    }
+
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(AccentCyan.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Wifi,
-                            contentDescription = null,
-                            tint = AccentCyan,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (logoBitmap != null) {
+                            Image(
+                                bitmap = logoBitmap,
+                                contentDescription = "Logo",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(RoundedCornerShape(10.dp))
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Wifi,
+                                contentDescription = null,
+                                tint = AccentCyan,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -99,11 +132,39 @@ fun DashboardScreen(
                             fontSize = 14.5.sp
                         )
                         Spacer(modifier = Modifier.height(1.dp))
-                        Text(
-                            text = ispSettings?.tagline?.takeIf { it.isNotBlank() && !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: "Internet Billing Management",
-                            color = TextSecondary,
-                            fontSize = 11.sp
-                        )
+                        val rawStatus = ispSettings?.networkStatus?.ifBlank { "Operational" } ?: "Operational"
+                        val netStatus = when (rawStatus) {
+                            "Maintenance" -> appStrings.statusMaintenance
+                            "Degraded" -> appStrings.statusDegraded
+                            else -> appStrings.statusOperational
+                        }
+                        val statusColor = when (rawStatus) {
+                            "Maintenance" -> AccentOrange
+                            "Degraded" -> AccentRed
+                            else -> AccentGreen
+                        }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(statusColor)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = netStatus,
+                                color = statusColor,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            if (!ispSettings?.phone.isNullOrBlank() && ispSettings?.phone != "01700000000") {
+                                Text(
+                                    text = " • ${ispSettings.phone}",
+                                    color = TextMuted,
+                                    fontSize = 10.5.sp
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -113,7 +174,7 @@ fun DashboardScreen(
         item {
             Column {
                 Text(
-                    text = "Quick Actions",
+                    text = appStrings.quickActions,
                     color = TextPrimary,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold
@@ -147,7 +208,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Add\nCustomer",
+                                text = appStrings.addCustomer,
                                 color = TextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -181,7 +242,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Collect\nPayment",
+                                text = appStrings.collectPayment,
                                 color = TextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -215,7 +276,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Generate\nBill",
+                                text = appStrings.generateBill,
                                 color = TextPrimary,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
@@ -232,7 +293,7 @@ fun DashboardScreen(
         item {
             Column {
                 Text(
-                    text = "Business Overview",
+                    text = appStrings.businessOverview,
                     color = TextPrimary,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold
@@ -244,16 +305,16 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         MetricStatCard(
-                            title = "Active Users",
+                            title = appStrings.activeUsers,
                             value = "$activeCount",
-                            subtitle = "Total: $totalCount",
+                            subtitle = "${appStrings.totalLabel}: $totalCount",
                             icon = Icons.Default.CheckCircle,
                             accentColor = AccentGreen,
                             modifier = Modifier.weight(1f),
                             onClick = onNavigateToCustomers
                         )
                         MetricStatCard(
-                            title = "Monthly Bill",
+                            title = appStrings.monthlyBill,
                             value = "৳${monthlyBill.toInt()}",
                             subtitle = monthDisplay,
                             icon = Icons.Default.Receipt,
@@ -268,7 +329,7 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         MetricStatCard(
-                            title = "Monthly Collection",
+                            title = appStrings.monthlyCollection,
                             value = "৳${monthlyCollection.toInt()}",
                             subtitle = monthDisplay,
                             icon = Icons.Default.Payments,
@@ -277,7 +338,7 @@ fun DashboardScreen(
                             onClick = onNavigateToCollection
                         )
                         MetricStatCard(
-                            title = "Today Collection",
+                            title = appStrings.todayCollection,
                             value = "৳${todayCollection.toInt()}",
                             subtitle = shortTodayStr,
                             icon = Icons.Default.AccessTime,
@@ -304,7 +365,7 @@ fun DashboardScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Billing Analytics",
+                            text = appStrings.billingAnalytics,
                             color = TextPrimary,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold
@@ -314,7 +375,7 @@ fun DashboardScreen(
                             modifier = Modifier.clickable { onNavigateToBilling() }
                         ) {
                             Text(
-                                text = "View Details",
+                                text = appStrings.viewAll,
                                 color = AccentCyan,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium
@@ -331,7 +392,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "Total Generated: ৳${totalGenerated.toInt()}",
+                        text = "${appStrings.totalGenerated}: ৳${totalGenerated.toInt()}",
                         color = TextSecondary,
                         fontSize = 12.sp
                     )
@@ -371,7 +432,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = "Collected ৳${monthlyCollection.toInt()} ($collectedPercent%)",
+                                text = "${appStrings.collected} ৳${monthlyCollection.toInt()} ($collectedPercent%)",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -385,7 +446,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = "Outstanding ৳${totalDue.toInt()} ($outstandingPercent%)",
+                                text = "${appStrings.outstanding} ৳${totalDue.toInt()} ($outstandingPercent%)",
                                 color = TextSecondary,
                                 fontSize = 11.sp
                             )
@@ -403,7 +464,7 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Collections",
+                    text = appStrings.recentPayments,
                     color = TextPrimary,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold
@@ -413,7 +474,7 @@ fun DashboardScreen(
                     modifier = Modifier.clickable { onNavigateToCollection() }
                 ) {
                     Text(
-                        text = "View All",
+                        text = appStrings.viewAll,
                         color = AccentCyan,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium
@@ -448,15 +509,9 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "No recent payments recorded",
+                            text = appStrings.noPaymentsRecorded,
                             color = TextSecondary,
                             fontSize = 12.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "Tap 'Collect Payment' above to record collections",
-                            color = TextMuted,
-                            fontSize = 10.5.sp
                         )
                     }
                 }

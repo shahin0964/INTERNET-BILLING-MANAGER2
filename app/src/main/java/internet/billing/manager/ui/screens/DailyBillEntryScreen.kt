@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.PaymentStatusBadge
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 import java.text.SimpleDateFormat
@@ -81,7 +82,7 @@ fun DailyBillEntryScreen(
             }
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Daily Bill Entry",
+                text = appStrings.dailyBillEntry,
                 color = TextPrimary,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold

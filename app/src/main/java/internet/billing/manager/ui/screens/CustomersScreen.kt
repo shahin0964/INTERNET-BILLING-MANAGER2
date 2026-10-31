@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.ui.components.CustomerStatusBadge
 import internet.billing.manager.ui.components.GlassCard
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 
@@ -65,14 +66,14 @@ fun CustomersScreen(
         ) {
             Column {
                 Text(
-                    text = "Customers",
+                    text = appStrings.customersTitle,
                     color = TextPrimary,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(1.dp))
                 Text(
-                    text = "Manage your ISP customers",
+                    text = appStrings.customersSubtitle,
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
@@ -92,7 +93,7 @@ fun CustomersScreen(
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
-                    contentDescription = "Add Customer",
+                    contentDescription = appStrings.addCustomerBtn,
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
@@ -106,7 +107,7 @@ fun CustomersScreen(
             value = searchQuery,
             onValueChange = { viewModel.setCustomerSearchQuery(it) },
             placeholder = {
-                Text("Search name, phone, PPPoE user...", color = TextMuted, fontSize = 12.sp)
+                Text(appStrings.searchCustomerHint, color = TextMuted, fontSize = 12.sp)
             },
             leadingIcon = {
                 Icon(Icons.Default.Search, contentDescription = "Search", tint = TextMuted, modifier = Modifier.size(18.dp))
@@ -135,29 +136,29 @@ fun CustomersScreen(
 
         // 3. Status Filter Tabs (Pills)
         val filterTabs = listOf(
-            Triple("All", totalCount, AccentPurple),
-            Triple("Active", activeCount, AccentGreen),
-            Triple("Suspended", suspendedCount, AccentOrange),
-            Triple("Inactive", inactiveCount, AccentRed)
+            Triple("All", appStrings.filterAll, totalCount, AccentPurple),
+            Triple("Active", appStrings.filterActive, activeCount, AccentGreen),
+            Triple("Suspended", appStrings.filterSuspended, suspendedCount, AccentOrange),
+            Triple("Inactive", appStrings.filterInactive, inactiveCount, AccentRed)
         )
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            filterTabs.forEach { (title, count, color) ->
-                val isSelected = statusFilter.equals(title, ignoreCase = true)
+            filterTabs.forEach { (filterKey, label, count, color) ->
+                val isSelected = statusFilter.equals(filterKey, ignoreCase = true)
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(8.dp))
                         .background(if (isSelected) color.copy(alpha = 0.25f) else BgCard)
-                        .clickable { viewModel.setCustomerStatusFilter(title) }
+                        .clickable { viewModel.setCustomerStatusFilter(filterKey) }
                         .padding(vertical = 6.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "$title ($count)",
+                        text = "$label ($count)",
                         color = if (isSelected) color else TextSecondary,
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -185,16 +186,10 @@ fun CustomersScreen(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = if (searchQuery.isNotBlank()) "No matching customers found" else "No customers added yet",
+                        text = appStrings.noCustomersFound,
                         color = TextSecondary,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = "Click the '+' button above to add real customers",
-                        color = TextMuted,
-                        fontSize = 12.sp
                     )
                 }
             }
@@ -232,10 +227,10 @@ fun CustomersScreen(
         val cust = customerToDelete!!
         AlertDialog(
             onDismissRequest = { customerToDelete = null },
-            title = { Text("Delete Customer", color = TextPrimary) },
+            title = { Text(appStrings.deleteBtn, color = TextPrimary) },
             text = {
                 Text(
-                    "Are you sure you want to delete ${cust.name.ifBlank { cust.pppoeUsername }} (${cust.customerCode})? This action cannot be undone.",
+                    "${appStrings.confirmDeleteCustomer}\n\n${cust.name.ifBlank { cust.pppoeUsername }} (${cust.customerCode})",
                     color = TextSecondary
                 )
             },
@@ -248,12 +243,12 @@ fun CustomersScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text(appStrings.deleteBtn, color = Color.White)
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { customerToDelete = null }) {
-                    Text("Cancel", color = TextSecondary)
+                    Text(appStrings.cancel, color = TextSecondary)
                 }
             }
         )
@@ -380,7 +375,7 @@ fun CustomerCard(
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Due: ৳${customer.dueAmount.toInt()}",
+                    text = "${appStrings.dueLabel}: ৳${customer.dueAmount.toInt()}",
                     color = if (customer.dueAmount > 0) AccentRed else AccentGreen,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold

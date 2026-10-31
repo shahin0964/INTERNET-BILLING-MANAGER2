@@ -6,9 +6,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import internet.billing.manager.InternetBillingApp
 import internet.billing.manager.data.local.CategorySum
 import internet.billing.manager.data.model.*
 import internet.billing.manager.data.repository.BillingRepository
+import internet.billing.manager.util.AutoSmsManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -247,6 +249,15 @@ class BillingViewModel(
     fun collectPayment(customerId: Long, amount: Double, method: String, note: String) {
         viewModelScope.launch {
             repository.recordPayment(customerId, amount, method, note)
+            // Trigger Auto SMS Receipt if enabled
+            if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoPaymentSmsEnabled) {
+                val cust = allCustomers.value.firstOrNull { it.id == customerId }
+                if (cust != null && cust.phone.isNotBlank()) {
+                    val rawTpl = AutoSmsManager.getTemplateText("payment_received", InternetBillingApp.instance)
+                    val msg = AutoSmsManager.formatMessage(rawTpl, cust, ispSettings.value, extraAmount = amount)
+                    AutoSmsManager.sendSingleSms(InternetBillingApp.instance, cust.phone, msg)
+                }
+            }
             showCollectPaymentDialog = false
             customerForPayment = null
         }
@@ -257,6 +268,18 @@ class BillingViewModel(
             val key = currentMonthYearKey.value
             val customers = allCustomers.value
             repository.generateMonthlyBills(key, customers)
+            // Trigger Auto SMS Bill notification if enabled
+            if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoBillSmsEnabled) {
+                val targets = customers.filter { it.status == "Active" && it.phone.isNotBlank() }
+                if (targets.isNotEmpty()) {
+                    val rawTpl = AutoSmsManager.getTemplateText("bill_generated", InternetBillingApp.instance)
+                    val items = targets.map { c ->
+                        val text = AutoSmsManager.formatMessage(rawTpl, c, ispSettings.value)
+                        Pair(c.phone, text)
+                    }
+                    AutoSmsManager.sendBatchSms(InternetBillingApp.instance, items)
+                }
+            }
             showGenerateBillDialog = false
         }
     }

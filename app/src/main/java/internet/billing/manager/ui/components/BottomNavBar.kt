@@ -19,10 +19,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 
 enum class BottomNavScreen(
-    val title: String,
+    val defaultTitle: String,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector
 ) {
@@ -31,6 +32,14 @@ enum class BottomNavScreen(
     BILLING("Billing", Icons.Filled.ReceiptLong, Icons.Outlined.ReceiptLong),
     COLLECTION("Collection", Icons.Filled.AccountBalanceWallet, Icons.Outlined.AccountBalanceWallet),
     MORE("More", Icons.Filled.MoreHoriz, Icons.Outlined.MoreHoriz)
+}
+
+fun BottomNavScreen.getLocalizedTitle(): String = when (this) {
+    BottomNavScreen.DASHBOARD -> appStrings.navDashboard
+    BottomNavScreen.CUSTOMERS -> appStrings.navCustomers
+    BottomNavScreen.BILLING -> appStrings.navBilling
+    BottomNavScreen.COLLECTION -> appStrings.navCollection
+    BottomNavScreen.MORE -> appStrings.navMore
 }
 
 @Composable
@@ -55,6 +64,7 @@ fun BottomNavBar(
             BottomNavScreen.values().forEach { screen ->
                 val isSelected = currentScreen == screen
                 val tint = if (isSelected) AccentCyan else NavUnselected
+                val title = screen.getLocalizedTitle()
 
                 Column(
                     modifier = Modifier
@@ -66,13 +76,13 @@ fun BottomNavBar(
                 ) {
                     Icon(
                         imageVector = if (isSelected) screen.selectedIcon else screen.unselectedIcon,
-                        contentDescription = screen.title,
+                        contentDescription = title,
                         tint = tint,
                         modifier = Modifier.size(19.dp)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = screen.title,
+                        text = title,
                         color = tint,
                         fontSize = 10.sp,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal

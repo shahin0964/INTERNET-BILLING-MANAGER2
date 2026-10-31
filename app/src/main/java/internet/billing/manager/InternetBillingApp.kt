@@ -12,6 +12,8 @@ class InternetBillingApp : Application() {
     override fun onCreate() {
         super.onCreate()
         internet.billing.manager.ui.theme.ThemeManager.initialize(this)
+        internet.billing.manager.ui.localization.LanguageManager.initialize(this)
+        internet.billing.manager.util.AutoSmsManager.initialize(this)
     }
 
     val database by lazy { AppDatabase.getDatabase(this, applicationScope) }

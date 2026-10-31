@@ -19,12 +19,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Dialog
+import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.Business
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.data.model.Expense
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.data.model.IspSettings
 import internet.billing.manager.ui.theme.*
+import internet.billing.manager.ui.localization.appStrings
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -64,7 +77,7 @@ fun CollectPaymentDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Collect Payment",
+                        text = appStrings.recordCollectionTitle,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -75,7 +88,7 @@ fun CollectPaymentDialog(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = appStrings.close,
                             tint = TextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -84,12 +97,12 @@ fun CollectPaymentDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Select Customer", color = TextSecondary, fontSize = 11.sp)
+                Text(appStrings.selectCustomer, color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 // Customer Selection Dropdown or List
                 if (customers.isEmpty()) {
-                    Text("No customers found. Please add a customer first.", color = AccentRed, fontSize = 12.sp)
+                    Text(appStrings.noCustomersFound, color = AccentRed, fontSize = 12.sp)
                 } else {
                     Column(
                         modifier = Modifier
@@ -127,7 +140,7 @@ fun CollectPaymentDialog(
                                     )
                                 }
                                 Text(
-                                    text = "Due: ৳${cust.dueAmount.toInt()}",
+                                    text = "${appStrings.dueLabel}: ৳${cust.dueAmount.toInt()}",
                                     color = if (cust.dueAmount > 0) AccentOrange else AccentGreen,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
@@ -142,7 +155,7 @@ fun CollectPaymentDialog(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text("Payment Amount (৳)") },
+                    label = { Text("${appStrings.paymentAmount} (৳)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -156,7 +169,7 @@ fun CollectPaymentDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Payment Method", color = TextSecondary, fontSize = 11.sp)
+                Text(appStrings.paymentMethod, color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(5.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -188,7 +201,7 @@ fun CollectPaymentDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Note / Transaction ID (Optional)") },
+                    label = { Text(appStrings.noteRemarks) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -217,7 +230,7 @@ fun CollectPaymentDialog(
                     enabled = selectedCustomer != null && (amountText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text(
-                        text = "Confirm & Collect ৳${amountText.ifBlank { "0" }}",
+                        text = "${appStrings.confirmAndCollect} ৳${amountText.ifBlank { "0" }}",
                         color = BgDark,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.5.sp
@@ -259,7 +272,7 @@ fun AddExpenseDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Add Business Expense",
+                        text = appStrings.addExpense,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -270,7 +283,7 @@ fun AddExpenseDialog(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = appStrings.close,
                             tint = TextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -282,7 +295,7 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Expense Title (e.g. Fiber Wire, Router)") },
+                    label = { Text(appStrings.expenseName) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -295,7 +308,7 @@ fun AddExpenseDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Expense Category", color = TextSecondary, fontSize = 11.sp)
+                Text(appStrings.expenseCategory, color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(5.dp))
                 Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                     Expense.ALL_CATEGORIES.chunked(2).forEach { rowCats ->
@@ -331,7 +344,7 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text("Amount (৳)") },
+                    label = { Text(appStrings.expenseAmount) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -348,7 +361,7 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Note / Vendor (Optional)") },
+                    label = { Text(appStrings.noteRemarks) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -385,7 +398,7 @@ fun AddExpenseDialog(
                     enabled = title.isNotBlank() && (amountText.toDoubleOrNull() ?: 0.0) > 0
                 ) {
                     Text(
-                        text = "Save Expense",
+                        text = appStrings.saveExpense,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.5.sp
@@ -416,7 +429,7 @@ fun GenerateBillDialog(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Generate Monthly Bills",
+                    text = appStrings.generateMonthlyBills,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -425,7 +438,10 @@ fun GenerateBillDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Generate bill entries for $monthYear for all active customers. This will update customer due balances and create daily billing entries.",
+                    text = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA)
+                        "সকল সক্রিয় গ্রাহকদের জন্য $monthYear মাসের বিল তৈরি হবে। এর ফলে গ্রাহকদের বকেয়া আপডেট হবে এবং দৈনিক বিলিং এন্ট্রি তৈরি হবে।"
+                    else
+                        "Generate bill entries for $monthYear for all active customers. This will update customer due balances and create daily billing entries.",
                     fontSize = 11.5.sp,
                     color = TextSecondary,
                     lineHeight = 16.sp
@@ -444,15 +460,15 @@ fun GenerateBillDialog(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Active Customers to Bill:", color = TextSecondary, fontSize = 11.5.sp)
-                        Text("$activeCustomerCount users", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("${appStrings.activeCustomersToBill}:", color = TextSecondary, fontSize = 11.5.sp)
+                        Text("$activeCustomerCount ${appStrings.usersCountSuffix}", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Estimated Total Bill:", color = TextSecondary, fontSize = 11.5.sp)
+                        Text("${appStrings.estimatedTotalBill}:", color = TextSecondary, fontSize = 11.5.sp)
                         Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                     }
                 }
@@ -468,7 +484,7 @@ fun GenerateBillDialog(
                         modifier = Modifier.weight(1f).height(38.dp),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Cancel", color = TextSecondary, fontSize = 12.sp)
+                        Text(appStrings.cancel, color = TextSecondary, fontSize = 12.sp)
                     }
                     Button(
                         onClick = onConfirm,
@@ -476,7 +492,7 @@ fun GenerateBillDialog(
                         shape = RoundedCornerShape(8.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
                     ) {
-                        Text("Generate Now", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                        Text(appStrings.generateNow, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                     }
                 }
             }
@@ -491,37 +507,79 @@ fun EditBusinessInfoDialog(
     onSave: (IspSettings) -> Unit
 ) {
     val initialName = currentSettings?.companyName?.takeIf { !it.equals("U-turn Technologies", ignoreCase = true) } ?: ""
-    val initialTagline = currentSettings?.tagline?.takeIf { !it.equals("Connect People Better Tomorrow", ignoreCase = true) } ?: ""
     val initialPhone = currentSettings?.phone?.takeIf { it != "01700000000" } ?: ""
+    val initialCurrency = currentSettings?.currencySymbol?.ifBlank { "৳" } ?: "৳"
+    val initialEmail = currentSettings?.email ?: ""
     val initialAddress = currentSettings?.address?.takeIf { !it.equals("Dhaka, Bangladesh", ignoreCase = true) } ?: ""
+    val initialNetworkStatus = currentSettings?.networkStatus?.ifBlank { "Operational" } ?: "Operational"
+    val initialLogoUri = currentSettings?.logoUri ?: ""
 
     var companyName by remember { mutableStateOf(initialName) }
-    var tagline by remember { mutableStateOf(initialTagline) }
     var phone by remember { mutableStateOf(initialPhone) }
+    var currencySymbol by remember { mutableStateOf(initialCurrency) }
+    var email by remember { mutableStateOf(initialEmail) }
     var address by remember { mutableStateOf(initialAddress) }
-    var bandwidthBillText by remember { mutableStateOf(currentSettings?.bandwidthBill?.toInt()?.takeIf { it > 0 }?.toString() ?: "0") }
-    var discountText by remember { mutableStateOf(currentSettings?.discount?.toInt()?.takeIf { it > 0 }?.toString() ?: "0") }
+    var networkStatus by remember { mutableStateOf(initialNetworkStatus) }
+    var logoUri by remember { mutableStateOf(initialLogoUri) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    val context = LocalContext.current
+    val logoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: Exception) {
+                // Ignore if persistable permission is not supported
+            }
+            logoUri = uri.toString()
+        }
+    }
+
+    val logoBitmap = remember(logoUri) {
+        if (logoUri.isNotBlank()) {
+            try {
+                val uri = Uri.parse(logoUri)
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)?.asImageBitmap()
+                }
+            } catch (e: Exception) {
+                null
+            }
+        } else null
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Surface(
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(16.dp),
             color = BgCard,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
+            border = BorderStroke(1.dp, CardBorder),
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.90f)
+                .padding(vertical = 8.dp)
         ) {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .padding(14.dp)
                     .verticalScroll(rememberScrollState())
             ) {
+                // Header Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "ISP Business Information",
-                        fontSize = 16.sp,
+                        text = appStrings.ispInfoTitle,
+                        fontSize = 16.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
@@ -530,130 +588,294 @@ fun EditBusinessInfoDialog(
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Close",
+                            imageVector = Icons.Default.Close,
+                            contentDescription = appStrings.close,
                             tint = TextSecondary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
+                Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+                Spacer(modifier = Modifier.height(12.dp))
 
-                OutlinedTextField(
-                    value = companyName,
-                    onValueChange = { companyName = it },
-                    label = { Text("ISP Business Name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                // 1. Company Logo
+                Text(
+                    text = appStrings.companyLogo,
+                    color = TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
                 )
-
                 Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(58.dp)
+                            .clip(CircleShape)
+                            .background(BgCardLight)
+                            .border(1.dp, CardBorder, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (logoBitmap != null) {
+                            Image(
+                                bitmap = logoBitmap,
+                                contentDescription = appStrings.companyLogo,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Business,
+                                contentDescription = null,
+                                tint = AccentCyan,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    }
 
-                OutlinedTextField(
-                    value = tagline,
-                    onValueChange = { tagline = it },
-                    label = { Text("Tagline / Subtitle") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Button(
+                            onClick = { logoPickerLauncher.launch("image/*") },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                            modifier = Modifier.height(34.dp)
+                        ) {
+                            Text(
+                                text = appStrings.changeLogo,
+                                color = BgDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.5.sp
+                            )
+                        }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Helpline / Support Phone") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text("Office Address") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = bandwidthBillText,
-                        onValueChange = { bandwidthBillText = it },
-                        label = { Text("Upstream Bill (৳)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-                    OutlinedTextField(
-                        value = discountText,
-                        onValueChange = { discountText = it },
-                        label = { Text("Discount (৳)") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
+                        if (logoUri.isNotBlank()) {
+                            TextButton(
+                                onClick = { logoUri = "" },
+                                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp),
+                                modifier = Modifier.height(26.dp)
+                            ) {
+                                Text(
+                                    text = appStrings.removeLogo,
+                                    color = AccentRed,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                Button(
-                    onClick = {
-                        val updated = (currentSettings ?: IspSettings()).copy(
-                            companyName = companyName,
-                            tagline = tagline,
-                            phone = phone,
-                            address = address,
-                            bandwidthBill = bandwidthBillText.toDoubleOrNull() ?: 0.0,
-                            discount = discountText.toDoubleOrNull() ?: 0.0
-                        )
-                        onSave(updated)
-                    },
-                    modifier = Modifier.fillMaxWidth().height(42.dp),
+                // 2. ISP Name / Reseller Brand
+                OutlinedTextField(
+                    value = companyName,
+                    onValueChange = { companyName = it },
+                    label = { Text(appStrings.ispNameLabel) },
+                    placeholder = { Text(appStrings.ispNameLabel) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentCyan,
+                        unfocusedLabelColor = TextSecondary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 3. Support Hotline & Currency ($)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Save Business Settings", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 13.5.sp)
+                    OutlinedTextField(
+                        value = phone,
+                        onValueChange = { phone = it },
+                        label = { Text(appStrings.supportHotline) },
+                        placeholder = { Text("01XXXXXXXXX") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                        singleLine = true,
+                        modifier = Modifier.weight(1.7f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AccentCyan,
+                            unfocusedBorderColor = CardBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedLabelColor = AccentCyan,
+                            unfocusedLabelColor = TextSecondary,
+                            cursorColor = AccentCyan
+                        )
+                    )
+
+                    OutlinedTextField(
+                        value = currencySymbol,
+                        onValueChange = { currencySymbol = it },
+                        label = { Text(appStrings.currencySymbol) },
+                        placeholder = { Text("৳") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AccentCyan,
+                            unfocusedBorderColor = CardBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedLabelColor = AccentCyan,
+                            unfocusedLabelColor = TextSecondary,
+                            cursorColor = AccentCyan
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 4. Company Email
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text(appStrings.companyEmail) },
+                    placeholder = { Text("info@isp.com") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentCyan,
+                        unfocusedLabelColor = TextSecondary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 5. Office Address
+                OutlinedTextField(
+                    value = address,
+                    onValueChange = { address = it },
+                    label = { Text(appStrings.officeAddress) },
+                    placeholder = { Text(appStrings.officeAddress) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentCyan,
+                        unfocusedLabelColor = TextSecondary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 6. Network Status
+                Text(
+                    text = appStrings.networkStatusLabel,
+                    color = TextSecondary,
+                    fontSize = 11.5.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val statusOptions = listOf(
+                        "Operational" to appStrings.statusOperational,
+                        "Maintenance" to appStrings.statusMaintenance,
+                        "Degraded" to appStrings.statusDegraded
+                    )
+                    statusOptions.forEach { (rawVal, localizedLabel) ->
+                        val isSelected = networkStatus.equals(rawVal, ignoreCase = true)
+                        val activeColor = when (rawVal) {
+                            "Operational" -> AccentGreen
+                            "Maintenance" -> AccentOrange
+                            else -> AccentRed
+                        }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) activeColor.copy(alpha = 0.2f) else BgCardLight)
+                                .clickable { networkStatus = rawVal }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = localizedLabel,
+                                color = if (isSelected) activeColor else TextSecondary,
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // 7. Bottom Buttons: Cancel & Save Business Info
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, CardBorder),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
+                    ) {
+                        Text(appStrings.cancel, fontSize = 13.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            val updated = (currentSettings ?: IspSettings()).copy(
+                                companyName = companyName,
+                                phone = phone,
+                                currencySymbol = currencySymbol.ifBlank { "৳" },
+                                email = email,
+                                address = address,
+                                networkStatus = networkStatus,
+                                logoUri = logoUri
+                            )
+                            onSave(updated)
+                        },
+                        modifier = Modifier
+                            .weight(1.5f)
+                            .height(44.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    ) {
+                        Text(
+                            text = appStrings.saveBusinessInfo,
+                            color = BgDark,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
                 }
             }
         }

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.theme.*
+import internet.billing.manager.ui.localization.appStrings
 
 @Composable
 fun AddPackageDialog(
@@ -52,7 +53,7 @@ fun AddPackageDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = if (packageToEdit == null) "Add Internet Package" else "Edit Package",
+                        text = if (packageToEdit == null) appStrings.addPackage else appStrings.editPackage,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
@@ -63,7 +64,7 @@ fun AddPackageDialog(
                     ) {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Close",
+                            contentDescription = appStrings.close,
                             tint = TextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
@@ -75,7 +76,7 @@ fun AddPackageDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Package Name (e.g. 20 Mbps Premium)") },
+                    label = { Text(appStrings.packageName) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -92,7 +93,7 @@ fun AddPackageDialog(
                     OutlinedTextField(
                         value = speedText,
                         onValueChange = { speedText = it },
-                        label = { Text("Speed (Mbps)") },
+                        label = { Text(appStrings.speedMbps) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -106,7 +107,7 @@ fun AddPackageDialog(
                     OutlinedTextField(
                         value = priceText,
                         onValueChange = { priceText = it },
-                        label = { Text("Price (৳/month)") },
+                        label = { Text(appStrings.monthlyPrice) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.weight(1f),
@@ -121,7 +122,7 @@ fun AddPackageDialog(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Text("Theme Accent Color", color = TextSecondary, fontSize = 11.sp)
+                Text(appStrings.accentColor, color = TextSecondary, fontSize = 11.sp)
                 Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -178,7 +179,7 @@ fun AddPackageDialog(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Delete",
+                                text = appStrings.deleteBtn,
                                 color = AccentRed,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.5.sp
@@ -207,7 +208,7 @@ fun AddPackageDialog(
                             enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
                         ) {
                             Text(
-                                text = "Update Package",
+                                text = appStrings.savePackage,
                                 color = BgDark,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 13.sp
@@ -218,7 +219,7 @@ fun AddPackageDialog(
                     if (showDeleteConfirm) {
                         AlertDialog(
                             onDismissRequest = { showDeleteConfirm = false },
-                            title = { Text("Delete Package?", color = TextPrimary) },
+                            title = { Text("${appStrings.deletePackage}?", color = TextPrimary) },
                             text = { Text("Are you sure you want to delete ${packageToEdit.name}?", color = TextSecondary) },
                             containerColor = BgCard,
                             confirmButton = {
@@ -229,12 +230,12 @@ fun AddPackageDialog(
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = AccentRed)
                                 ) {
-                                    Text("Delete", color = Color.White)
+                                    Text(appStrings.deleteBtn, color = Color.White)
                                 }
                             },
                             dismissButton = {
                                 OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                                    Text("Cancel", color = TextSecondary)
+                                    Text(appStrings.cancel, color = TextSecondary)
                                 }
                             }
                         )
@@ -260,7 +261,7 @@ fun AddPackageDialog(
                         enabled = (speedText.toIntOrNull() ?: 0) > 0 && (priceText.toDoubleOrNull() ?: 0.0) > 0
                     ) {
                         Text(
-                            text = "Save Package",
+                            text = appStrings.savePackage,
                             color = BgDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp

@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.GlowStatCard
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 import java.text.SimpleDateFormat
@@ -62,7 +63,7 @@ fun CollectionScreen(
             ) {
                 Column {
                     Text(
-                        text = "Collection Overview",
+                        text = appStrings.collectionTitle,
                         color = TextPrimary,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
@@ -148,7 +149,7 @@ fun CollectionScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     GlowStatCard(
-                        title = "Total Bill",
+                        title = appStrings.totalBillAmount,
                         value = "৳${monthlyBill.toInt()}",
                         accentColor = AccentCyan,
                         icon = Icons.Default.Receipt,
@@ -156,7 +157,7 @@ fun CollectionScreen(
                         modifier = Modifier.weight(1f)
                     )
                     GlowStatCard(
-                        title = "Total Collected",
+                        title = appStrings.totalPaidAmount,
                         value = "৳${totalCollected.toInt()}",
                         accentColor = AccentGreen,
                         icon = Icons.Default.CheckCircle,
@@ -171,7 +172,7 @@ fun CollectionScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     GlowStatCard(
-                        title = "Previous Due",
+                        title = appStrings.previousDueTitle,
                         value = "৳${previousDue.toInt()}",
                         accentColor = AccentPurple,
                         icon = Icons.Default.History,
@@ -179,7 +180,7 @@ fun CollectionScreen(
                         modifier = Modifier.weight(1f)
                     )
                     GlowStatCard(
-                        title = "Total Due",
+                        title = appStrings.totalDueAmount,
                         value = "৳${totalDue.toInt()}",
                         accentColor = AccentOrange,
                         icon = Icons.Default.Warning,
@@ -265,7 +266,7 @@ fun CollectionScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Daily Bill Entry",
+                                    text = appStrings.dailyBillEntry,
                                     color = TextPrimary,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -319,7 +320,7 @@ fun CollectionScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = "Expense Management",
+                                    text = appStrings.expenseTitle,
                                     color = TextPrimary,
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.SemiBold
@@ -360,7 +361,7 @@ fun CollectionScreen(
                 )
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
-                    text = "Record Customer Payment",
+                    text = appStrings.recordCollectionTitle,
                     color = BgDark,
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp
@@ -376,7 +377,7 @@ fun CollectionScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Recent Collections",
+                    text = appStrings.paymentHistory,
                     color = TextPrimary,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold

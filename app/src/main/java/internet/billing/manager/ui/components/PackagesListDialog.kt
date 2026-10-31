@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.theme.*
+import internet.billing.manager.ui.localization.appStrings
 
 @Composable
 fun InternetPackagesManagerDialog(
@@ -52,7 +53,7 @@ fun InternetPackagesManagerDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Internet Packages",
+                        text = appStrings.packagesDialogTitle,
                         color = TextPrimary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
@@ -73,7 +74,7 @@ fun InternetPackagesManagerDialog(
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Text(
-                            text = "Add Package",
+                            text = appStrings.addPackage,
                             color = BgDark,
                             fontWeight = FontWeight.Bold,
                             fontSize = 11.5.sp
@@ -100,16 +101,10 @@ fun InternetPackagesManagerDialog(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = "No packages yet",
+                                text = appStrings.noPackagesConfigured,
                                 color = TextSecondary,
                                 fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "Tap '+ Add Package' to create one",
-                                color = TextMuted,
-                                fontSize = 11.sp
                             )
                         }
                     }
@@ -168,13 +163,13 @@ fun InternetPackagesManagerDialog(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Edit,
-                                            contentDescription = "Edit",
+                                            contentDescription = appStrings.editBtn,
                                             tint = AccentCyan,
                                             modifier = Modifier.size(13.dp)
                                         )
                                         Spacer(modifier = Modifier.width(3.dp))
                                         Text(
-                                            text = "Edit",
+                                            text = appStrings.editBtn,
                                             color = AccentCyan,
                                             fontSize = 11.5.sp,
                                             fontWeight = FontWeight.Bold
@@ -198,7 +193,7 @@ fun InternetPackagesManagerDialog(
                         contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = "Cancel",
+                            text = appStrings.cancel,
                             color = AccentCyan,
                             fontSize = 12.5.sp,
                             fontWeight = FontWeight.SemiBold

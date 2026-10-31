@@ -24,8 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.InternetPackage
+import internet.billing.manager.ui.components.AdvancedFeaturesDialog
+import internet.billing.manager.ui.components.AppUpdateDialog
 import internet.billing.manager.ui.components.GlassCard
+import internet.billing.manager.ui.components.LanguageSelectionDialog
 import internet.billing.manager.ui.components.ThemeSelectionDialog
+import internet.billing.manager.ui.localization.LanguageManager
+import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 
@@ -37,10 +42,13 @@ fun SettingsScreen(
     val context = LocalContext.current
     val ispSettings by viewModel.ispSettings.collectAsState()
     val packages by viewModel.allPackages.collectAsState()
+    val allCustomers by viewModel.allCustomers.collectAsState()
 
     var showThemeDialog by remember { mutableStateOf(false) }
-    var showSmsTemplateDialog by remember { mutableStateOf(false) }
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var showAdvancedFeaturesDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showUpdateDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -73,13 +81,13 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = "Settings",
+                        text = appStrings.settingsTitle,
                         color = TextPrimary,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "App settings and preferences",
+                        text = appStrings.settingsSubtitle,
                         color = TextSecondary,
                         fontSize = 11.sp
                     )
@@ -98,28 +106,16 @@ fun SettingsScreen(
                     // Item 1: ISP Business Info
                     SettingsRowItem(
                         icon = Icons.Default.Business,
-                        title = "ISP Business Information",
-                        subtitle = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: "Tap to set business info",
+                        title = appStrings.ispBusinessInfo,
+                        subtitle = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) } ?: appStrings.tapToManage,
                         iconTint = AccentCyan,
                         onClick = { viewModel.showEditBusinessInfoDialog = true }
                     )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
-
-                    // Item 2: Bulk SMS Template
-                    SettingsRowItem(
-                        icon = Icons.Default.Chat,
-                        title = "Bulk SMS Template",
-                        subtitle = "Create & manage SMS templates",
-                        iconTint = AccentGreen,
-                        onClick = { showSmsTemplateDialog = true }
-                    )
-                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
-
-                    // Item 3: Internet Packages
+                    // Item 2: Internet Packages
                     SettingsRowItem(
                         icon = Icons.Default.Wifi,
-                        title = "Internet Packages",
-                        subtitle = if (packages.isNotEmpty()) "${packages.size} packages • Tap to manage" else "Tap to manage packages",
+                        title = appStrings.internetPackages,
+                        subtitle = if (packages.isNotEmpty()) "${packages.size} ${appStrings.packagesCountSuffix}" else appStrings.tapToManage,
                         iconTint = AccentPurple,
                         onClick = {
                             viewModel.showPackagesManagerDialog = true
@@ -127,34 +123,34 @@ fun SettingsScreen(
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 4: Advanced Features
+                    // Item 3: Advanced Features
                     SettingsRowItem(
                         icon = Icons.Default.Tune,
-                        title = "Advanced Features",
-                        subtitle = "Additional tools and settings",
+                        title = appStrings.advancedFeatures,
+                        subtitle = appStrings.advancedFeaturesSubtitle,
                         iconTint = AccentBlue,
                         onClick = {
-                            Toast.makeText(context, "Advanced Features Configured", Toast.LENGTH_SHORT).show()
+                            showAdvancedFeaturesDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 5: Language
+                    // Item 4: Language (English / বাংলা)
                     SettingsRowItem(
                         icon = Icons.Default.Language,
-                        title = "Language",
-                        subtitle = "English",
+                        title = appStrings.language,
+                        subtitle = LanguageManager.currentLanguage.nativeName,
                         iconTint = AccentCyan,
                         onClick = {
-                            Toast.makeText(context, "English / Bengali supported", Toast.LENGTH_SHORT).show()
+                            showLanguageDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 6: Theme
+                    // Item 5: Theme
                     SettingsRowItem(
                         icon = Icons.Default.Palette,
-                        title = "Theme",
+                        title = appStrings.theme,
                         subtitle = ThemeManager.currentTheme.name,
                         iconTint = AccentPurple,
                         onClick = {
@@ -163,10 +159,10 @@ fun SettingsScreen(
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 7: Backup & Restore
+                    // Item 6: Backup & Restore
                     SettingsRowItem(
                         icon = Icons.Default.CloudSync,
-                        title = "Backup & Restore",
+                        title = appStrings.backupRestore,
                         subtitle = "Securely backup and restore data",
                         iconTint = AccentGreen,
                         onClick = {
@@ -175,32 +171,32 @@ fun SettingsScreen(
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 8: App Update
+                    // Item 7: App Update
                     SettingsRowItem(
                         icon = Icons.Default.SystemUpdate,
-                        title = "App Update",
-                        subtitle = "Check for new updates (Latest v1.0.0)",
+                        title = appStrings.appUpdate,
+                        subtitle = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA) "GitHub থেকে নতুন আপডেট চেক ও ইনস্টল করুন" else "Check & install updates from GitHub",
                         iconTint = AccentBlue,
                         onClick = {
-                            Toast.makeText(context, "You are on the latest version v1.0.0", Toast.LENGTH_SHORT).show()
+                            showUpdateDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 9: About
+                    // Item 8: About
                     SettingsRowItem(
                         icon = Icons.Default.Info,
-                        title = "About",
+                        title = appStrings.about,
                         subtitle = "App information, privacy & support",
                         iconTint = AccentCyan,
                         onClick = { showAboutDialog = true }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
-                    // Item 10: Security
+                    // Item 9: Security
                     SettingsRowItem(
                         icon = Icons.Default.Security,
-                        title = "Security",
+                        title = appStrings.security,
                         subtitle = "Protected ✓",
                         iconTint = AccentGreen,
                         onClick = {
@@ -220,7 +216,7 @@ fun SettingsScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Internet Packages",
+                        text = appStrings.internetPackages,
                         color = TextPrimary,
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
@@ -232,7 +228,7 @@ fun SettingsScreen(
                         }
                     ) {
                         Text(
-                            text = "Manage",
+                            text = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA) "ম্যানেজ" else "Manage",
                             color = AccentCyan,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold
@@ -260,52 +256,12 @@ fun SettingsScreen(
         }
     }
 
-    // Bulk SMS Template Dialog
-    if (showSmsTemplateDialog) {
-        var template by remember {
-            mutableStateOf(ispSettings?.smsTemplate ?: "Dear {NAME}, your ISP bill for {MONTH} is {DUE} ৳. Please pay on time. Thank you.")
-        }
-        AlertDialog(
-            onDismissRequest = { showSmsTemplateDialog = false },
-            title = { Text("Bulk SMS Template", color = TextPrimary) },
-            text = {
-                Column {
-                    Text("Placeholders: {NAME}, {DUE}, {MONTH}, {COMPANY}", color = TextSecondary, fontSize = 11.sp)
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = template,
-                        onValueChange = { template = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-                }
-            },
-            containerColor = BgCard,
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val current = ispSettings
-                        if (current != null) {
-                            viewModel.saveBusinessInfo(current.copy(smsTemplate = template))
-                        }
-                        showSmsTemplateDialog = false
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
-                ) {
-                    Text("Save Template", color = BgDark)
-                }
-            },
-            dismissButton = {
-                OutlinedButton(onClick = { showSmsTemplateDialog = false }) {
-                    Text("Cancel", color = TextSecondary)
-                }
-            }
+    // Advanced Features Dialog (Auto SMS System, Tools & Automation)
+    if (showAdvancedFeaturesDialog) {
+        AdvancedFeaturesDialog(
+            allCustomers = allCustomers,
+            ispSettings = ispSettings,
+            onDismiss = { showAdvancedFeaturesDialog = false }
         )
     }
 
@@ -342,6 +298,18 @@ fun SettingsScreen(
     if (showThemeDialog) {
         ThemeSelectionDialog(
             onDismiss = { showThemeDialog = false }
+        )
+    }
+
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
+
+    if (showUpdateDialog) {
+        AppUpdateDialog(
+            onDismiss = { showUpdateDialog = false }
         )
     }
 }
