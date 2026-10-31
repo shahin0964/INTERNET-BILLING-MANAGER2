@@ -33,6 +33,6 @@ interface BillDao {
     @Delete
     suspend fun deleteBill(bill: BillEntry)
 
-    @Query("UPDATE bill_entries SET isPaid = 1, paidAmount = billAmount, dueAmount = 0 WHERE id = :billId")
-    suspend fun markBillAsPaid(billId: Long)
+    @Query("UPDATE bill_entries SET isPaid = :isPaid, paidAmount = billAmount, dueAmount = 0 WHERE id = :billId")
+    suspend fun markBillAsPaid(billId: Long, isPaid: Boolean = true)
 }
