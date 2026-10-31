@@ -33,29 +33,22 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Android APK
-        run: |
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee build_log.txt || EXIT_CODE=$?
-          if [ ${EXIT_CODE:-0} -ne 0 ]; then
-            echo "## ❌ Gradle Build Failed" >> $GITHUB_STEP_SUMMARY
-            echo '```text' >> $GITHUB_STEP_SUMMARY
-            tail -n 80 build_log.txt >> $GITHUB_STEP_SUMMARY
-            echo '```' >> $GITHUB_STEP_SUMMARY
-            exit $EXIT_CODE
-          fi
+        run: ./gradlew :app:assembleDebug --stacktrace
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          echo "Listing all generated APKs:"
-          find app/build/outputs/apk -name "*.apk"
-          APK_FILE=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -n "$APK_FILE" ]; then
+          echo "=== Searching for generated APK ==="
+          APK_FILE=$(find . -type f -name "*.apk" 2>/dev/null | head -n 1)
+          echo "Found APK: $APK_FILE"
+          if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             cp "$APK_FILE" release-artifacts/IBM-latest.apk
+            echo "Successfully prepared release-artifacts/IBM-latest.apk"
+            ls -lh release-artifacts/IBM-latest.apk
           else
-            echo "::error::No APK found in app/build/outputs/apk"
+            echo "::error::No APK file found in workspace after build!"
             exit 1
           fi
-          ls -lh release-artifacts/IBM-latest.apk
 
       - name: Update Single GitHub Release
         uses: ncipollo/release-action@v1
