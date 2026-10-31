@@ -104,105 +104,64 @@ fun BillingScreen(
                 shape = RoundedCornerShape(14.dp),
                 borderColor = AccentCyan.copy(alpha = 0.35f)
             ) {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 text = appStrings.billingTitle,
                                 color = TextPrimary,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "প্রতি মাসের ১ তারিখ রাত ১২টায় স্বয়ংক্রিয় বিল তৈরি হয়",
-                                color = TextSecondary,
-                                fontSize = 10.5.sp
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AccentOrange.copy(alpha = 0.15f))
+                                    .padding(horizontal = 7.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${customerBillingItems.size} জন বকেয়া",
+                                    color = AccentOrange,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
-
-                        // Status pill showing pending count
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(AccentOrange.copy(alpha = 0.15f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "${customerBillingItems.size} জন বকেয়া",
-                                color = AccentOrange,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "প্রতি মাসের ১ তারিখ রাত ১২টায় স্বয়ংক্রিয় বিল তৈরি হয়",
+                            color = TextSecondary,
+                            fontSize = 10.5.sp
+                        )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Button(
+                        onClick = { viewModel.showGenerateBillDialog = true },
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.height(34.dp)
                     ) {
-                        // Button 1: Add Manual Bill (+ Add to Billing)
-                        OutlinedButton(
-                            onClick = { viewModel.showAddManualBillDialog = true },
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, AccentCyan),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = AccentCyan.copy(alpha = 0.10f)
-                            ),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = null,
-                                tint = AccentCyan,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "+ বিল যোগ করুন",
-                                color = AccentCyan,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        // Button 2: Auto Generate Monthly Bills
-                        Button(
-                            onClick = { viewModel.showGenerateBillDialog = true },
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(34.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Receipt,
-                                contentDescription = null,
-                                tint = BgDark,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = appStrings.generateBill.replace("\n", " "),
-                                color = BgDark,
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Default.Receipt,
+                            contentDescription = null,
+                            tint = BgDark,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = appStrings.generateBill.replace("\n", " "),
+                            color = BgDark,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 }
             }
@@ -495,13 +454,13 @@ fun BillingScreen(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         if (item.previousDue > 0) {
-                            // Row 1: Previous Due with months
+                            // Row 1: Previous Due with exact months
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = "পূর্বের বকেয়া বিল / Previous Due",
                                         color = TextSecondary,
@@ -510,29 +469,64 @@ fun BillingScreen(
                                     Text(
                                         text = "বকেয়া মাস: ${item.dueMonthsText}",
                                         color = AccentOrange,
-                                        fontSize = 9.5.sp,
-                                        fontWeight = FontWeight.Medium
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold
                                     )
                                 }
                                 Text(
                                     text = "৳${item.previousDue.toInt()}",
                                     color = AccentOrange,
-                                    fontSize = 12.5.sp,
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            if (item.currentMonthBill > 0) {
+                                Spacer(modifier = Modifier.height(5.dp))
 
-                            // Row 2: Current Month Bill with plus indicator
+                                // Row 2: Current Month Bill with plus indicator
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "(+) চলতি মাসের বিল / Current Bill",
+                                            color = TextSecondary,
+                                            fontSize = 10.5.sp
+                                        )
+                                        Text(
+                                            text = "মাস: $formattedCurrentMonth",
+                                            color = TextMuted,
+                                            fontSize = 9.5.sp
+                                        )
+                                    }
+                                    Text(
+                                        text = "৳${item.currentMonthBill.toInt()}",
+                                        color = TextPrimary,
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Divider(
+                                color = CardBorder.copy(alpha = 0.35f),
+                                thickness = 0.8.dp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                        } else {
+                            // Single Row: Current month bill
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
+                                Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        text = "(+) চলতি মাসের বিল / Current Bill",
+                                        text = "চলতি মাসের বিল / Current Bill",
                                         color = TextSecondary,
                                         fontSize = 10.5.sp
                                     )
@@ -549,7 +543,6 @@ fun BillingScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
-
                             Spacer(modifier = Modifier.height(6.dp))
                             Divider(
                                 color = CardBorder.copy(alpha = 0.35f),

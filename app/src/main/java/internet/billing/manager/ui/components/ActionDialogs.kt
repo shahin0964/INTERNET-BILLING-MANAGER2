@@ -169,6 +169,52 @@ fun CollectPaymentDialog(
                     )
                 )
 
+                if (selectedCustomer != null && selectedCustomer!!.dueAmount > selectedCustomer!!.monthlyBill && selectedCustomer!!.monthlyBill > 0) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AccentCyan.copy(alpha = 0.15f))
+                                .clickable {
+                                    amountText = selectedCustomer!!.monthlyBill.toInt().toString()
+                                }
+                                .padding(vertical = 5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "১ মাসের বিল (৳${selectedCustomer!!.monthlyBill.toInt()})",
+                                color = AccentCyan,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(AccentOrange.copy(alpha = 0.15f))
+                                .clickable {
+                                    amountText = selectedCustomer!!.dueAmount.toInt().toString()
+                                }
+                                .padding(vertical = 5.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "মোট বকেয়া (৳${selectedCustomer!!.dueAmount.toInt()})",
+                                color = AccentOrange,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(appStrings.paymentMethod, color = TextSecondary, fontSize = 11.sp)

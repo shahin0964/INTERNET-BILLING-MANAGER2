@@ -87,62 +87,91 @@ class BillingRepository(
         )
         paymentDao.insertPayment(transaction)
 
-        // Deduct from customer due amount
+        // 1. Deduct from customer total due amount
         val newDue = (customer.dueAmount - amount).coerceAtLeast(0.0)
         customerDao.updateDue(customerId, newDue)
 
-        // If customer has an unpaid monthly bill, update it
-        val unpaidBill = billDao.getLatestUnpaidBillForCustomer(customerId)
-        if (unpaidBill != null) {
-            val newBillPaid = unpaidBill.paidAmount + amount
-            val newBillDue = (unpaidBill.billAmount - newBillPaid).coerceAtLeast(0.0)
+        // 2. Fetch all unpaid bills for this customer in chronological order (oldest first - FIFO)
+        val unpaidBills = billDao.getUnpaidBillsForCustomer(customerId)
+        val pastUnpaidBills = unpaidBills.filter { it.monthYear < currentMonthYear }
+        val currentMonthBill = unpaidBills.firstOrNull { it.monthYear == currentMonthYear }
+
+        var remainingPayment = amount
+
+        // Step A: Pay past recorded bills first (oldest first)
+        for (bill in pastUnpaidBills) {
+            if (remainingPayment <= 0.0) break
+            val billDue = bill.dueAmount
+            if (billDue > 0.0) {
+                val payThis = minOf(remainingPayment, billDue)
+                val newPaid = bill.paidAmount + payThis
+                val newBillDue = (bill.billAmount - newPaid).coerceAtLeast(0.0)
+                billDao.updateBill(
+                    bill.copy(
+                        paidAmount = newPaid,
+                        dueAmount = newBillDue,
+                        isPaid = newBillDue <= 0.0
+                    )
+                )
+                remainingPayment -= payThis
+            }
+        }
+
+        // Step B: If customer had previous dues not recorded as separate bill_entries,
+        // absorb payment towards that past due balance before touching the running bill!
+        val currentBillDue = currentMonthBill?.dueAmount ?: customer.monthlyBill
+        val initialPreviousDue = (customer.dueAmount - currentBillDue).coerceAtLeast(0.0)
+        val pastRecordedDueSum = pastUnpaidBills.sumOf { it.dueAmount }
+        val unrecordedPreviousDue = (initialPreviousDue - pastRecordedDueSum).coerceAtLeast(0.0)
+
+        if (unrecordedPreviousDue > 0.0 && remainingPayment > 0.0) {
+            val payUnrecorded = minOf(remainingPayment, unrecordedPreviousDue)
+            remainingPayment -= payUnrecorded
+        }
+
+        // Step C: Only after all previous dues are satisfied, apply remaining payment to running month's bill!
+        if (currentMonthBill != null && remainingPayment > 0.0) {
+            val payThis = minOf(remainingPayment, currentMonthBill.dueAmount)
+            val newPaid = currentMonthBill.paidAmount + payThis
+            val newBillDue = (currentMonthBill.billAmount - newPaid).coerceAtLeast(0.0)
             billDao.updateBill(
-                unpaidBill.copy(
-                    paidAmount = newBillPaid,
+                currentMonthBill.copy(
+                    paidAmount = newPaid,
                     dueAmount = newBillDue,
                     isPaid = newBillDue <= 0.0
                 )
             )
-        } else {
-            // Also record a payment entry
-            val billEntry = BillEntry(
-                customerId = customerId,
-                customerName = customer.name.ifBlank { customer.pppoeUsername },
-                customerCode = customer.customerCode,
-                monthYear = currentMonthYear,
-                billAmount = amount,
-                paidAmount = amount,
-                dueAmount = 0.0,
-                isPaid = true,
-                billDateMillis = System.currentTimeMillis(),
-                notes = "$method Payment"
-            )
-            billDao.insertBill(billEntry)
+            remainingPayment -= payThis
         }
     }
 
     suspend fun deletePaymentAndReverse(payment: PaymentTransaction) {
         paymentDao.deletePayment(payment)
 
-        val customer = customerDao.getCustomerById(payment.customerId)
-        if (customer != null) {
-            val restoredDue = customer.dueAmount + payment.amount
-            customerDao.updateDue(customer.id, restoredDue)
-        }
+        val customer = customerDao.getCustomerById(payment.customerId) ?: return
+        val restoredDue = customer.dueAmount + payment.amount
+        customerDao.updateDue(customer.id, restoredDue)
 
-        // Reverse corresponding bill payment
-        val bill = billDao.getBillForCustomerMonth(payment.customerId, payment.monthYear)
-            ?: billDao.getLatestUnpaidBillForCustomer(payment.customerId)
-        if (bill != null) {
-            val newPaid = (bill.paidAmount - payment.amount).coerceAtLeast(0.0)
-            val newDue = (bill.billAmount - newPaid).coerceAtLeast(0.0)
-            billDao.updateBill(
-                bill.copy(
-                    paidAmount = newPaid,
-                    dueAmount = newDue,
-                    isPaid = false
+        // Reverse bill payments in LIFO order (newest paid bills first)
+        val customerBills = billDao.getAllBillsForCustomer(payment.customerId)
+            .sortedWith(compareByDescending<BillEntry> { it.monthYear }.thenByDescending { it.id })
+
+        var remainingToReverse = payment.amount
+        for (bill in customerBills) {
+            if (remainingToReverse <= 0.0) break
+            if (bill.paidAmount > 0.0) {
+                val reverseThis = minOf(remainingToReverse, bill.paidAmount)
+                val newPaid = (bill.paidAmount - reverseThis).coerceAtLeast(0.0)
+                val newDue = (bill.billAmount - newPaid).coerceAtLeast(0.0)
+                billDao.updateBill(
+                    bill.copy(
+                        paidAmount = newPaid,
+                        dueAmount = newDue,
+                        isPaid = newDue <= 0.0
+                    )
                 )
-            )
+                remainingToReverse -= reverseThis
+            }
         }
     }
 

@@ -141,45 +141,44 @@ class BillingViewModel(
             val currentBill = custBills.firstOrNull { it.monthYear == monthKey }
             val unpaidBills = custBills.filter { !it.isPaid && it.dueAmount > 0 }
 
-            val currentBillAmount = when {
-                currentBill != null -> currentBill.billAmount
-                cust.status == Customer.STATUS_ACTIVE -> cust.monthlyBill
-                else -> 0.0
-            }
-
-            val currentBillDue = currentBill?.dueAmount ?: if (cust.status == Customer.STATUS_ACTIVE) cust.monthlyBill else 0.0
+            val totalCustomerDue = cust.dueAmount
             val isCurrentPaid = currentBill != null && currentBill.isPaid && currentBill.dueAmount <= 0.0
 
-            val totalCustomerDue = cust.dueAmount
             if (totalCustomerDue <= 0.0 && (currentBill == null || isCurrentPaid) && unpaidBills.isEmpty()) {
                 // Customer has no dues - automatically leaves Billing screen!
                 continue
             }
 
-            val previousDue = (totalCustomerDue - currentBillDue).coerceAtLeast(0.0)
-
-            val pastMonths = unpaidBills
-                .filter { it.monthYear != monthKey }
-                .map { formatShortMonth(it.monthYear) }
-                .distinct()
-
-            val dueMonthsText = when {
-                pastMonths.isNotEmpty() -> pastMonths.joinToString(", ")
-                previousDue > 0 -> "Previous Dues"
-                else -> ""
+            // Running month's unpaid bill due
+            val currentBillDue = when {
+                currentBill != null -> currentBill.dueAmount
+                cust.status == Customer.STATUS_ACTIVE -> cust.monthlyBill
+                else -> 0.0
             }
 
-            val totalPayable = currentBillAmount + previousDue
+            // Current due is capped at customer's total due
+            val currentDue = minOf(currentBillDue, totalCustomerDue)
+            // Previous due is strictly the remainder of customer's total due
+            val previousDue = (totalCustomerDue - currentDue).coerceAtLeast(0.0)
+            // Total payable STRICTLY equals totalCustomerDue!
+            val totalPayable = totalCustomerDue
 
-            if (totalPayable > 0 || totalCustomerDue > 0) {
+            if (totalPayable > 0.0) {
+                val dueMonthsText = computeDueMonthsText(
+                    unpaidBills = unpaidBills,
+                    currentMonthKey = monthKey,
+                    previousDue = previousDue,
+                    monthlyBill = cust.monthlyBill
+                )
+
                 list.add(
                     CustomerBillingItem(
                         customer = cust,
                         currentMonthKey = monthKey,
-                        currentMonthBill = currentBillAmount,
+                        currentMonthBill = currentDue,
                         previousDue = previousDue,
                         dueMonthsText = dueMonthsText,
-                        totalPayable = if (totalCustomerDue > 0) totalCustomerDue.coerceAtLeast(totalPayable) else totalPayable,
+                        totalPayable = totalPayable,
                         isPaid = false,
                         latestBillId = currentBill?.id ?: 0L
                     )
@@ -426,12 +425,54 @@ data class CustomerBillingItem(
 private fun formatShortMonth(monthYear: String): String {
     return try {
         val parser = SimpleDateFormat("yyyy-MM", Locale.getDefault())
-        val formatter = SimpleDateFormat("MMM", Locale.getDefault())
+        val formatter = SimpleDateFormat("MMM yyyy", Locale.getDefault())
         val date = parser.parse(monthYear)
         if (date != null) formatter.format(date) else monthYear
     } catch (e: Exception) {
         monthYear
     }
+}
+
+private fun computeDueMonthsText(
+    unpaidBills: List<BillEntry>,
+    currentMonthKey: String,
+    previousDue: Double,
+    monthlyBill: Double
+): String {
+    val recordedPastMonths = unpaidBills
+        .filter { it.monthYear < currentMonthKey }
+        .map { it.monthYear }
+        .distinct()
+        .sorted()
+
+    val months = if (recordedPastMonths.isNotEmpty()) {
+        recordedPastMonths.map { formatShortMonth(it) }
+    } else if (previousDue > 0) {
+        val count = if (monthlyBill > 0) {
+            Math.ceil(previousDue / monthlyBill).toInt().coerceIn(1, 12)
+        } else {
+            1
+        }
+        val cal = Calendar.getInstance()
+        try {
+            val parser = SimpleDateFormat("yyyy-MM", Locale.getDefault())
+            cal.time = parser.parse(currentMonthKey) ?: Date()
+        } catch (e: Exception) {
+            cal.time = Date()
+        }
+        val generated = mutableListOf<String>()
+        for (i in count downTo 1) {
+            val pastCal = cal.clone() as Calendar
+            pastCal.add(Calendar.MONTH, -i)
+            val key = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(pastCal.time)
+            generated.add(formatShortMonth(key))
+        }
+        generated
+    } else {
+        emptyList()
+    }
+
+    return if (months.isNotEmpty()) months.joinToString(", ") else ""
 }
 
 class BillingViewModelFactory(
