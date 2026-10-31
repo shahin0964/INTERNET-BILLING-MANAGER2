@@ -203,14 +203,7 @@ fun CollectionScreen(
                         accentColor = AccentBlue,
                         icon = Icons.Default.Speed,
                         subtitle = appStrings.bandwidthBillSubtitle,
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable {
-                                viewModel.openAddExpense(
-                                    category = Expense.CAT_BANDWIDTH_BILL,
-                                    title = "Bandwidth Bill"
-                                )
-                            }
+                        modifier = Modifier.weight(1f)
                     )
                     GlowStatCard(
                         title = appStrings.monthlyProfitTitle,
