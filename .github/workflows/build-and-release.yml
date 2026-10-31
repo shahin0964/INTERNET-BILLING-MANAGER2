@@ -33,37 +33,14 @@ jobs:
         run: chmod +x gradlew
 
       - name: Build Android APK
-        run: |
-          ./gradlew assembleRelease --stacktrace 2>&1 | tee build_output.log || ./gradlew assembleDebug --stacktrace 2>&1 | tee -a build_output.log
-
-      - name: Print Error on Failure
-        if: failure()
-        run: |
-          echo "::error::Build Failed!"
-          tail -n 150 build_output.log
-
-      - name: Upload Build Log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-log
-          path: build_output.log
+        run: ./gradlew assembleDebug --stacktrace
 
       - name: Prepare APK for Release
         run: |
           mkdir -p release-artifacts
-          echo "Searching for built APKs..."
-          find . -name "*.apk"
-          APK_FILE=$(find . -name "*.apk" -not -path "*/intermediates/*" | head -n 1)
-          echo "Selected APK: $APK_FILE"
-          if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
-            cp "$APK_FILE" release-artifacts/IBM-latest.apk
-          else
-            echo "::error::No APK file was found!"
-            exit 1
-          fi
-          echo "Listing release-artifacts:"
-          ls -lh release-artifacts/
+          cp app/build/outputs/apk/debug/app-debug.apk release-artifacts/IBM-latest.apk
+          echo "Release artifact ready:"
+          ls -lh release-artifacts/IBM-latest.apk
 
       - name: Update Single GitHub Release
         uses: ncipollo/release-action@v1
