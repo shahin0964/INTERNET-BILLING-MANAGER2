@@ -353,6 +353,533 @@ fun AdvancedFeaturesDialog(
 }
 
 @Composable
+fun EditTemplateDialog(
+    template: SmsTemplateItem,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit
+) {
+    val context = LocalContext.current
+    var currentText by remember(template.key) {
+        mutableStateOf(AutoSmsManager.getTemplateText(template.key, context))
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = BgCard,
+            border = BorderStroke(1.dp, CardBorder),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .padding(14.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = "Edit Template: ${template.title}",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.5.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
+                    color = AccentCyan,
+                    fontSize = 10.5.sp
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = currentText,
+                    onValueChange = { currentText = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    minLines = 4,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            currentText = template.defaultText
+                        },
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, CardBorder)
+                    ) {
+                        Text("Reset Default", color = TextSecondary, fontSize = 11.5.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            onSave(currentText)
+                        },
+                        modifier = Modifier.weight(1f).height(40.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    ) {
+                        Text("Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun BulkSmsSendDialog(
+    allCustomers: List<Customer>,
+    ispSettings: IspSettings?,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    var selectedTemplateKey by remember { mutableStateOf(AutoSmsManager.defaultTemplates.first().key) }
+    var targetGroup by remember { mutableStateOf("All") } // "All", "Active", "Due"
+    var isSendingInProgress by remember { mutableStateOf(false) }
+    var sendProgressCurrent by remember { mutableStateOf(0) }
+    var sendProgressTotal by remember { mutableStateOf(0) }
+    var currentRecipientName by remember { mutableStateOf("") }
+    var isWaitingDelay by remember { mutableStateOf(false) }
+    var sendSummaryResult by remember { mutableStateOf<SmsSendSummary?>(null) }
+    var sendJob by remember { mutableStateOf<Job?>(null) }
+
+    val smsPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            Toast.makeText(context, "SMS Permission granted!", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "SMS Permission required to send via SIM", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // Sending Progress Dialog
+    if (isSendingInProgress) {
+        Dialog(
+            onDismissRequest = { /* Prevent dismiss while sending */ },
+            properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+        ) {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                border = BorderStroke(1.dp, AccentCyan.copy(alpha = 0.5f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(12.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Sending Bulk SMS via SIM",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    LinearProgressIndicator(
+                        progress = {
+                            if (sendProgressTotal > 0) sendProgressCurrent.toFloat() / sendProgressTotal.toFloat() else 0f
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp)),
+                        color = AccentCyan,
+                        trackColor = BgCardLight
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "Sent: $sendProgressCurrent of $sendProgressTotal",
+                        color = AccentCyan,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Current: $currentRecipientName",
+                        color = TextSecondary,
+                        fontSize = 11.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (isWaitingDelay) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(12.dp),
+                                strokeWidth = 2.dp,
+                                color = AccentOrange
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Pausing ${AutoSmsManager.smsDelaySeconds}s to protect SIM from carrier spam block...",
+                                color = AccentOrange,
+                                fontSize = 10.5.sp
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = "Dispatching next message...",
+                            color = AccentGreen,
+                            fontSize = 10.5.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            sendJob?.cancel()
+                            isSendingInProgress = false
+                            Toast.makeText(context, "SMS Queue Stopped", Toast.LENGTH_SHORT).show()
+                        },
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, AccentRed.copy(alpha = 0.5f))
+                    ) {
+                        Text("Stop Queue", color = AccentRed, fontSize = 12.sp)
+                    }
+                }
+            }
+        }
+    }
+
+    // Summary Result Dialog
+    if (sendSummaryResult != null) {
+        val summary = sendSummaryResult!!
+        AlertDialog(
+            onDismissRequest = {
+                sendSummaryResult = null
+                onDismiss()
+            },
+            title = { Text("Bulk SMS Complete", color = TextPrimary) },
+            text = {
+                Column {
+                    Text("Total Processed: ${summary.total}", color = TextSecondary, fontSize = 13.sp)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Successfully Sent: ${summary.successful}", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    if (summary.failed > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text("Failed / No phone: ${summary.failed}", color = AccentRed, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        sendSummaryResult = null
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                ) {
+                    Text("OK", color = BgDark, fontWeight = FontWeight.Bold)
+                }
+            },
+            containerColor = BgCard
+        )
+    }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = BgCard,
+            border = BorderStroke(1.dp, CardBorder),
+            modifier = Modifier
+                .fillMaxWidth(0.94f)
+                .fillMaxHeight(0.88f)
+                .padding(vertical = 8.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(14.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AccentCyan.copy(alpha = 0.15f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Send,
+                                contentDescription = null,
+                                tint = AccentCyan,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = appStrings.bulkSmsSend,
+                                color = TextPrimary,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
+                            )
+                            Text(
+                                text = "Queue SIM messages with safe anti-spam delay",
+                                color = TextSecondary,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+
+                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = TextSecondary)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // 1. Choose Template Dropdown
+                var templateExpanded by remember { mutableStateOf(false) }
+                val activeTemplateItem = AutoSmsManager.defaultTemplates.firstOrNull { it.key == selectedTemplateKey }
+                    ?: AutoSmsManager.defaultTemplates.first()
+
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = activeTemplateItem.title,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text(appStrings.selectTemplate) },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = AccentCyan
+                            )
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AccentCyan,
+                            unfocusedBorderColor = CardBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clickable { templateExpanded = true }
+                    )
+
+                    DropdownMenu(
+                        expanded = templateExpanded,
+                        onDismissRequest = { templateExpanded = false },
+                        modifier = Modifier
+                            .background(BgCard)
+                            .border(BorderStroke(1.dp, CardBorder), RoundedCornerShape(8.dp))
+                    ) {
+                        AutoSmsManager.defaultTemplates.forEach { item ->
+                            DropdownMenuItem(
+                                text = {
+                                    Column {
+                                        Text(
+                                            text = item.title,
+                                            color = if (item.key == selectedTemplateKey) AccentCyan else TextPrimary,
+                                            fontWeight = if (item.key == selectedTemplateKey) FontWeight.Bold else FontWeight.Normal,
+                                            fontSize = 12.5.sp
+                                        )
+                                        Text(
+                                            text = item.description,
+                                            color = TextMuted,
+                                            fontSize = 10.sp
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    selectedTemplateKey = item.key
+                                    templateExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 2. Target Recipients Filter
+                Text(appStrings.targetAudience, color = TextSecondary, fontSize = 11.5.sp)
+                Spacer(modifier = Modifier.height(6.dp))
+
+                val allWithPhone = allCustomers.filter { it.phone.isNotBlank() }
+                val activeWithPhone = allCustomers.filter { it.phone.isNotBlank() && it.status == Customer.STATUS_ACTIVE }
+                val dueWithPhone = allCustomers.filter { it.phone.isNotBlank() && it.dueAmount > 0 }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    listOf(
+                        Triple("All", "${appStrings.targetAll} (${allWithPhone.size})", allWithPhone),
+                        Triple("Active", "${appStrings.targetActiveOnly} (${activeWithPhone.size})", activeWithPhone),
+                        Triple("Due", "${appStrings.targetDueOnly} (${dueWithPhone.size})", dueWithPhone)
+                    ).forEach { (key, label, _) ->
+                        val isSelected = targetGroup == key
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) AccentCyan.copy(alpha = 0.2f) else BgCardLight)
+                                .border(1.dp, if (isSelected) AccentCyan else CardBorder, RoundedCornerShape(8.dp))
+                                .clickable { targetGroup = key }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                color = if (isSelected) AccentCyan else TextSecondary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+
+                val targetRecipients = when (targetGroup) {
+                    "Active" -> activeWithPhone
+                    "Due" -> dueWithPhone
+                    else -> allWithPhone
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Message Preview Box
+                val rawTemplateText = AutoSmsManager.getTemplateText(selectedTemplateKey, context)
+                val sampleCustomer = targetRecipients.firstOrNull() ?: Customer(
+                    name = "Sample Customer",
+                    phone = "017XXXXXXXX",
+                    monthlyBill = 500.0,
+                    dueAmount = 500.0,
+                    pppoeUsername = "sample_user",
+                    packageName = "5 Mbps"
+                )
+                val previewFormatted = AutoSmsManager.formatMessage(
+                    template = rawTemplateText,
+                    customer = sampleCustomer,
+                    ispSettings = ispSettings
+                )
+
+                Text(appStrings.messagePreview, color = TextSecondary, fontSize = 11.5.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(BgCardLight)
+                        .border(1.dp, CardBorder, RoundedCornerShape(8.dp))
+                        .padding(10.dp)
+                ) {
+                    Text(
+                        text = previewFormatted,
+                        color = TextPrimary,
+                        fontSize = 11.5.sp,
+                        lineHeight = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Start Sending Button
+                Button(
+                    onClick = {
+                        if (targetRecipients.isEmpty()) {
+                            Toast.makeText(context, "No customers with valid phone numbers in this group", Toast.LENGTH_SHORT).show()
+                            return@Button
+                        }
+
+                        val hasPermission = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.SEND_SMS
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (!hasPermission) {
+                            smsPermissionLauncher.launch(Manifest.permission.SEND_SMS)
+                            return@Button
+                        }
+
+                        isSendingInProgress = true
+                        sendProgressCurrent = 0
+                        sendProgressTotal = targetRecipients.size
+
+                        sendJob = coroutineScope.launch {
+                            val summary = AutoSmsManager.sendBatchSms(
+                                context = context,
+                                customers = targetRecipients,
+                                template = rawTemplateText,
+                                ispSettings = ispSettings,
+                                onProgress = { current, total, name, isWaiting ->
+                                    sendProgressCurrent = current
+                                    sendProgressTotal = total
+                                    currentRecipientName = name
+                                    isWaitingDelay = isWaiting
+                                }
+                            )
+                            isSendingInProgress = false
+                            sendSummaryResult = summary
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                    enabled = targetRecipients.isNotEmpty()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Send,
+                        contentDescription = null,
+                        tint = BgDark,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "${appStrings.sendSmsBtn} (${targetRecipients.size})",
+                        color = BgDark,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+        }
+    }
+}
+
+@Composable
 fun AutoSmsHubDialog(
     allCustomers: List<Customer>,
     ispSettings: IspSettings?,
@@ -389,87 +916,15 @@ fun AutoSmsHubDialog(
     // Template Edit Dialog
     if (editingTemplateItem != null) {
         val item = editingTemplateItem!!
-        var currentText by remember(item.key) {
-            mutableStateOf(AutoSmsManager.getTemplateText(item.key, context))
-        }
-
-        Dialog(onDismissRequest = { editingTemplateItem = null }) {
-            Surface(
-                shape = RoundedCornerShape(14.dp),
-                color = BgCard,
-                border = BorderStroke(1.dp, CardBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .padding(14.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text(
-                        text = "Edit Template: ${item.title}",
-                        color = TextPrimary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.5.sp
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
-                        color = AccentCyan,
-                        fontSize = 10.5.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    OutlinedTextField(
-                        value = currentText,
-                        onValueChange = { currentText = it },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 4,
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            cursorColor = AccentCyan
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedButton(
-                            onClick = {
-                                currentText = item.defaultText
-                            },
-                            modifier = Modifier.weight(1f).height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(1.dp, CardBorder)
-                        ) {
-                            Text("Reset Default", color = TextSecondary, fontSize = 11.5.sp)
-                        }
-
-                        Button(
-                            onClick = {
-                                AutoSmsManager.saveTemplateText(item.key, currentText, context)
-                                Toast.makeText(context, "Template saved!", Toast.LENGTH_SHORT).show()
-                                editingTemplateItem = null
-                            },
-                            modifier = Modifier.weight(1f).height(40.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
-                        ) {
-                            Text("Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-                        }
-                    }
-                }
+        EditTemplateDialog(
+            template = item,
+            onDismiss = { editingTemplateItem = null },
+            onSave = { newText ->
+                AutoSmsManager.saveTemplateText(item.key, newText, context)
+                Toast.makeText(context, "Template saved!", Toast.LENGTH_SHORT).show()
+                editingTemplateItem = null
             }
-        }
+        )
     }
 
     // Sending Progress Dialog

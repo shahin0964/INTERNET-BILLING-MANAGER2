@@ -610,7 +610,7 @@ fun AutoSmsScreen(
         EditTemplateDialog(
             template = tpl,
             onDismiss = { templateToEdit = null },
-            onSave = { newText ->
+            onSave = { newText: String ->
                 AutoSmsManager.saveTemplateText(tpl.key, newText, context)
                 templateToEdit = null
                 Toast.makeText(context, if (isBangla) "টেমপ্লেট সংরক্ষণ করা হয়েছে" else "Template saved", Toast.LENGTH_SHORT).show()
