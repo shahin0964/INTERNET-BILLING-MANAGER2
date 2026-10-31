@@ -29,6 +29,7 @@ import internet.billing.manager.data.model.Customer
 import internet.billing.manager.ui.components.CustomerDetailsDialog
 import internet.billing.manager.ui.components.CustomerStatusBadge
 import internet.billing.manager.ui.components.GlassCard
+import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
@@ -351,6 +352,25 @@ fun CustomerCard(
                     color = if (customer.dueAmount > 0) AccentRed else AccentGreen,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(3.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Start,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Event,
+                    contentDescription = null,
+                    tint = TextSecondary,
+                    modifier = Modifier.size(11.dp)
+                )
+                Spacer(modifier = Modifier.width(3.dp))
+                Text(
+                    text = if (LanguageManager.isBengali()) "বিল শেষ তারিখ: প্রতি মাসের ${customer.billDueDay} তারিখ" else "Bill Due: ${customer.billDueDay}th of month",
+                    color = TextSecondary,
+                    fontSize = 10.5.sp
                 )
             }
 

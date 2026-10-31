@@ -418,6 +418,17 @@ class BillingViewModel(
         }
     }
 
+    fun updateCustomerDueDay(customer: Customer, newDueDay: Int) {
+        viewModelScope.launch {
+            val clampedDay = newDueDay.coerceIn(1, 31)
+            val updated = customer.copy(billDueDay = clampedDay)
+            repository.updateCustomer(updated)
+            if (selectedCustomerForDetails?.id == customer.id) {
+                selectedCustomerForDetails = updated
+            }
+        }
+    }
+
     fun deletePayment(payment: PaymentTransaction) {
         viewModelScope.launch {
             repository.deletePaymentAndReverse(payment)

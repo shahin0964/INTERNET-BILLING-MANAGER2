@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,6 +29,7 @@ import androidx.compose.ui.window.DialogProperties
 import internet.billing.manager.data.model.Customer
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.data.model.PreviousDueItem
+import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import java.text.SimpleDateFormat
@@ -60,6 +62,7 @@ fun AddEditCustomerDialog(
                 ?: "500"
         )
     }
+    var billDueDay by remember { mutableStateOf(customerToEdit?.billDueDay ?: 10) }
 
     var status by remember { mutableStateOf(customerToEdit?.status ?: Customer.STATUS_ACTIVE) }
     val connectionType by remember { mutableStateOf(customerToEdit?.connectionType ?: "Fiber") }
@@ -428,6 +431,72 @@ fun AddEditCustomerDialog(
                     onValueChange = { monthlyBillText = it },
                     label = { Text("${appStrings.monthlyFee} *") },
                     placeholder = { Text("e.g. 500") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentCyan,
+                        unfocusedLabelColor = TextSecondary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // 8.1 Bill Due Day (Day of Month)
+                Text(
+                    text = if (LanguageManager.isBengali()) "বিল পরিশোধের শেষ তারিখ (প্রতি মাসের দিন)" else "Bill Payment Due Day (Day of Month)",
+                    color = TextSecondary,
+                    fontSize = 11.5.sp
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(5, 7, 10, 15, 20).forEach { day ->
+                        val isSelected = billDueDay == day
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) AccentCyan.copy(alpha = 0.25f) else BgCardLight.copy(alpha = 0.35f))
+                                .border(1.dp, if (isSelected) AccentCyan else CardBorder, RoundedCornerShape(8.dp))
+                                .clickable { billDueDay = day }
+                                .padding(vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (LanguageManager.isBengali()) "$day তারিখ" else "${day}th",
+                                color = if (isSelected) AccentCyan else TextPrimary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                OutlinedTextField(
+                    value = billDueDay.toString(),
+                    onValueChange = { input ->
+                        val clean = input.filter { it.isDigit() }
+                        val num = clean.toIntOrNull()
+                        if (num != null && num in 1..31) {
+                            billDueDay = num
+                        } else if (clean.isEmpty()) {
+                            billDueDay = 1
+                        }
+                    },
+                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)") },
+                    placeholder = { Text("10") },
+                    leadingIcon = {
+                        Icon(Icons.Default.Event, contentDescription = null, tint = AccentCyan, modifier = Modifier.size(18.dp))
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
@@ -844,6 +913,7 @@ fun AddEditCustomerDialog(
                                 speedMbps = selectedPackage?.speedMbps ?: 0,
                                 monthlyBill = monthlyPrice,
                                 dueAmount = totalDue,
+                                billDueDay = billDueDay,
                                 status = status,
                                 connectionType = connectionType,
                                 address = address,

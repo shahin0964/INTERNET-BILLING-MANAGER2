@@ -388,8 +388,8 @@ fun EditTemplateDialog(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = if (isBangla) "ভেরিয়েবলসমূহ: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}"
-                           else "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
+                    text = if (isBangla) "ভেরিয়েবলসমূহ: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}"
+                           else "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
                     color = AccentCyan,
                     fontSize = 10.5.sp
                 )

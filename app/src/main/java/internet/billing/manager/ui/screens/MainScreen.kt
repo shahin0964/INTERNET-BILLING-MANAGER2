@@ -287,6 +287,9 @@ fun MainScreen(
             onStatusChange = { newStatus ->
                 viewModel.updateCustomerStatus(customerForDetails, newStatus)
             },
+            onDueDayChange = { newDueDay ->
+                viewModel.updateCustomerDueDay(customerForDetails, newDueDay)
+            },
             onCollectPayment = {
                 viewModel.customerForPayment = customerForDetails
                 viewModel.showCollectPaymentDialog = true

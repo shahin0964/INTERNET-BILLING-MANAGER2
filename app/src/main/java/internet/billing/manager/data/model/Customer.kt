@@ -16,6 +16,7 @@ data class Customer(
     val speedMbps: Int = 0,
     val monthlyBill: Double = 0.0,
     val dueAmount: Double = 0.0,
+    val billDueDay: Int = 10,
     val status: String = STATUS_ACTIVE, // "Active", "Suspended", "Inactive"
     val connectionType: String = "Fiber",
     val address: String = "",

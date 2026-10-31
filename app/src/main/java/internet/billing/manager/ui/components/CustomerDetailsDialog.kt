@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -24,11 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import internet.billing.manager.data.model.Customer
+import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import java.text.SimpleDateFormat
@@ -41,10 +44,12 @@ fun CustomerDetailsDialog(
     onDismiss: () -> Unit,
     onEdit: () -> Unit,
     onStatusChange: (String) -> Unit,
+    onDueDayChange: (Int) -> Unit = {},
     onCollectPayment: () -> Unit,
     onDelete: () -> Unit
 ) {
     val context = LocalContext.current
+    var showDueDayPicker by remember { mutableStateOf(false) }
 
     val initial = remember(customer.name, customer.pppoeUsername) {
         val str = customer.name.ifBlank { customer.pppoeUsername }
@@ -206,33 +211,146 @@ fun CustomerDetailsDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(12.dp),
-                        horizontalArrangement = Arrangement.SpaceAround
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Monthly Bill", color = TextSecondary, fontSize = 10.5.sp)
+                            Text(text = "Monthly Bill", color = TextSecondary, fontSize = 10.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "৳${customer.monthlyBill.toInt()}",
                                 color = TextPrimary,
-                                fontSize = 15.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
 
                         Divider(
                             modifier = Modifier
-                                .height(32.dp)
+                                .height(30.dp)
                                 .width(1.dp),
                             color = CardBorder.copy(alpha = 0.6f)
                         )
 
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Current Due", color = TextSecondary, fontSize = 10.5.sp)
+                            Text(text = "Current Due", color = TextSecondary, fontSize = 10.sp)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "৳${customer.dueAmount.toInt()}",
                                 color = if (customer.dueAmount > 0) AccentRed else AccentGreen,
-                                fontSize = 15.sp,
+                                fontSize = 14.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+
+                        Divider(
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(1.dp),
+                            color = CardBorder.copy(alpha = 0.6f)
+                        )
+
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .clickable { showDueDayPicker = true }
+                                .padding(horizontal = 4.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = if (LanguageManager.isBengali()) "শেষ তারিখ" else "Due Day",
+                                color = AccentCyan,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = if (LanguageManager.isBengali()) "${customer.billDueDay} তারিখ" else "${customer.billDueDay}th",
+                                    color = AccentCyan,
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit Due Day",
+                                    tint = AccentCyan,
+                                    modifier = Modifier.size(11.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Dedicated Bill Payment Deadline & Setting Card
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    borderColor = AccentCyan.copy(alpha = 0.35f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AccentCyan.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Event,
+                                    contentDescription = null,
+                                    tint = AccentCyan,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (LanguageManager.isBengali()) "বিল পরিশোধের শেষ তারিখ" else "Bill Payment Deadline",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = if (LanguageManager.isBengali()) "প্রতি মাসের ${customer.billDueDay} তারিখ" else "By ${customer.billDueDay}th of every month",
+                                    color = AccentCyan,
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Button(
+                            onClick = { showDueDayPicker = true },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan.copy(alpha = 0.2f)),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                            modifier = Modifier.height(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = null,
+                                tint = AccentCyan,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (LanguageManager.isBengali()) "সেট করুন" else "Set Date",
+                                color = AccentCyan,
+                                fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -392,6 +510,223 @@ fun CustomerDetailsDialog(
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+
+    if (showDueDayPicker) {
+        BillDueDayPickerDialog(
+            currentDay = customer.billDueDay,
+            customerName = customer.name.ifBlank { customer.pppoeUsername },
+            onDismiss = { showDueDayPicker = false },
+            onSave = { newDay ->
+                onDueDayChange(newDay)
+                showDueDayPicker = false
+                Toast.makeText(
+                    context,
+                    if (LanguageManager.isBengali()) "বিল পরিশোধের শেষ তারিখ প্রতি মাসের $newDay তারিখ নির্ধারণ করা হয়েছে" else "Bill payment due day set to ${newDay}th of month",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        )
+    }
+}
+
+@Composable
+fun BillDueDayPickerDialog(
+    currentDay: Int,
+    customerName: String,
+    onDismiss: () -> Unit,
+    onSave: (Int) -> Unit
+) {
+    var selectedDay by remember { mutableStateOf(currentDay) }
+    var textInput by remember { mutableStateOf(currentDay.toString()) }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = BgCard,
+            border = BorderStroke(1.dp, CardBorder),
+            modifier = Modifier
+                .fillMaxWidth(0.92f)
+                .padding(16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = if (LanguageManager.isBengali()) "বিল শেষ তারিখ নির্ধারণ" else "Set Bill Due Date",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = customerName,
+                            fontSize = 11.5.sp,
+                            color = AccentCyan
+                        )
+                    }
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.size(26.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = if (LanguageManager.isBengali()) "প্রতি মাসের কত তারিখের মধ্যে বিল পরিশোধ করতে হবে?" else "What day of the month is the bill due by?",
+                    color = TextSecondary,
+                    fontSize = 11.5.sp
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Quick presets row
+                Text(
+                    text = if (LanguageManager.isBengali()) "দ্রুত নির্বাচন (জনপ্রিয় দিন):" else "Quick Presets:",
+                    color = TextMuted,
+                    fontSize = 10.5.sp
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    listOf(5, 7, 10, 15, 20).forEach { day ->
+                        val isSelected = selectedDay == day
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) AccentCyan.copy(alpha = 0.25f) else BgCardLight.copy(alpha = 0.4f))
+                                .border(1.dp, if (isSelected) AccentCyan else CardBorder, RoundedCornerShape(8.dp))
+                                .clickable {
+                                    selectedDay = day
+                                    textInput = day.toString()
+                                }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (LanguageManager.isBengali()) "$day তারিখ" else "${day}th",
+                                color = if (isSelected) AccentCyan else TextPrimary,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                fontSize = 11.5.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Number text input
+                OutlinedTextField(
+                    value = textInput,
+                    onValueChange = { input ->
+                        val clean = input.filter { it.isDigit() }
+                        textInput = clean
+                        val num = clean.toIntOrNull()
+                        if (num != null && num in 1..31) {
+                            selectedDay = num
+                        }
+                    },
+                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)") },
+                    placeholder = { Text("10") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Event,
+                            contentDescription = null,
+                            tint = AccentCyan,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        Text(
+                            text = if (LanguageManager.isBengali()) "তারিখ" else "th",
+                            color = TextSecondary,
+                            fontSize = 12.sp,
+                            modifier = Modifier.padding(end = 12.dp)
+                        )
+                    },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = AccentCyan,
+                        unfocusedBorderColor = CardBorder,
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentCyan,
+                        unfocusedLabelColor = TextSecondary,
+                        cursorColor = AccentCyan
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Action buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(1.dp, CardBorder),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextSecondary)
+                    ) {
+                        Text(text = if (LanguageManager.isBengali()) "বাতিল" else "Cancel", fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            val finalDay = textInput.toIntOrNull()?.coerceIn(1, 31) ?: selectedDay
+                            onSave(finalDay)
+                        },
+                        modifier = Modifier
+                            .weight(1.3f)
+                            .height(40.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (LanguageManager.isBengali()) "সেভ করুন" else "Save Date",
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+                }
             }
         }
     }

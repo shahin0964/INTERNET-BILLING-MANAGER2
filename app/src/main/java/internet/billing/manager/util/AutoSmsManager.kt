@@ -197,6 +197,8 @@ object AutoSmsManager {
             .replace("{PHONE}", phone)
             .replace("{PPPOE}", customer.pppoeUsername)
             .replace("{PACKAGE}", customer.packageName.ifBlank { "${customer.speedMbps} Mbps" })
+            .replace("{DUE_DAY}", customer.billDueDay.toString())
+            .replace("{LAST_DATE}", "${customer.billDueDay} ${currentMonth}")
             .replace("{DATE}", SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date()))
             .replace("{TIME}", SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date()))
             .replace("{MESSAGE}", extraMessage)
