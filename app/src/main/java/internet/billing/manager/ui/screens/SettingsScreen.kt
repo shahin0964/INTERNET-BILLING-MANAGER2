@@ -24,11 +24,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.InternetPackage
-import internet.billing.manager.ui.components.AdvancedFeaturesDialog
 import internet.billing.manager.ui.components.AppUpdateDialog
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.LanguageSelectionDialog
 import internet.billing.manager.ui.components.ThemeSelectionDialog
+import internet.billing.manager.util.AppUpdateManager
 import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
@@ -37,6 +37,7 @@ import internet.billing.manager.ui.viewmodel.BillingViewModel
 @Composable
 fun SettingsScreen(
     viewModel: BillingViewModel,
+    onNavigateToAdvancedFeatures: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -46,7 +47,6 @@ fun SettingsScreen(
 
     var showThemeDialog by remember { mutableStateOf(false) }
     var showLanguageDialog by remember { mutableStateOf(false) }
-    var showAdvancedFeaturesDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
 
@@ -129,9 +129,7 @@ fun SettingsScreen(
                         title = appStrings.advancedFeatures,
                         subtitle = appStrings.advancedFeaturesSubtitle,
                         iconTint = AccentBlue,
-                        onClick = {
-                            showAdvancedFeaturesDialog = true
-                        }
+                        onClick = onNavigateToAdvancedFeatures
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
 
@@ -256,17 +254,9 @@ fun SettingsScreen(
         }
     }
 
-    // Advanced Features Dialog (Auto SMS System, Tools & Automation)
-    if (showAdvancedFeaturesDialog) {
-        AdvancedFeaturesDialog(
-            allCustomers = allCustomers,
-            ispSettings = ispSettings,
-            onDismiss = { showAdvancedFeaturesDialog = false }
-        )
-    }
-
     // About Dialog
     if (showAboutDialog) {
+        val appVersionName = AppUpdateManager.getCurrentVersionName(context)
         AlertDialog(
             onDismissRequest = { showAboutDialog = false },
             title = { Text("INTERNET BILLING MANAGER (IBM)", color = TextPrimary) },
@@ -274,7 +264,7 @@ fun SettingsScreen(
                 Column {
                     Text("Short Name: IBM", color = AccentCyan, fontWeight = FontWeight.Bold)
                     Text("Package: internet.billing.manager", color = TextSecondary, fontSize = 12.sp)
-                    Text("Version: 1.0.0", color = TextSecondary, fontSize = 12.sp)
+                    Text("Version: v$appVersionName", color = TextSecondary, fontSize = 12.sp)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Professional ISP Customer, Billing, Daily Bill Collection, and Expense Management System built with Modern Android Jetpack Compose & Room Database.",

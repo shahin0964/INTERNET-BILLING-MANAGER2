@@ -32,10 +32,17 @@ jobs:
       - name: Grant Execute Permission for Gradlew
         run: chmod +x gradlew
 
+      - name: Compute Dynamic Version
+        run: |
+          VERSION_CODE=${{ github.run_number }}
+          VERSION_NAME="1.0.${{ github.run_number }}"
+          echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+
       - name: Build Android APK
         run: |
           set -o pipefail
-          ./gradlew :app:assembleDebug --stacktrace 2>&1 | tee build_log.txt
+          ./gradlew :app:assembleDebug -PversionCode=${{ env.VERSION_CODE }} -PversionName=${{ env.VERSION_NAME }} --stacktrace 2>&1 | tee build_log.txt
 
       - name: Push Error Log on Failure
         if: failure()
@@ -57,28 +64,30 @@ jobs:
           echo "Found APK: $APK_FILE"
           if [ -n "$APK_FILE" ] && [ -f "$APK_FILE" ]; then
             cp "$APK_FILE" release-artifacts/IBM-latest.apk
-            echo "Successfully prepared release-artifacts/IBM-latest.apk"
-            ls -lh release-artifacts/IBM-latest.apk
+            cp "$APK_FILE" "release-artifacts/IBM-v${{ env.VERSION_NAME }}.apk"
+            echo "Successfully prepared release artifacts"
+            ls -lh release-artifacts/
           else
             echo "::error::No APK file found in workspace after build!"
             exit 1
           fi
 
-      - name: Update Single GitHub Release
+      - name: Update GitHub Release
         uses: ncipollo/release-action@v1
         with:
-          tag: "latest"
+          tag: "v${{ env.VERSION_NAME }}"
           commit: ${{ github.sha }}
-          name: "INTERNET BILLING MANAGER (IBM) - Latest Release"
+          name: "v${{ env.VERSION_NAME }}"
           body: |
             ## 📱 INTERNET BILLING MANAGER (IBM)
-            **সর্বশেষ রিলিজ (Latest APK Update)**
+            **সর্বশেষ রিলিজ (v${{ env.VERSION_NAME }})**
 
             এই রিলিজটি প্রতিটি আপডেটে স্বয়ংক্রিয়ভাবে প্রতিস্থাপন ও আপডেট করা হয়। নিচের লিঙ্ক থেকে সরাসরি লেটেস্ট APK ফাইলটি ডাউনলোড করে ফোনে ইনস্টল করতে পারবেন।
 
             ### 📋 বিল্ড বিবরণ:
             - **App Name**: INTERNET BILLING MANAGER
             - **Short / Launcher Name**: `IBM`
+            - **App Version**: `v${{ env.VERSION_NAME }}` (Build #${{ env.VERSION_CODE }})
             - **Package**: `internet.billing.manager`
             - **Java / JDK Version**: JDK 21 (Latest LTS)
             - **Gradle & Kotlin Toolchain**: Latest (Kotlin 2.0.21, Compose 2024.10, AGP 8.7)
@@ -88,8 +97,8 @@ jobs:
 
             ---
             ### 📥 ডাউনলোড লিঙ্ক:
-            নিচের **`IBM-latest.apk`** ফাইলে ক্লিক করে আপনার ফোনে সরাসরি ডাউনলোড ও ইনস্টল করুন।
-          artifacts: "release-artifacts/IBM-latest.apk"
+            নিচের **`IBM-latest.apk`** বা **`IBM-v${{ env.VERSION_NAME }}.apk`** ফাইলে ক্লিক করে ডাউনলোড ও ইনস্টল করুন।
+          artifacts: "release-artifacts/*"
           allowUpdates: true
           replacesArtifacts: true
           makeLatest: true

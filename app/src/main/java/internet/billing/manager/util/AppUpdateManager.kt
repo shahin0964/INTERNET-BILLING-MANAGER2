@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.runtime.getValue
@@ -15,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.FileProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.io.File
@@ -30,6 +30,7 @@ import java.util.TimeZone
 data class GitHubReleaseInfo(
     val tagName: String,
     val title: String,
+    val displayVersion: String,
     val publishedAt: String,
     val updatedAt: String,
     val releaseDateFormatted: String,
@@ -51,8 +52,6 @@ sealed class UpdateCheckState {
 object AppUpdateManager {
     private const val GITHUB_REPO = "shahin0964/INTERNET-BILLING-MANAGER2"
     private const val RELEASES_API_URL = "https://api.github.com/repos/$GITHUB_REPO/releases/latest"
-    private const val PREFS_NAME = "ibm_app_update_prefs"
-    private const val KEY_LAST_SEEN_UPDATE = "last_seen_update_timestamp"
 
     var checkState: UpdateCheckState by mutableStateOf(UpdateCheckState.Idle)
         private set
@@ -60,7 +59,7 @@ object AppUpdateManager {
     var isDownloading: Boolean by mutableStateOf(false)
         private set
 
-    var downloadProgress: Float by mutableStateOf(0f)
+    var downloadProgress: Float by mutableFloatStateOf(0f)
         private set
 
     var downloadedBytes: Long by mutableLongStateOf(0L)
@@ -72,13 +71,16 @@ object AppUpdateManager {
     var downloadedApkFile: File? by mutableStateOf(null)
         private set
 
-    var isCancelRequested: Boolean = false
+    private var isCancelRequested: Boolean = false
+    private var activeConnection: HttpURLConnection? = null
+    private var activeDownloadJob: Job? = null
 
     fun getCurrentVersionName(context: Context): String {
         return try {
             val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
             } else {
+                @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
             pInfo.versionName ?: "1.0.0"
@@ -92,12 +94,36 @@ object AppUpdateManager {
             val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
             } else {
+                @Suppress("DEPRECATION")
                 context.packageManager.getPackageInfo(context.packageName, 0)
             }
             pInfo.lastUpdateTime
         } catch (e: Exception) {
             0L
         }
+    }
+
+    fun parseVersionString(text: String): String {
+        val regex = Regex("""[vV]?(\d+(\.\d+)+)""")
+        val match = regex.find(text)
+        return match?.groupValues?.get(1) ?: text.removePrefix("v").removePrefix("V").trim()
+    }
+
+    fun isRemoteVersionNewer(localVer: String, remoteVer: String): Boolean {
+        val cleanLocal = parseVersionString(localVer)
+        val cleanRemote = parseVersionString(remoteVer)
+
+        val localParts = cleanLocal.split(".").mapNotNull { it.toIntOrNull() }
+        val remoteParts = cleanRemote.split(".").mapNotNull { it.toIntOrNull() }
+
+        val maxLen = maxOf(localParts.size, remoteParts.size)
+        for (i in 0 until maxLen) {
+            val l = localParts.getOrElse(i) { 0 }
+            val r = remoteParts.getOrElse(i) { 0 }
+            if (r > l) return true
+            if (r < l) return false
+        }
+        return false
     }
 
     suspend fun checkForUpdates(context: Context) {
@@ -124,7 +150,7 @@ object AppUpdateManager {
                     val json = JSONObject(jsonStr)
 
                     val tagName = json.optString("tag_name", "latest")
-                    val title = json.optString("name", "Latest Release")
+                    val title = json.optString("name", tagName)
                     val publishedAt = json.optString("published_at", "")
                     val updatedAt = json.optString("updated_at", publishedAt)
                     val body = json.optString("body", "No changelog provided.")
@@ -156,21 +182,33 @@ object AppUpdateManager {
                         apkDownloadUrl = "https://github.com/$GITHUB_REPO/releases/download/latest/IBM-latest.apk"
                     }
 
-                    // Parse release timestamp
+                    val localVersion = getCurrentVersionName(context)
+                    val remoteVersionRaw = if (tagName.isNotBlank() && tagName != "latest") tagName else title
+                    val cleanRemoteVersion = parseVersionString(remoteVersionRaw)
+                    val cleanLocalVersion = parseVersionString(localVersion)
+
                     val releaseMillis = parseIso8601ToMillis(assetUpdatedAt.ifBlank { updatedAt })
                     val appInstalledMillis = getAppInstalledTime(context)
 
-                    // Consider update available if release was built/updated after this app's installed time (with 3-minute grace)
-                    // or if tag is a higher version
-                    val isNewer = if (releaseMillis > 0 && appInstalledMillis > 0) {
-                        releaseMillis > (appInstalledMillis + 180000L)
-                    } else {
-                        true // If cannot compare timestamps, allow user to install
+                    val isNewer = when {
+                        isRemoteVersionNewer(localVersion, cleanRemoteVersion) -> true
+                        cleanRemoteVersion.isNotBlank() && cleanLocalVersion.isNotBlank() && cleanRemoteVersion == cleanLocalVersion -> false
+                        else -> {
+                            // If tag is not versioned or comparable, fall back to timestamp
+                            if (releaseMillis > 0 && appInstalledMillis > 0) {
+                                releaseMillis > (appInstalledMillis + 60000L)
+                            } else {
+                                false
+                            }
+                        }
                     }
+
+                    val displayVersion = if (cleanRemoteVersion.isNotBlank()) "v$cleanRemoteVersion" else tagName
 
                     val releaseInfo = GitHubReleaseInfo(
                         tagName = tagName,
                         title = title,
+                        displayVersion = displayVersion,
                         publishedAt = publishedAt,
                         updatedAt = assetUpdatedAt,
                         releaseDateFormatted = formatTimestampToDisplay(assetUpdatedAt),
@@ -213,12 +251,10 @@ object AppUpdateManager {
         downloadedApkFile = null
 
         withContext(Dispatchers.IO) {
+            activeDownloadJob = coroutineContext[Job]
             try {
-                // Ensure target directory exists
                 val updatesDir = File(context.cacheDir, "apk_updates")
                 if (!updatesDir.exists()) updatesDir.mkdirs()
-
-                // Delete any old APK files
                 updatesDir.listFiles()?.forEach { it.delete() }
 
                 val destinationFile = File(updatesDir, release.apkName.ifBlank { "IBM-latest.apk" })
@@ -229,6 +265,7 @@ object AppUpdateManager {
 
                 // Follow HTTP redirects (301, 302, 307, 308)
                 while (true) {
+                    if (isCancelRequested) return@withContext
                     val url = URL(downloadUrl)
                     connection = (url.openConnection() as HttpURLConnection).apply {
                         instanceFollowRedirects = true
@@ -236,6 +273,7 @@ object AppUpdateManager {
                         connectTimeout = 15000
                         readTimeout = 20000
                     }
+                    activeConnection = connection
 
                     val code = connection.responseCode
                     if (code == HttpURLConnection.HTTP_MOVED_PERM ||
@@ -258,43 +296,53 @@ object AppUpdateManager {
                     totalBytes = contentLength
                 }
 
-                val input: InputStream = connection.inputStream
-                val output = FileOutputStream(destinationFile)
+                val input: InputStream = connection.inputStream.buffered(64 * 1024)
+                val output = FileOutputStream(destinationFile).buffered(64 * 1024)
 
-                val buffer = ByteArray(8192)
+                val buffer = ByteArray(64 * 1024)
                 var bytesRead: Int
                 var currentBytes = 0L
+                var lastProgressTime = 0L
 
                 while (input.read(buffer).also { bytesRead = it } != -1) {
                     if (isCancelRequested) {
-                        output.flush()
-                        output.close()
-                        input.close()
+                        try { output.close() } catch (_: Exception) {}
+                        try { input.close() } catch (_: Exception) {}
                         destinationFile.delete()
                         withContext(Dispatchers.Main) {
                             isDownloading = false
                             downloadProgress = 0f
+                            downloadedBytes = 0L
                         }
                         return@withContext
                     }
 
                     output.write(buffer, 0, bytesRead)
                     currentBytes += bytesRead
-                    downloadedBytes = currentBytes
 
-                    if (totalBytes > 0) {
-                        downloadProgress = (currentBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                    val now = System.currentTimeMillis()
+                    if (now - lastProgressTime >= 120) {
+                        lastProgressTime = now
+                        withContext(Dispatchers.Main) {
+                            downloadedBytes = currentBytes
+                            if (totalBytes > 0) {
+                                downloadProgress = (currentBytes.toFloat() / totalBytes.toFloat()).coerceIn(0f, 1f)
+                            }
+                        }
                     }
                 }
 
                 output.flush()
                 output.close()
                 input.close()
+                activeConnection?.disconnect()
+                activeConnection = null
 
                 if (destinationFile.exists() && destinationFile.length() > 500000L) {
                     withContext(Dispatchers.Main) {
                         isDownloading = false
                         downloadProgress = 1f
+                        downloadedBytes = destinationFile.length()
                         downloadedApkFile = destinationFile
                         onComplete(destinationFile)
                     }
@@ -305,16 +353,34 @@ object AppUpdateManager {
                     }
                 }
             } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    isDownloading = false
-                    Toast.makeText(context, "Download failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                if (isCancelRequested) {
+                    withContext(Dispatchers.Main) {
+                        isDownloading = false
+                        downloadProgress = 0f
+                        downloadedBytes = 0L
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        isDownloading = false
+                        Toast.makeText(context, "Download failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+                    }
                 }
+            } finally {
+                activeConnection = null
+                activeDownloadJob = null
             }
         }
     }
 
     fun cancelDownload() {
         isCancelRequested = true
+        try {
+            activeConnection?.disconnect()
+        } catch (_: Exception) {}
+        activeDownloadJob?.cancel()
+        isDownloading = false
+        downloadProgress = 0f
+        downloadedBytes = 0L
     }
 
     fun installApk(context: Context, apkFile: File) {
@@ -324,7 +390,6 @@ object AppUpdateManager {
         }
 
         try {
-            // Android 8.0+ Unknown App Sources Permission check
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!context.packageManager.canRequestPackageInstalls()) {
                     Toast.makeText(
@@ -385,7 +450,7 @@ object AppUpdateManager {
     }
 
     fun formatBytes(bytes: Long): String {
-        if (bytes <= 0) return "16.5 MB"
+        if (bytes <= 0) return "16.7 MB"
         val mb = bytes.toDouble() / (1024.0 * 1024.0)
         return String.format(Locale.US, "%.1f MB", mb)
     }

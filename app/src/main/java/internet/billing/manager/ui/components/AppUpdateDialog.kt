@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -60,13 +61,13 @@ fun AppUpdateDialog(
             border = BorderStroke(1.dp, CardBorder),
             modifier = Modifier
                 .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.85f)
-                .padding(vertical = 12.dp)
+                .fillMaxHeight(0.86f)
+                .padding(vertical = 10.dp)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {
                 // Header Row
                 Row(
@@ -115,18 +116,16 @@ fun AppUpdateDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = appStrings.close,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(17.dp)
+                            contentDescription = "Close",
+                            tint = TextMuted,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(10.dp))
-                Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Scrollable Content
+                // Scrollable Body
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -175,7 +174,7 @@ fun AppUpdateDialog(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     when (val state = AppUpdateManager.checkState) {
                         is UpdateCheckState.Checking -> {
@@ -224,7 +223,7 @@ fun AppUpdateDialog(
                                             text = appStrings.updateError,
                                             color = AccentRed,
                                             fontWeight = FontWeight.Bold,
-                                            fontSize = 12.5.sp
+                                            fontSize = 12.sp
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(6.dp))
@@ -250,11 +249,20 @@ fun AppUpdateDialog(
                                         )
                                         context.startActivity(browserIntent)
                                     },
-                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp),
                                     shape = RoundedCornerShape(8.dp),
-                                    border = BorderStroke(1.dp, CardBorder)
+                                    border = BorderStroke(1.dp, CardBorder),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Text(appStrings.openInBrowser, color = TextSecondary, fontSize = 11.5.sp)
+                                    Text(
+                                        text = appStrings.openInBrowser,
+                                        color = TextSecondary,
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
 
                                 Button(
@@ -263,11 +271,21 @@ fun AppUpdateDialog(
                                             AppUpdateManager.checkForUpdates(context)
                                         }
                                     },
-                                    modifier = Modifier.weight(1f).height(40.dp),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(44.dp),
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                                    colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
-                                    Text(appStrings.checkAgain, color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    Text(
+                                        text = appStrings.checkAgain,
+                                        color = BgDark,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 11.5.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
                         }
@@ -286,7 +304,7 @@ fun AppUpdateDialog(
                                     )
                                     .border(
                                         1.dp,
-                                        if (release.isUpdateAvailable) AccentGreen.copy(alpha = 0.4f) else CardBorderSubtle,
+                                        if (release.isUpdateAvailable) AccentGreen.copy(alpha = 0.45f) else CardBorderSubtle,
                                         RoundedCornerShape(10.dp)
                                     )
                                     .padding(12.dp)
@@ -297,7 +315,10 @@ fun AppUpdateDialog(
                                         horizontalArrangement = Arrangement.SpaceBetween,
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Row(
+                                            modifier = Modifier.weight(1f),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
                                             Icon(
                                                 imageVector = if (release.isUpdateAvailable) Icons.Default.NewReleases else Icons.Default.CheckCircle,
                                                 contentDescription = null,
@@ -309,7 +330,9 @@ fun AppUpdateDialog(
                                                 text = if (release.isUpdateAvailable) appStrings.updateAvailable else appStrings.appUpToDate,
                                                 color = if (release.isUpdateAvailable) AccentGreen else TextPrimary,
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp
+                                                fontSize = 12.5.sp,
+                                                maxLines = 1,
+                                                overflow = TextOverflow.Ellipsis
                                             )
                                         }
 
@@ -325,17 +348,34 @@ fun AppUpdateDialog(
 
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "${appStrings.latestVersion}: ${release.title}",
-                                            color = TextSecondary,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Medium
+                                            text = "${appStrings.latestVersion}: ${release.displayVersion}",
+                                            color = if (release.isUpdateAvailable) AccentGreen else TextSecondary,
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.SemiBold
                                         )
+
+                                        if (release.isUpdateAvailable) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(AccentGreen)
+                                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                            ) {
+                                                Text(
+                                                    text = "NEW",
+                                                    color = BgDark,
+                                                    fontSize = 9.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
+                                        }
                                     }
 
-                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Spacer(modifier = Modifier.height(3.dp))
 
                                     Text(
                                         text = "${appStrings.releaseDateLabel}: ${release.releaseDateFormatted}",
@@ -345,7 +385,7 @@ fun AppUpdateDialog(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Release Notes Section
                             Text(
@@ -367,14 +407,14 @@ fun AppUpdateDialog(
                                     .verticalScroll(rememberScrollState())
                             ) {
                                 Text(
-                                    text = release.changelog.ifBlank { "Build and update release APK automatically pushed to GitHub." },
+                                    text = release.changelog.ifBlank { "Latest release build automatically generated and published via GitHub Actions." },
                                     color = TextSecondary,
                                     fontSize = 11.sp,
                                     lineHeight = 15.5.sp
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
                             // Downloading Progress Card
                             if (AppUpdateManager.isDownloading) {
@@ -418,7 +458,7 @@ fun AppUpdateDialog(
                                             trackColor = CardBorder
                                         )
 
-                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
 
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
@@ -431,15 +471,21 @@ fun AppUpdateDialog(
                                                 fontSize = 10.5.sp
                                             )
 
-                                            Text(
-                                                text = "Cancel",
-                                                color = AccentRed,
-                                                fontSize = 11.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                modifier = Modifier.clickable {
-                                                    AppUpdateManager.cancelDownload()
-                                                }
-                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .clickable {
+                                                        AppUpdateManager.cancelDownload()
+                                                    }
+                                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(
+                                                    text = "Cancel",
+                                                    color = AccentRed,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = FontWeight.Bold
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -451,11 +497,14 @@ fun AppUpdateDialog(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(AccentGreen.copy(alpha = 0.2f))
-                                        .border(1.dp, AccentGreen.copy(alpha = 0.5f), RoundedCornerShape(10.dp))
-                                        .padding(10.dp)
+                                        .background(AccentGreen.copy(alpha = 0.15f))
+                                        .border(1.dp, AccentGreen.copy(alpha = 0.4f), RoundedCornerShape(10.dp))
+                                        .padding(12.dp)
                                 ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
                                         Icon(
                                             imageVector = Icons.Default.CheckCircle,
                                             contentDescription = null,
@@ -478,14 +527,14 @@ fun AppUpdateDialog(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 // Bottom Action Buttons
                 when (val state = AppUpdateManager.checkState) {
                     is UpdateCheckState.Success -> {
                         val release = state.release
 
-                        if (AppUpdateManager.downloadedApkFile != null) {
+                        if (AppUpdateManager.downloadedApkFile != null && !AppUpdateManager.isDownloading) {
                             // Ready to install
                             Button(
                                 onClick = {
@@ -495,9 +544,10 @@ fun AppUpdateDialog(
                                 },
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(46.dp),
+                                    .height(48.dp),
                                 shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen)
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.InstallMobile,
@@ -510,13 +560,14 @@ fun AppUpdateDialog(
                                     text = appStrings.installNow,
                                     color = BgDark,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
+                                    fontSize = 13.sp
                                 )
                             }
                         } else if (!AppUpdateManager.isDownloading) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 OutlinedButton(
                                     onClick = {
@@ -526,9 +577,10 @@ fun AppUpdateDialog(
                                     },
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(44.dp),
+                                        .height(48.dp),
                                     shape = RoundedCornerShape(10.dp),
-                                    border = BorderStroke(1.dp, CardBorder)
+                                    border = BorderStroke(1.dp, CardBorder),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
@@ -540,7 +592,10 @@ fun AppUpdateDialog(
                                     Text(
                                         text = appStrings.checkAgain,
                                         color = TextSecondary,
-                                        fontSize = 12.sp
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
 
@@ -548,18 +603,18 @@ fun AppUpdateDialog(
                                     onClick = {
                                         coroutineScope.launch {
                                             AppUpdateManager.downloadAndPrepareApk(context, release) { apkFile ->
-                                                // As requested, auto-trigger the package install prompt when download completes!
                                                 AppUpdateManager.installApk(context, apkFile)
                                             }
                                         }
                                     },
                                     modifier = Modifier
-                                        .weight(1.5f)
-                                        .height(44.dp),
+                                        .weight(1.35f)
+                                        .height(48.dp),
                                     shape = RoundedCornerShape(10.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = if (release.isUpdateAvailable) AccentGreen else AccentCyan
-                                    )
+                                    ),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Download,
@@ -567,12 +622,14 @@ fun AppUpdateDialog(
                                         tint = BgDark,
                                         modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        text = appStrings.downloadUpdate,
+                                        text = if (release.isUpdateAvailable) appStrings.downloadUpdate else "Re-download APK",
                                         color = BgDark,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 12.5.sp
+                                        fontSize = 11.5.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }
@@ -584,9 +641,10 @@ fun AppUpdateDialog(
                             onClick = onDismiss,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(42.dp),
+                                .height(44.dp),
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = BgCardLight)
+                            colors = ButtonDefaults.buttonColors(containerColor = BgCardLight),
+                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
                         ) {
                             Text(
                                 text = appStrings.close,

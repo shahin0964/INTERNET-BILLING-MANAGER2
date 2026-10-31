@@ -9,12 +9,15 @@ android {
     namespace = "internet.billing.manager"
     compileSdk = 35
 
+    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 21
+    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.21"
+
     defaultConfig {
         applicationId = "internet.billing.manager"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = appVersionCode
+        versionName = appVersionName
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

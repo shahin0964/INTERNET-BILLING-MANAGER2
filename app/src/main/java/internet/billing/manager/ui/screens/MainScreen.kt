@@ -18,7 +18,9 @@ enum class ActiveScreen {
     COLLECTION,
     DAILY_ENTRY,
     EXPENSE,
-    SETTINGS
+    SETTINGS,
+    ADVANCED_FEATURES,
+    AUTO_SMS
 }
 
 @Composable
@@ -40,6 +42,15 @@ fun MainScreen(
     BackHandler(enabled = currentScreen == ActiveScreen.DAILY_ENTRY || currentScreen == ActiveScreen.EXPENSE) {
         currentScreen = ActiveScreen.COLLECTION
         selectedNavTab = BottomNavScreen.COLLECTION
+    }
+
+    BackHandler(enabled = currentScreen == ActiveScreen.ADVANCED_FEATURES) {
+        currentScreen = ActiveScreen.SETTINGS
+        selectedNavTab = BottomNavScreen.MORE
+    }
+
+    BackHandler(enabled = currentScreen == ActiveScreen.AUTO_SMS) {
+        currentScreen = ActiveScreen.ADVANCED_FEATURES
     }
 
     Scaffold(
@@ -130,7 +141,33 @@ fun MainScreen(
                 }
 
                 ActiveScreen.SETTINGS -> {
-                    SettingsScreen(viewModel = viewModel)
+                    SettingsScreen(
+                        viewModel = viewModel,
+                        onNavigateToAdvancedFeatures = {
+                            currentScreen = ActiveScreen.ADVANCED_FEATURES
+                        }
+                    )
+                }
+
+                ActiveScreen.ADVANCED_FEATURES -> {
+                    AdvancedFeaturesScreen(
+                        onBack = {
+                            currentScreen = ActiveScreen.SETTINGS
+                            selectedNavTab = BottomNavScreen.MORE
+                        },
+                        onNavigateToAutoSms = {
+                            currentScreen = ActiveScreen.AUTO_SMS
+                        }
+                    )
+                }
+
+                ActiveScreen.AUTO_SMS -> {
+                    AutoSmsScreen(
+                        viewModel = viewModel,
+                        onBack = {
+                            currentScreen = ActiveScreen.ADVANCED_FEATURES
+                        }
+                    )
                 }
             }
         }
