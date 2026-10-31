@@ -18,6 +18,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        internet.billing.manager.ui.theme.ThemeManager.initialize(this)
         enableEdgeToEdge()
         setContent {
             InternetBillingTheme {

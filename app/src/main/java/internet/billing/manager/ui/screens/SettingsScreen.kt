@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.components.GlassCard
+import internet.billing.manager.ui.components.ThemeSelectionDialog
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
 
@@ -37,6 +38,7 @@ fun SettingsScreen(
     val ispSettings by viewModel.ispSettings.collectAsState()
     val packages by viewModel.allPackages.collectAsState()
 
+    var showThemeDialog by remember { mutableStateOf(false) }
     var showSmsTemplateDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
 
@@ -151,12 +153,12 @@ fun SettingsScreen(
 
                     // Item 6: Theme
                     SettingsRowItem(
-                        icon = Icons.Default.DarkMode,
+                        icon = Icons.Default.Palette,
                         title = "Theme",
-                        subtitle = "Dark",
+                        subtitle = ThemeManager.currentTheme.name,
                         iconTint = AccentPurple,
                         onClick = {
-                            Toast.makeText(context, "Dark AMOLED Theme Active", Toast.LENGTH_SHORT).show()
+                            showThemeDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
@@ -209,69 +211,36 @@ fun SettingsScreen(
             }
         }
 
-        // 3. Internet Packages Section (Horizontal Cards)
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Internet Packages",
-                    color = TextPrimary,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold
-                )
+        if (packages.isNotEmpty()) {
+            // 3. Internet Packages Section (Preview Cards for created packages)
+            item {
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.clickable {
-                        viewModel.showPackagesManagerDialog = true
-                    }
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Manage",
-                        color = AccentCyan,
-                        fontSize = 11.sp,
+                        text = "Internet Packages",
+                        color = TextPrimary,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
-                }
-            }
-        }
-
-        if (packages.isEmpty()) {
-            item {
-                GlassCard(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            viewModel.showPackagesManagerDialog = true
-                        },
-                    shape = RoundedCornerShape(10.dp),
-                    borderColor = CardBorderSubtle
-                ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.clickable {
+                            viewModel.showPackagesManagerDialog = true
+                        }
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            tint = AccentCyan,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "No packages yet. Tap to create a package",
-                            color = TextSecondary,
-                            fontSize = 11.5.sp
+                            text = "Manage",
+                            color = AccentCyan,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
             }
-        } else {
+
             item {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -367,6 +336,12 @@ fun SettingsScreen(
                     Text("OK", color = BgDark)
                 }
             }
+        )
+    }
+
+    if (showThemeDialog) {
+        ThemeSelectionDialog(
+            onDismiss = { showThemeDialog = false }
         )
     }
 }
@@ -468,10 +443,11 @@ fun PackageCardItem(
             }
             Spacer(modifier = Modifier.height(5.dp))
             Text(
-                text = "${pkg.speedMbps} Mbps",
+                text = if (pkg.speedMbps > 0) "${pkg.speedMbps} Mbps" else pkg.name,
                 color = TextPrimary,
                 fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                maxLines = 1
             )
             Spacer(modifier = Modifier.height(1.dp))
             Text(
