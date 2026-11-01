@@ -664,4 +664,6 @@ fun AppUpdateDialog(
         }
     }
 }
+}
+
 
