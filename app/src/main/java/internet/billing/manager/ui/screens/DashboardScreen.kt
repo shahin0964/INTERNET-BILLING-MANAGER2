@@ -517,54 +517,7 @@ fun ModernBillingAnalyticsCard(
     onNavigateToBilling: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var isVisible by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        isVisible = true
-    }
-
-    // Smooth animation for Donut Chart progress
-    val targetProgress = if (totalGenerated > 0) (collectedPercent / 100f) else 0f
-    val animatedProgress by animateFloatAsState(
-        targetValue = if (isVisible) targetProgress else 0f,
-        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
-        label = "DonutProgress"
-    )
-
-    // Infinite transition for live animations
-    val infiniteTransition = rememberInfiniteTransition(label = "CardLiveAnimations")
-
-    // 1. Radiating & pulsing neon cyan Wi-Fi icon waves atop the router
-    val wifiPulse by infiniteTransition.animateFloat(
-        initialValue = 0.35f,
-        targetValue = 1.0f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "WifiGlowPulse"
-    )
-
-    // 2. 3 cyan LEDs on front panel blinking with live network data activity
-    val ledBlinkPhase by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1100, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "RouterLedBlink"
-    )
-
-    // 3. Shimmer wave sweep flare across the router horizon base
-    val shimmerProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "WaveShimmerSweep"
-    )
+    val progressFraction = if (totalGenerated > 0) (collectedPercent / 100f) else 0f
 
     // Outer Card with Cyber Neon Glow Border and Deep Space Navy Glass Background
     Box(
@@ -775,90 +728,20 @@ fun ModernBillingAnalyticsCard(
                     }
                 }
 
-                // Center: 3D Router with Animated LEDs, Wi-Fi Pulse, and Shimmer Floor
-                val routerBoxWidth = 88.dp
-                val routerBoxHeight = 64.dp
+                // Center: 3D Router Illustration (Clean, static, crisp artwork)
                 Box(
-                    modifier = Modifier
-                        .size(routerBoxWidth, routerBoxHeight),
+                    modifier = Modifier.size(92.dp, 64.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    // 1. Clean 3D router illustration
                     Image(
                         painter = painterResource(id = R.drawable.ic_clean_router),
                         contentDescription = "Wi-Fi Router",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.fillMaxSize()
                     )
-
-                    // 2. Animated Wi-Fi radiating neon aura
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopCenter)
-                            .padding(top = 2.dp)
-                            .size(24.dp)
-                            .scale(0.85f + 0.25f * wifiPulse)
-                            .alpha(wifiPulse * 0.85f)
-                            .background(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color.White.copy(alpha = 0.95f),
-                                        AccentCyan.copy(alpha = 0.75f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                shape = CircleShape
-                            )
-                    )
-
-                    // 3. Animated 3 LEDs on front panel
-                    val ledPhaseInt = ledBlinkPhase.toInt() % 4
-                    RouterLedDot(
-                        x = routerBoxWidth * 0.24f,
-                        y = routerBoxHeight * 0.71f,
-                        isLit = ledPhaseInt == 0 || ledPhaseInt == 3
-                    )
-                    RouterLedDot(
-                        x = routerBoxWidth * 0.30f,
-                        y = routerBoxHeight * 0.71f,
-                        isLit = ledPhaseInt == 1 || ledPhaseInt == 3
-                    )
-                    RouterLedDot(
-                        x = routerBoxWidth * 0.36f,
-                        y = routerBoxHeight * 0.72f,
-                        isLit = ledPhaseInt == 2 || ledPhaseInt == 3
-                    )
-
-                    // 4. Animated laser shimmer flare sweeping along base curve
-                    Canvas(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(14.dp)
-                            .align(Alignment.BottomCenter)
-                    ) {
-                        val flareX = shimmerProgress * size.width
-                        val flareY = size.height * 0.5f
-                        val flareRadius = 14.dp.toPx()
-                        val flareCenter = Offset(flareX, flareY)
-
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color.White.copy(alpha = 0.95f),
-                                    AccentCyan.copy(alpha = 0.75f),
-                                    Color(0xFF00B0FF).copy(alpha = 0.3f),
-                                    Color.Transparent
-                                ),
-                                center = flareCenter,
-                                radius = flareRadius
-                            ),
-                            radius = flareRadius,
-                            center = flareCenter
-                        )
-                    }
                 }
 
-                // Right: 3D Donut Progress Chart
+                // Right: 3D Donut Progress Chart (Static, crisp)
                 Box(
                     modifier = Modifier.size(72.dp),
                     contentAlignment = Alignment.Center
@@ -879,7 +762,7 @@ fun ModernBillingAnalyticsCard(
                         )
 
                         // Collected sweep arc (Vibrant Emerald Green)
-                        if (animatedProgress > 0f) {
+                        if (progressFraction > 0f) {
                             drawArc(
                                 brush = Brush.sweepGradient(
                                     listOf(
@@ -889,11 +772,11 @@ fun ModernBillingAnalyticsCard(
                                     )
                                 ),
                                 startAngle = -90f,
-                                sweepAngle = animatedProgress * 360f,
+                                sweepAngle = progressFraction * 360f,
                                 useCenter = false,
                                 style = Stroke(
                                     width = strokeWidth,
-                                    cap = if (animatedProgress in 0.02f..0.98f) StrokeCap.Round else StrokeCap.Butt
+                                    cap = if (progressFraction in 0.02f..0.98f) StrokeCap.Round else StrokeCap.Butt
                                 )
                             )
                         }
@@ -904,7 +787,7 @@ fun ModernBillingAnalyticsCard(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "${(animatedProgress * 100).toInt()}%",
+                            text = "${collectedPercent}%",
                             color = TextPrimary,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold
@@ -1069,47 +952,6 @@ fun ModernBillingAnalyticsCard(
     }
 }
 
-/**
- * Animated Cyan/White LED light on router front panel
- */
-@Composable
-private fun RouterLedDot(
-    x: Dp,
-    y: Dp,
-    isLit: Boolean
-) {
-    val alpha by animateFloatAsState(
-        targetValue = if (isLit) 1.0f else 0.35f,
-        animationSpec = tween(140),
-        label = "LedBlinkAlpha"
-    )
-
-    // Outer aura
-    Box(
-        modifier = Modifier
-            .offset(x = x - 3.5.dp, y = y - 3.5.dp)
-            .size(7.dp)
-            .alpha(alpha)
-            .background(
-                brush = Brush.radialGradient(
-                    colors = listOf(Color.White, AccentCyan, Color.Transparent)
-                ),
-                shape = CircleShape
-            )
-    )
-
-    // Core light
-    Box(
-        modifier = Modifier
-            .offset(x = x - 1.5.dp, y = y - 1.5.dp)
-            .size(3.dp)
-            .alpha(alpha)
-            .background(
-                color = if (isLit) Color.White else AccentCyan,
-                shape = CircleShape
-            )
-    )
-}
 
 private fun formatAmount(amount: Double): String {
     return NumberFormat.getIntegerInstance(Locale.US).format(amount.toLong())
