@@ -253,30 +253,26 @@ fun NetworkToolsScreen(
                 )
             }
 
-            // Tool 1: Speed Test (with Live ISP badge)
+            // Tool 1: Speed Test
             item {
                 DiagnosticToolCard(
                     icon = Icons.Default.Speed,
                     iconContainerColor = Color(0xFF831843).copy(alpha = 0.5f),
                     iconTint = Color(0xFFF472B6),
                     title = "⚡ Speed Test",
-                    badgeText = "DL & UL",
-                    badgeColor = Color(0xFF4C1D95),
                     subtitle = "Benchmark download & upload speed, latency, and jitter",
                     onClick = { activeSheet = ActiveToolSheet.SPEED_TEST }
                 )
             }
 
-            // Tool 2: Ping Test (with RTT graph, payload, interval)
+            // Tool 2: Ping Test
             item {
                 DiagnosticToolCard(
                     icon = Icons.Default.Public,
                     iconContainerColor = Color(0xFF1E3A8A).copy(alpha = 0.5f),
                     iconTint = Color(0xFF60A5FA),
                     title = "Ping Diagnostic",
-                    badgeText = "Graph & Geo",
-                    badgeColor = Color(0xFF1E40AF),
-                    subtitle = "Configurable payload (32-1472B), interval, AS number, and RTT graph",
+                    subtitle = "Configurable payload, interval, AS number, and RTT graph",
                     onClick = {
                         sharedTargetHost = "8.8.8.8"
                         activeSheet = ActiveToolSheet.PING
@@ -291,8 +287,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF0369A1).copy(alpha = 0.5f),
                     iconTint = Color(0xFF38BDF8),
                     title = "🗺️ Traceroute Route Visualizer",
-                    badgeText = "ICMP / UDP",
-                    badgeColor = Color(0xFF0284C7),
                     subtitle = "Hop-by-hop latency route map with quick ping & port inspection",
                     onClick = { activeSheet = ActiveToolSheet.TRACEROUTE }
                 )
@@ -305,8 +299,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF0E7490).copy(alpha = 0.5f),
                     iconTint = Color(0xFF38BDF8),
                     title = "DNS Query & DNSSEC",
-                    badgeText = "All Sections",
-                    badgeColor = Color(0xFF0891B2),
                     subtitle = "A, AAAA, MX, TXT, NS records with DNSSEC validation & sections",
                     onClick = { activeSheet = ActiveToolSheet.DNS }
                 )
@@ -319,8 +311,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF134E4A).copy(alpha = 0.5f),
                     iconTint = Color(0xFF2DD4BF),
                     title = "📡 Wi-Fi Signal & Channels",
-                    badgeText = "Channel Map",
-                    badgeColor = Color(0xFF312E81),
                     subtitle = "2.4 GHz channel occupancy graph, optimal channels & custom name",
                     onClick = { activeSheet = ActiveToolSheet.WIFI_ANALYZER }
                 )
@@ -346,8 +336,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF065F46).copy(alpha = 0.5f),
                     iconTint = Color(0xFF34D399),
                     title = "🔎 LAN Subnet Scanner",
-                    badgeText = "OUI & MAC",
-                    badgeColor = Color(0xFF047857),
                     subtitle = "Scan /24 subnet or custom range, detect vendors, rename, and star",
                     onClick = { activeSheet = ActiveToolSheet.LAN_SCANNER }
                 )
@@ -360,8 +348,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF581C87).copy(alpha = 0.5f),
                     iconTint = Color(0xFFC084FC),
                     title = "🔌 Multi-Port Scanner",
-                    badgeText = "Presets",
-                    badgeColor = Color(0xFF6B21A8),
                     subtitle = "MikroTik, Web, Mail, or custom port range with speed presets",
                     onClick = {
                         sharedTargetHost = overview.defaultGateway
@@ -377,8 +363,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF1E3A8A).copy(alpha = 0.5f),
                     iconTint = Color(0xFF60A5FA),
                     title = "⚡ Wake on LAN (WOL)",
-                    badgeText = "Remote WOL",
-                    badgeColor = Color(0xFF1D4ED8),
                     subtitle = "Wake remote PCs, NAS, and MikroTik via UDP magic packet",
                     onClick = { activeSheet = ActiveToolSheet.WAKE_ON_LAN }
                 )
@@ -391,8 +375,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF0F766E).copy(alpha = 0.5f),
                     iconTint = Color(0xFF2DD4BF),
                     title = "📡 UPnP & Bonjour Browser",
-                    badgeText = "SSDP Discovery",
-                    badgeColor = Color(0xFF0D9488),
                     subtitle = "Discover local routers, ONUs, media servers, and open web consoles",
                     onClick = { activeSheet = ActiveToolSheet.UPNP_BROWSER }
                 )
@@ -405,8 +387,6 @@ fun NetworkToolsScreen(
                     iconContainerColor = Color(0xFF1E3A8A).copy(alpha = 0.5f),
                     iconTint = Color(0xFF38BDF8),
                     title = "🏢 WHOIS Domain & IP Lookup",
-                    badgeText = "Custom Server",
-                    badgeColor = Color(0xFF1E40AF),
                     subtitle = "Registrar, creation & expiry dates, name servers, and raw records",
                     onClick = { activeSheet = ActiveToolSheet.WHOIS }
                 )
