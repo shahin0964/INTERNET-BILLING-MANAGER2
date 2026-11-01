@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlin.math.roundToInt
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.theme.*
