@@ -1,7 +1,9 @@
 package internet.billing.manager.data.repository
 
+import internet.billing.manager.InternetBillingApp
 import internet.billing.manager.data.local.*
 import internet.billing.manager.data.model.*
+import internet.billing.manager.util.AutoBackupManager
 import kotlinx.coroutines.flow.Flow
 import java.text.SimpleDateFormat
 import java.util.*
@@ -32,14 +34,21 @@ class BillingRepository(
     fun searchCustomers(query: String): Flow<List<Customer>> =
         customerDao.searchCustomers(query)
 
-    suspend fun insertCustomer(customer: Customer): Long =
-        customerDao.insertCustomer(customer)
+    suspend fun insertCustomer(customer: Customer): Long {
+        val id = customerDao.insertCustomer(customer)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+        return id
+    }
 
-    suspend fun updateCustomer(customer: Customer) =
+    suspend fun updateCustomer(customer: Customer) {
         customerDao.updateCustomer(customer)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 
-    suspend fun deleteCustomer(customer: Customer) =
+    suspend fun deleteCustomer(customer: Customer) {
         customerDao.deleteCustomer(customer)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 
     suspend fun getCustomerById(id: Long): Customer? =
         customerDao.getCustomerById(id)
@@ -143,6 +152,7 @@ class BillingRepository(
             )
             remainingPayment -= payThis
         }
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
     }
 
     suspend fun deletePaymentAndReverse(payment: PaymentTransaction) {
@@ -173,13 +183,14 @@ class BillingRepository(
                 remainingToReverse -= reverseThis
             }
         }
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
     }
 
     suspend fun addManualBill(customerId: Long, monthYear: String, amount: Double, notes: String): Long {
         val customer = customerDao.getCustomerById(customerId) ?: return 0L
         val updatedDue = customer.dueAmount + amount
         customerDao.updateDue(customerId, updatedDue)
-        return billDao.insertBill(
+        val id = billDao.insertBill(
             BillEntry(
                 customerId = customerId,
                 customerName = customer.name.ifBlank { customer.pppoeUsername },
@@ -193,10 +204,13 @@ class BillingRepository(
                 notes = notes.ifBlank { "Manual bill for $monthYear" }
             )
         )
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+        return id
     }
 
     suspend fun updateCustomerStatus(customerId: Long, status: String) {
         customerDao.updateStatus(customerId, status)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
     }
 
     suspend fun getUnpaidBillsForCustomer(customerId: Long): List<BillEntry> =
@@ -205,7 +219,11 @@ class BillingRepository(
     // Bills
     val unpaidBills: Flow<List<BillEntry>> = billDao.getUnpaidBills()
 
-    suspend fun insertBill(bill: BillEntry): Long = billDao.insertBill(bill)
+    suspend fun insertBill(bill: BillEntry): Long {
+        val id = billDao.insertBill(bill)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+        return id
+    }
 
     fun getAllBills(): Flow<List<BillEntry>> = billDao.getAllBills()
 
@@ -267,6 +285,7 @@ class BillingRepository(
         if (entries.isNotEmpty()) {
             billDao.insertAllBills(entries)
         }
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
     }
 
     // Expenses
@@ -290,23 +309,37 @@ class BillingRepository(
     fun getCategorySumsForMonth(monthYear: String): Flow<List<CategorySum>> =
         expenseDao.getCategorySumsForMonth(monthYear)
 
-    suspend fun insertExpense(expense: Expense): Long =
-        expenseDao.insertExpense(expense)
+    suspend fun insertExpense(expense: Expense): Long {
+        val id = expenseDao.insertExpense(expense)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+        return id
+    }
 
-    suspend fun deleteExpense(expense: Expense) =
+    suspend fun deleteExpense(expense: Expense) {
         expenseDao.deleteExpense(expense)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 
     // Packages
-    suspend fun insertPackage(pkg: InternetPackage): Long =
-        packageDao.insertPackage(pkg)
+    suspend fun insertPackage(pkg: InternetPackage): Long {
+        val id = packageDao.insertPackage(pkg)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+        return id
+    }
 
-    suspend fun updatePackage(pkg: InternetPackage) =
+    suspend fun updatePackage(pkg: InternetPackage) {
         packageDao.updatePackage(pkg)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 
-    suspend fun deletePackage(pkg: InternetPackage) =
+    suspend fun deletePackage(pkg: InternetPackage) {
         packageDao.deletePackage(pkg)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 
     // Settings
-    suspend fun updateSettings(settings: IspSettings) =
+    suspend fun updateSettings(settings: IspSettings) {
         settingsDao.insertOrUpdate(settings)
+        AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
+    }
 }

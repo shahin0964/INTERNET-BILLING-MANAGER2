@@ -390,6 +390,9 @@ object AppUpdateManager {
         }
 
         try {
+            // Pre-update safety backup
+            AutoBackupManager.performBackup(context)
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!context.packageManager.canRequestPackageInstalls()) {
                     Toast.makeText(

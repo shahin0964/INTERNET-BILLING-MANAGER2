@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.components.AppUpdateDialog
+import internet.billing.manager.ui.components.BackupRestoreDialog
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.LanguageSelectionDialog
 import internet.billing.manager.ui.components.ThemeSelectionDialog
@@ -61,6 +62,7 @@ fun SettingsScreen(
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
+    var showBackupDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -173,10 +175,10 @@ fun SettingsScreen(
                     SettingsRowItem(
                         icon = Icons.Default.CloudSync,
                         title = appStrings.backupRestore,
-                        subtitle = "Securely backup and restore data",
+                        subtitle = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA) "স্বয়ংক্রিয় ব্যাকআপ ও ডাটা রিস্টোর" else "Automatic backup & data restore",
                         iconTint = AccentGreen,
                         onClick = {
-                            Toast.makeText(context, "Local Room Database Saved", Toast.LENGTH_SHORT).show()
+                            showBackupDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
@@ -474,6 +476,12 @@ fun SettingsScreen(
     if (showUpdateDialog) {
         AppUpdateDialog(
             onDismiss = { showUpdateDialog = false }
+        )
+    }
+
+    if (showBackupDialog) {
+        BackupRestoreDialog(
+            onDismiss = { showBackupDialog = false }
         )
     }
 }
