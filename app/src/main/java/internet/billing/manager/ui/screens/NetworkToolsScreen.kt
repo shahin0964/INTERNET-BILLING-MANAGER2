@@ -443,7 +443,23 @@ fun NetworkToolsScreen(
         ActiveToolSheet.SPEED_TEST -> SpeedTestDialog(onDismiss = { activeSheet = ActiveToolSheet.NONE })
         ActiveToolSheet.PING -> PingTestDialog(
             defaultGateway = sharedTargetHost.ifBlank { overview.defaultGateway },
-            onDismiss = { activeSheet = ActiveToolSheet.NONE }
+            onDismiss = { activeSheet = ActiveToolSheet.NONE },
+            onSwitchToRoute = { host ->
+                sharedTargetHost = host
+                activeSheet = ActiveToolSheet.TRACEROUTE
+            },
+            onSwitchToPorts = { host ->
+                sharedTargetHost = host
+                activeSheet = ActiveToolSheet.PORT_SCANNER
+            },
+            onSwitchToWhois = { host ->
+                sharedTargetHost = host
+                activeSheet = ActiveToolSheet.WHOIS
+            },
+            onSwitchToDns = { host ->
+                sharedTargetHost = host
+                activeSheet = ActiveToolSheet.DNS
+            }
         )
         ActiveToolSheet.TRACEROUTE -> TracerouteDialog(
             defaultGateway = overview.defaultGateway,

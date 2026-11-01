@@ -9,8 +9,8 @@ android {
     namespace = "internet.billing.manager"
     compileSdk = 35
 
-    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 54
-    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.54"
+    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 56
+    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.56"
 
     defaultConfig {
         applicationId = "internet.billing.manager"
