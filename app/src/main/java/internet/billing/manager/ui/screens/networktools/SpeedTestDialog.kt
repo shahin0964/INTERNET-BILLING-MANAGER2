@@ -94,7 +94,7 @@ fun SpeedTestDialog(onDismiss: () -> Unit) {
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "%.1f".format(if (state.isTesting) state.currentSpeedMbps else state.downloadSpeedMbps),
+                                text = String.format(java.util.Locale.US, "%.1f", if (state.isTesting) state.currentSpeedMbps else state.downloadSpeedMbps),
                                 color = TextPrimary,
                                 fontSize = 36.sp,
                                 fontWeight = FontWeight.Black

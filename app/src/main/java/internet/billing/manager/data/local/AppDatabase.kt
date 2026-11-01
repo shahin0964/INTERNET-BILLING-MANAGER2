@@ -72,6 +72,15 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        fun resetDatabase() {
+            synchronized(this) {
+                try {
+                    INSTANCE?.close()
+                } catch (_: Exception) {}
+                INSTANCE = null
+            }
+        }
+
         private class AppDatabaseCallback(
             private val scope: CoroutineScope
         ) : RoomDatabase.Callback() {

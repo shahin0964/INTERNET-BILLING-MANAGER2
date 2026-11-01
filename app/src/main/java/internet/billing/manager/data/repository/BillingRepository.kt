@@ -53,6 +53,12 @@ class BillingRepository(
     suspend fun getCustomerById(id: Long): Customer? =
         customerDao.getCustomerById(id)
 
+    suspend fun getCustomersByStatusList(status: String): List<Customer> =
+        customerDao.getCustomersByStatusList(status)
+
+    suspend fun getAllCustomersList(): List<Customer> =
+        customerDao.getAllCustomersList()
+
     // Payments
     fun getPaymentsForMonth(monthYear: String): Flow<List<PaymentTransaction>> =
         paymentDao.getPaymentsForMonth(monthYear)

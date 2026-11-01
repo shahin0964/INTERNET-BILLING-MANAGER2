@@ -493,6 +493,7 @@ fun AddEditCustomerDialog(
                                 .weight(1f)
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(if (isSelected) activeColor.copy(alpha = 0.2f) else BgCardLight)
+                                .border(1.dp, if (isSelected) activeColor else CardBorder, RoundedCornerShape(8.dp))
                                 .clickable { status = item }
                                 .padding(vertical = 7.dp),
                             contentAlignment = Alignment.Center

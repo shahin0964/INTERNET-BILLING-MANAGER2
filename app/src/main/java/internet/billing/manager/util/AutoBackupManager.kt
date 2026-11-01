@@ -88,9 +88,9 @@ object AutoBackupManager {
                 val sdb = db.openHelper.writableDatabase
                 sdb.execSQL("CREATE TABLE IF NOT EXISTS app_preferences_backup (key_name TEXT PRIMARY KEY, value_json TEXT)")
                 val prefsJson = JSONObject().apply {
-                    put("auto_sms", getPrefsAsJson(context, "auto_sms_preferences"))
-                    put("app_theme", getPrefsAsJson(context, "app_theme_preferences"))
-                    put("language", getPrefsAsJson(context, "language_preferences"))
+                    put("auto_sms", getPrefsAsJson(context, "ibm_auto_sms_prefs"))
+                    put("app_theme", getPrefsAsJson(context, "ibm_theme_prefs"))
+                    put("language", getPrefsAsJson(context, "ibm_language_prefs"))
                     put("network_tools", getPrefsAsJson(context, "network_tools_prefs"))
                     put("auto_billing", getPrefsAsJson(context, "auto_billing_preferences"))
                 }
@@ -117,7 +117,7 @@ object AutoBackupManager {
                 if (cBill.moveToFirst()) billCount = cBill.getInt(0)
                 cBill.close()
 
-                val cPay = sdb.query("SELECT COUNT(*) FROM payment_transactions")
+                val cPay = sdb.query("SELECT COUNT(*) FROM payments")
                 if (cPay.moveToFirst()) payCount = cPay.getInt(0)
                 cPay.close()
             } catch (_: Exception) {}
@@ -184,9 +184,9 @@ object AutoBackupManager {
             val walDb = context.getDatabasePath("internet_billing_manager.db-wal")
             val shmDb = context.getDatabasePath("internet_billing_manager.db-shm")
 
-            // Close DB
+            // Reset & Close DB
             try {
-                (context.applicationContext as InternetBillingApp).database.close()
+                internet.billing.manager.data.local.AppDatabase.resetDatabase()
             } catch (_: Exception) {}
 
             // Overwrite main DB file
@@ -304,7 +304,21 @@ object AutoBackupManager {
                 }
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     calendar.timeInMillis,
@@ -337,7 +351,13 @@ object AutoBackupManager {
         val prefs = context.getSharedPreferences(prefName, Context.MODE_PRIVATE)
         val json = JSONObject()
         prefs.all.forEach { (k, v) ->
-            json.put(k, v)
+            if (v is Set<*>) {
+                val array = org.json.JSONArray()
+                v.forEach { array.put(it) }
+                json.put(k, array)
+            } else {
+                json.put(k, v)
+            }
         }
         return json
     }
@@ -346,9 +366,9 @@ object AutoBackupManager {
         try {
             val root = JSONObject(jsonString)
             listOf(
-                "auto_sms" to "auto_sms_preferences",
-                "app_theme" to "app_theme_preferences",
-                "language" to "language_preferences",
+                "auto_sms" to "ibm_auto_sms_prefs",
+                "app_theme" to "ibm_theme_prefs",
+                "language" to "ibm_language_prefs",
                 "network_tools" to "network_tools_prefs",
                 "auto_billing" to "auto_billing_preferences"
             ).forEach { (jsonKey, prefName) ->
@@ -365,11 +385,22 @@ object AutoBackupManager {
                             is Long -> p.putLong(k, v)
                             is Double -> p.putFloat(k, v.toFloat())
                             is String -> p.putString(k, v)
+                            is org.json.JSONArray -> {
+                                val set = mutableSetOf<String>()
+                                for (i in 0 until v.length()) {
+                                    set.add(v.optString(i))
+                                }
+                                p.putStringSet(k, set)
+                            }
                         }
                     }
                     p.apply()
                 }
             }
+            // Re-initialize live app states so changes take effect immediately
+            internet.billing.manager.ui.theme.ThemeManager.initialize(context)
+            internet.billing.manager.ui.localization.LanguageManager.initialize(context)
+            AutoSmsManager.initialize(context)
         } catch (_: Exception) {}
     }
 

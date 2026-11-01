@@ -39,32 +39,25 @@ object AutoBillingManager {
 
     suspend fun runBillingForMonth(context: Context, monthKey: String) {
         val repo = (context.applicationContext as InternetBillingApp).repository
-        val activeCustomers = repo.allCustomers
-        // Collect current snapshot of active customers
-        val customersList = repo.getCustomersByStatus(Customer.STATUS_ACTIVE)
-        // Using repository's generateMonthlyBills
-        repo.allCustomers.collect { list ->
-            val active = list.filter { it.status == Customer.STATUS_ACTIVE }
-            if (active.isNotEmpty()) {
-                repo.generateMonthlyBills(monthKey, active)
+        val active = repo.getCustomersByStatusList(Customer.STATUS_ACTIVE)
+        if (active.isNotEmpty()) {
+            repo.generateMonthlyBills(monthKey, active)
 
-                // Trigger Auto SMS if enabled
-                if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoBillSmsEnabled) {
-                    val settings = (context.applicationContext as InternetBillingApp).database.settingsDao().getSettingsSync()
-                    val targets = active.filter { it.phone.isNotBlank() }
-                    if (targets.isNotEmpty()) {
-                        val rawTpl = AutoSmsManager.getTemplateText("bill_generated", context)
-                        AutoSmsManager.sendBatchSms(
-                            context = context,
-                            customers = targets,
-                            template = rawTpl,
-                            ispSettings = settings,
-                            onProgress = { _, _, _, _ -> }
-                        )
-                    }
+            // Trigger Auto SMS if enabled
+            if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoBillSmsEnabled) {
+                val settings = (context.applicationContext as InternetBillingApp).database.settingsDao().getSettingsSync()
+                val targets = active.filter { it.phone.isNotBlank() }
+                if (targets.isNotEmpty()) {
+                    val rawTpl = AutoSmsManager.getTemplateText("bill_generated", context)
+                    AutoSmsManager.sendBatchSms(
+                        context = context,
+                        customers = targets,
+                        template = rawTpl,
+                        ispSettings = settings,
+                        onProgress = { _, _, _, _ -> }
+                    )
                 }
             }
-            return@collect
         }
     }
 
@@ -89,7 +82,21 @@ object AutoBillingManager {
                 set(Calendar.MILLISECOND, 0)
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        nextMonthCal.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        nextMonthCal.timeInMillis,
+                        pendingIntent
+                    )
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 alarmManager.setExactAndAllowWhileIdle(
                     AlarmManager.RTC_WAKEUP,
                     nextMonthCal.timeInMillis,

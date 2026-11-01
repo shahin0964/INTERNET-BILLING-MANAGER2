@@ -24,9 +24,11 @@ class InternetBillingApp : Application() {
         internet.billing.manager.util.AutoBackupManager.initialize(this)
     }
 
-    val database by lazy { AppDatabase.getDatabase(this, applicationScope) }
-    val repository by lazy {
-        BillingRepository(
+    val database: AppDatabase
+        get() = AppDatabase.getDatabase(this, applicationScope)
+
+    val repository: BillingRepository
+        get() = BillingRepository(
             database.customerDao(),
             database.packageDao(),
             database.paymentDao(),
@@ -34,5 +36,4 @@ class InternetBillingApp : Application() {
             database.expenseDao(),
             database.settingsDao()
         )
-    }
 }

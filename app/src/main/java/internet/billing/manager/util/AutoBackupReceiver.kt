@@ -12,6 +12,7 @@ class AutoBackupReceiver : BroadcastReceiver() {
         CoroutineScope(Dispatchers.IO).launch {
             AutoBackupManager.performBackup(context)
             AutoBackupManager.scheduleDailyBackupAlarm(context)
+            AutoBillingManager.scheduleNextMonthAlarm(context)
         }
     }
 }

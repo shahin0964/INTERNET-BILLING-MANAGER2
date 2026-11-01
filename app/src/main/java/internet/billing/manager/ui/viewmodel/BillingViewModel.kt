@@ -330,7 +330,7 @@ class BillingViewModel(
             repository.recordPayment(customerId, amount, method, note)
             // Trigger Auto SMS Receipt if enabled
             if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoPaymentSmsEnabled) {
-                val cust = allCustomers.value.firstOrNull { it.id == customerId }
+                val cust = repository.getCustomerById(customerId)
                 if (cust != null && cust.phone.isNotBlank()) {
                     val rawTpl = AutoSmsManager.getTemplateText("payment_received", InternetBillingApp.instance)
                     val msg = AutoSmsManager.formatMessage(rawTpl, cust, ispSettings.value, extraAmount = amount)
