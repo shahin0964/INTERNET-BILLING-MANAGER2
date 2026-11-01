@@ -1,5 +1,7 @@
 package internet.billing.manager.ui.screens
 
+import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -7,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,8 +36,10 @@ fun MainScreen(
     viewModel: BillingViewModel,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     var currentScreen by remember { mutableStateOf(ActiveScreen.DASHBOARD) }
     var selectedNavTab by remember { mutableStateOf(BottomNavScreen.DASHBOARD) }
+    var lastBackPressedTime by remember { mutableLongStateOf(0L) }
 
     val allCustomers by viewModel.allCustomers.collectAsState()
     val allPackages by viewModel.allPackages.collectAsState()
@@ -43,10 +48,9 @@ fun MainScreen(
     val monthlyBill by viewModel.totalActiveMonthlyBill.collectAsState()
     val monthYearKey by viewModel.currentMonthYearKey.collectAsState()
 
-    // Handle back button when inside nested sub-screens
-    BackHandler(enabled = currentScreen == ActiveScreen.DAILY_ENTRY || currentScreen == ActiveScreen.EXPENSE) {
-        currentScreen = ActiveScreen.COLLECTION
-        selectedNavTab = BottomNavScreen.COLLECTION
+    // 1. Handle back button when inside nested sub-screens
+    BackHandler(enabled = currentScreen == ActiveScreen.AUTO_SMS) {
+        currentScreen = ActiveScreen.ADVANCED_FEATURES
     }
 
     BackHandler(enabled = currentScreen == ActiveScreen.ADVANCED_FEATURES) {
@@ -54,8 +58,31 @@ fun MainScreen(
         selectedNavTab = BottomNavScreen.MORE
     }
 
-    BackHandler(enabled = currentScreen == ActiveScreen.AUTO_SMS) {
-        currentScreen = ActiveScreen.ADVANCED_FEATURES
+    BackHandler(enabled = currentScreen == ActiveScreen.DAILY_ENTRY || currentScreen == ActiveScreen.EXPENSE) {
+        currentScreen = ActiveScreen.COLLECTION
+        selectedNavTab = BottomNavScreen.COLLECTION
+    }
+
+    // 2. Handle back button when on main navigation tabs (not Dashboard) -> go back to Dashboard
+    val isNonDashboardNavScreen = currentScreen == ActiveScreen.CUSTOMERS ||
+            currentScreen == ActiveScreen.BILLING ||
+            currentScreen == ActiveScreen.COLLECTION ||
+            currentScreen == ActiveScreen.SETTINGS
+
+    BackHandler(enabled = isNonDashboardNavScreen) {
+        currentScreen = ActiveScreen.DASHBOARD
+        selectedNavTab = BottomNavScreen.DASHBOARD
+    }
+
+    // 3. Double-back-to-exit when on Dashboard screen
+    BackHandler(enabled = currentScreen == ActiveScreen.DASHBOARD) {
+        val now = System.currentTimeMillis()
+        if (now - lastBackPressedTime < 2000L) {
+            (context as? Activity)?.finish()
+        } else {
+            lastBackPressedTime = now
+            Toast.makeText(context, appStrings.pressAgainToExit, Toast.LENGTH_SHORT).show()
+        }
     }
 
     Scaffold(

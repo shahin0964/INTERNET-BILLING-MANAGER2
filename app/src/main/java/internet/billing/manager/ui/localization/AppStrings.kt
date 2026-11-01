@@ -234,6 +234,7 @@ interface AppStrings {
     val releaseDateLabel: String
     val allowUnknownSourcesPrompt: String
     val openInBrowser: String
+    val pressAgainToExit: String
 }
 
 object EnglishStrings : AppStrings {
@@ -470,6 +471,7 @@ object EnglishStrings : AppStrings {
     override val releaseDateLabel = "Release Date"
     override val allowUnknownSourcesPrompt = "Please enable 'Install unknown apps' permission to install the update."
     override val openInBrowser = "Open in Browser"
+    override val pressAgainToExit = "Press back again to exit"
 }
 
 object BanglaStrings : AppStrings {
@@ -706,4 +708,5 @@ object BanglaStrings : AppStrings {
     override val releaseDateLabel = "রিলিজের তারিখ"
     override val allowUnknownSourcesPrompt = "অ্যাপটি ইনস্টল করার জন্য অজানা অ্যাপ ইনস্টলের অনুমতি দিন।"
     override val openInBrowser = "ব্রাউজারে খুলুন"
+    override val pressAgainToExit = "অ্যাপ থেকে বের হতে আবার ব্যাক প্রেস করুন"
 }
