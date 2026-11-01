@@ -1,33 +1,34 @@
 package internet.billing.manager.ui.screens
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import internet.billing.manager.R
 import internet.billing.manager.ui.theme.AccentCyan
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.sin
-
-import androidx.compose.material3.Text
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun AnimatedSplashScreen(
@@ -41,14 +42,18 @@ fun AnimatedSplashScreen(
     val appVersion = remember {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.0.43"
+            pInfo.versionName ?: "1.0.48"
         } catch (e: Exception) {
-            "1.0.43"
+            "1.0.48"
         }
     }
 
     // Smooth cinematic entrance (fade and scale from 0.96f to exactly 1.0f)
     val entranceAnim = remember { Animatable(0f) }
+
+    // Loading progress animation from 0f to 1f
+    val loadingProgress = remember { Animatable(0f) }
+    var loadingStatusText by remember { mutableStateOf("Initializing...") }
 
     // Glowing aura pulse for central globe
     val infiniteTransition = rememberInfiniteTransition(label = "SplashGlowInfinite")
@@ -60,17 +65,6 @@ fun AnimatedSplashScreen(
             repeatMode = RepeatMode.Reverse
         ),
         label = "GlobeGlowPulse"
-    )
-
-    // Animated chaser light pulse across the 3 artwork dots
-    val dotPhase by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 3f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1350, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "ArtworkDotPhase"
     )
 
     fun dismissSplash() {
@@ -87,20 +81,50 @@ fun AnimatedSplashScreen(
     }
 
     LaunchedEffect(Unit) {
-        // Smooth cinematic entrance
-        entranceAnim.animateTo(
-            targetValue = 1f,
-            animationSpec = tween(durationMillis = 700, easing = EaseOutCubic)
-        )
-        // Splash duration
-        delay(2400)
-        dismissSplash()
+        // 1. Cinematic entrance fade in
+        launch {
+            entranceAnim.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 650, easing = EaseOutCubic)
+            )
+        }
+
+        // 2. Realistic multi-stage loading animation
+        launch {
+            delay(150)
+            loadingStatusText = "Connecting..."
+            loadingProgress.animateTo(
+                targetValue = 0.35f,
+                animationSpec = tween(durationMillis = 550, easing = FastOutSlowInEasing)
+            )
+
+            loadingStatusText = "Loading Database..."
+            loadingProgress.animateTo(
+                targetValue = 0.72f,
+                animationSpec = tween(durationMillis = 650, easing = LinearEasing)
+            )
+
+            loadingStatusText = "Synchronizing..."
+            loadingProgress.animateTo(
+                targetValue = 0.94f,
+                animationSpec = tween(durationMillis = 500, easing = EaseOutQuad)
+            )
+
+            loadingStatusText = "Ready!"
+            loadingProgress.animateTo(
+                targetValue = 1.0f,
+                animationSpec = tween(durationMillis = 300, easing = FastOutLinearInEasing)
+            )
+
+            delay(250)
+            dismissSplash()
+        }
     }
 
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF021B3C))
+            .background(Color(0xFF021636))
             .alpha(entranceAnim.value)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
@@ -111,8 +135,7 @@ fun AnimatedSplashScreen(
     ) {
         val entranceScale = 0.96f + (0.04f * entranceAnim.value)
 
-        // 1. High-resolution full-bleed 20:9 artwork (1080x2400 native)
-        // Completely fills the screen edge-to-edge without letterbox bars or cutoffs
+        // 1. Full-bleed artwork (941x1672 native, fills phone screen edge-to-edge)
         Image(
             painter = painterResource(id = R.drawable.app_splash),
             contentDescription = "Internet Billing Manager Splash",
@@ -132,7 +155,7 @@ fun AnimatedSplashScreen(
                 .background(
                     brush = Brush.radialGradient(
                         colors = listOf(
-                            AccentCyan.copy(alpha = 0.5f),
+                            AccentCyan.copy(alpha = 0.45f),
                             Color(0xFF0099FF).copy(alpha = 0.2f),
                             Color.Transparent
                         )
@@ -141,33 +164,132 @@ fun AnimatedSplashScreen(
                 )
         )
 
-        // 3. Cyber Animated Glow directly on the 3 Dots in the artwork:
-        // Positioned using exact proportional coordinates:
-        // Left Dot: x = 43.89%, y = 69.11%
-        // Middle Dot: x = 49.95%, y = 69.11%
-        // Right Dot: x = 56.00%, y = 69.11%
-        val yOffset = maxHeight * 0.6911f
-        val xOffsetDot1 = maxWidth * 0.4389f
-        val xOffsetDot2 = maxWidth * 0.4995f
-        val xOffsetDot3 = maxWidth * 0.5600f
+        // 3. Cyber Animated Loading System
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .navigationBarsPadding()
+                .padding(bottom = 54.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            val progressPercent = (loadingProgress.value * 100).toInt().coerceIn(0, 100)
 
-        ArtworkDotGlow(
-            xOffset = xOffsetDot1,
-            yOffset = yOffset,
-            intensity = calculateDotIntensity(dotPhase, 0)
-        )
+            // Status message + Progress percentage
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = loadingStatusText,
+                    color = AccentCyan,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.8.sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "$progressPercent%",
+                    color = Color.White.copy(alpha = 0.95f),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-        ArtworkDotGlow(
-            xOffset = xOffsetDot2,
-            yOffset = yOffset,
-            intensity = calculateDotIntensity(dotPhase, 1)
-        )
+            Spacer(modifier = Modifier.height(10.dp))
 
-        ArtworkDotGlow(
-            xOffset = xOffsetDot3,
-            yOffset = yOffset,
-            intensity = calculateDotIntensity(dotPhase, 2)
-        )
+            // Glowing Capsule Progress Bar
+            val barWidth = 210.dp
+            val barHeight = 6.dp
+            Box(
+                modifier = Modifier
+                    .width(barWidth)
+                    .height(barHeight)
+                    .clip(CircleShape)
+                    .background(Color(0xFF041B3B))
+                    .border(
+                        BorderStroke(1.dp, Color(0xFF00E5FF).copy(alpha = 0.4f)),
+                        CircleShape
+                    )
+            ) {
+                // Active Fill Bar
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .fillMaxWidth(loadingProgress.value)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFF0091EA),
+                                    Color(0xFF00E5FF),
+                                    Color.White
+                                )
+                            )
+                        )
+                )
+
+                // Shimmer sweep flare running through the bar
+                val shimmerX by infiniteTransition.animateFloat(
+                    initialValue = -0.5f,
+                    targetValue = 1.5f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(1200, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "LoadingBarShimmer"
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(45.dp)
+                        .offset(x = barWidth * shimmerX)
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color.Transparent,
+                                    Color.White.copy(alpha = 0.85f),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(11.dp))
+
+            // 3 Animated Cyber Dancing Light Dots
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val dotAnim by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 3f,
+                    animationSpec = infiniteRepeatable(
+                        animation = tween(900, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart
+                    ),
+                    label = "DancingDots"
+                )
+
+                for (i in 0..2) {
+                    val intensity = calculateDotIntensity(dotAnim, i)
+                    val dotScale = 0.75f + (0.45f * intensity)
+                    val dotAlpha = 0.35f + (0.65f * intensity)
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .scale(dotScale)
+                            .alpha(dotAlpha)
+                            .background(
+                                if (i == 1) Color.White else AccentCyan,
+                                CircleShape
+                            )
+                    )
+                }
+            }
+        }
 
         // 4. Bottom Version & App Branding Tag
         Column(
@@ -175,7 +297,7 @@ fun AnimatedSplashScreen(
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .navigationBarsPadding()
-                .padding(bottom = 24.dp),
+                .padding(bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -185,10 +307,10 @@ fun AnimatedSplashScreen(
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = "v$appVersion",
-                color = Color.White.copy(alpha = 0.7f),
+                color = Color.White.copy(alpha = 0.75f),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 0.5.sp
@@ -206,55 +328,5 @@ private fun calculateDotIntensity(phase: Float, dotIndex: Int): Float {
         sin(diff * Math.PI.toFloat()).coerceIn(0f, 1f)
     } else {
         0f
-    }
-}
-
-/**
- * High-energy cyber neon lens flare & halo drawn precisely on top of a dot in the artwork.
- */
-@Composable
-private fun BoxScope.ArtworkDotGlow(
-    xOffset: Dp,
-    yOffset: Dp,
-    intensity: Float
-) {
-    if (intensity > 0.04f) {
-        // 1. Soft cyber halo aura (expanding and breathing with intensity)
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = xOffset - 15.dp,
-                    y = yOffset - 15.dp
-                )
-                .size(30.dp)
-                .alpha(intensity * 0.95f)
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = 0.9f),
-                            AccentCyan.copy(alpha = 0.8f),
-                            Color(0xFF0099FF).copy(alpha = 0.4f),
-                            Color.Transparent
-                        )
-                    ),
-                    shape = CircleShape
-                )
-        )
-
-        // 2. High-intensity brilliant white core flare
-        val coreSize = 9.dp * (1f + 0.35f * intensity)
-        Box(
-            modifier = Modifier
-                .offset(
-                    x = xOffset - (coreSize / 2),
-                    y = yOffset - (coreSize / 2)
-                )
-                .size(coreSize)
-                .alpha(intensity)
-                .background(
-                    color = Color.White,
-                    shape = CircleShape
-                )
-        )
     }
 }
