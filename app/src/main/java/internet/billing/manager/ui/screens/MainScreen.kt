@@ -28,7 +28,8 @@ enum class ActiveScreen {
     EXPENSE,
     SETTINGS,
     ADVANCED_FEATURES,
-    AUTO_SMS
+    AUTO_SMS,
+    NETWORK_TOOLS
 }
 
 @Composable
@@ -49,6 +50,10 @@ fun MainScreen(
     val monthYearKey by viewModel.currentMonthYearKey.collectAsState()
 
     // 1. Handle back button when inside nested sub-screens
+    BackHandler(enabled = currentScreen == ActiveScreen.NETWORK_TOOLS) {
+        currentScreen = ActiveScreen.ADVANCED_FEATURES
+    }
+
     BackHandler(enabled = currentScreen == ActiveScreen.AUTO_SMS) {
         currentScreen = ActiveScreen.ADVANCED_FEATURES
     }
@@ -189,6 +194,9 @@ fun MainScreen(
                         },
                         onNavigateToAutoSms = {
                             currentScreen = ActiveScreen.AUTO_SMS
+                        },
+                        onNavigateToNetworkTools = {
+                            currentScreen = ActiveScreen.NETWORK_TOOLS
                         }
                     )
                 }
@@ -196,6 +204,14 @@ fun MainScreen(
                 ActiveScreen.AUTO_SMS -> {
                     AutoSmsScreen(
                         viewModel = viewModel,
+                        onBack = {
+                            currentScreen = ActiveScreen.ADVANCED_FEATURES
+                        }
+                    )
+                }
+
+                ActiveScreen.NETWORK_TOOLS -> {
+                    NetworkToolsScreen(
                         onBack = {
                             currentScreen = ActiveScreen.ADVANCED_FEATURES
                         }

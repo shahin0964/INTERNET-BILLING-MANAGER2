@@ -28,6 +28,7 @@ import internet.billing.manager.util.AutoSmsManager
 fun AdvancedFeaturesScreen(
     onBack: () -> Unit,
     onNavigateToAutoSms: () -> Unit,
+    onNavigateToNetworkTools: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
@@ -70,7 +71,7 @@ fun AdvancedFeaturesScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (isBangla) "সিম অটোমেশন ও অ্যাডভান্সড সেটিংস" else "SIM automation & system settings",
+                    text = if (isBangla) "সিম অটোমেশন ও নেটওয়ার্ক টুলস" else "SIM automation & network tools",
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
@@ -85,11 +86,25 @@ fun AdvancedFeaturesScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // Row 1: Auto SMS System (SIM) - Navigates to dedicated AutoSmsScreen!
+            // Row 1: Network Tools (নেটওয়ার্ক টুলস)
+            item {
+                AdvancedFeatureRowCard(
+                    icon = Icons.Default.Build,
+                    iconTint = AccentCyan,
+                    title = if (isBangla) "নেটওয়ার্ক টুলস (Network Tools)" else "Network Tools",
+                    subtitle = if (isBangla) "পিং টেস্ট, ডিএনএস লুকআপ, আইপি ও গেটওয়ে, পোর্ট চেকার, স্পিড টেস্ট" else "Ping test, DNS lookup, IP & gateway, Port checker, Speed test, Wi-Fi analyzer",
+                    badgeText = "7 Tools",
+                    badgeColor = AccentCyan,
+                    showChevron = true,
+                    onClick = onNavigateToNetworkTools
+                )
+            }
+
+            // Row 2: Auto SMS System (SIM) - Navigates to dedicated AutoSmsScreen!
             item {
                 AdvancedFeatureRowCard(
                     icon = Icons.Default.Chat,
-                    iconTint = AccentCyan,
+                    iconTint = AccentOrange,
                     title = if (isBangla) "অটো এসএমএস সিস্টেম (সিম)" else "Auto SMS System (SIM)",
                     subtitle = if (isBangla) "সিম রেট-লিমিট ডিসপ্যাচ, নোটিশ ও ৯টি বাংলা টেমপ্লেট" else "SIM rate-limited dispatch, billing notices & 9 templates",
                     badgeText = if (AutoSmsManager.isAutoSmsEnabled) "ON" else "OFF",
