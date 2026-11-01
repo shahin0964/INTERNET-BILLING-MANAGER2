@@ -9,6 +9,7 @@ import android.net.wifi.WifiManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -569,7 +570,7 @@ object NetworkToolsManager {
         val countryFlag = CountryLookup.countryCodeToEmoji(countryCode)
 
         var seq = 1
-        while (kotlinx.coroutines.isActive) {
+        while (isActive) {
             val start = System.currentTimeMillis()
             var rtt = 0f
             var success = false

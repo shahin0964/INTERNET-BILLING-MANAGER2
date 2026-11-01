@@ -1,4 +1,4 @@
-# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.56
+# 📱 INTERNET BILLING MANAGER (IBM) - v1.0.57
 
 🎥 ভিডিও রেফারেন্স অনুযায়ী হুবহু "Ping Test" ও "Tools Query" ইন্টারফেস রূপান্তর:
 ইউজারের প্রেরিত ভিডিওর UI/UX এর সাথে হুবহু মিল রেখে Ping Test অংশটি নতুনভাবে ডিজাইন করা হয়েছে:

@@ -44,7 +44,7 @@ fun PingTestDialog(
     onSwitchToDns: (String) -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
-    var targetInput by remember { mutableStateOf("8.8.8.8") }
+    var targetInput by remember { mutableStateOf(defaultGateway.ifBlank { "8.8.8.8" }) }
     var selectedTool by remember { mutableStateOf("Ping") }
     var preferIpv6 by remember { mutableStateOf(false) }
 
