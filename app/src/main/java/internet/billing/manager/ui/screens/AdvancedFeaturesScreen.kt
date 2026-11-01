@@ -92,8 +92,8 @@ fun AdvancedFeaturesScreen(
                     icon = Icons.Default.Build,
                     iconTint = AccentCyan,
                     title = if (isBangla) "নেটওয়ার্ক টুলস (Network Tools)" else "Network Tools",
-                    subtitle = if (isBangla) "পিং টেস্ট, ডিএনএস লুকআপ, আইপি ও গেটওয়ে, পোর্ট চেকার, স্পিড টেস্ট" else "Ping test, DNS lookup, IP & gateway, Port checker, Speed test, Wi-Fi analyzer",
-                    badgeText = "7 Tools",
+                    subtitle = if (isBangla) "স্পিড টেস্ট, পিং, ট্রেসরুট, ল্যান স্ক্যানার, ওয়েক অন ল্যান, ওয়াইফাই চ্যানেল, পোর্ট স্ক্যানার, হু ইজ, ইউপিএনপি" else "Speed test, Ping, Traceroute, LAN scanner, WOL, Wi-Fi channels, Port scanner, WHOIS, UPnP",
+                    badgeText = "12 Tools",
                     badgeColor = AccentCyan,
                     showChevron = true,
                     onClick = onNavigateToNetworkTools
