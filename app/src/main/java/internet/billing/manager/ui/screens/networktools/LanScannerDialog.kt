@@ -309,7 +309,7 @@ fun LanScannerDialog(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                        Icon(Icons.Default.WifiFind, contentDescription = null, tint = TextMuted, modifier = Modifier.size(36.dp))
+                                        Icon(Icons.Default.Wifi, contentDescription = null, tint = TextMuted, modifier = Modifier.size(36.dp))
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text("Tap 'Scan LAN' to discover all active devices on $subnetInput.0/24", color = TextMuted, fontSize = 11.5.sp)
                                     }

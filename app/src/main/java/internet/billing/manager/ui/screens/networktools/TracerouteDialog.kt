@@ -110,7 +110,7 @@ fun TracerouteDialog(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Route, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.AltRoute, contentDescription = null, tint = Color(0xFF38BDF8), modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text("Traceroute Route Visualizer", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = TextPrimary)
                         }

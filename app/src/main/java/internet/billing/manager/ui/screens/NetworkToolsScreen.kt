@@ -287,7 +287,7 @@ fun NetworkToolsScreen(
             // Tool 3: Traceroute Visualizer
             item {
                 DiagnosticToolCard(
-                    icon = Icons.Default.Route,
+                    icon = Icons.Default.AltRoute,
                     iconContainerColor = Color(0xFF0369A1).copy(alpha = 0.5f),
                     iconTint = Color(0xFF38BDF8),
                     title = "🗺️ Traceroute Route Visualizer",

@@ -131,6 +131,14 @@ data class PortCheckResult(
     val message: String
 )
 
+data class GatewayAudit(
+    val gatewayIp: String = "0.0.0.0",
+    val isPingable: Boolean = false,
+    val pingLatencyMs: Long = 0,
+    val ports: List<PortCheckResult> = emptyList(),
+    val isAnalyzing: Boolean = false
+)
+
 data class SpeedTestState(
     val isTesting: Boolean = false,
     val phase: String = "Idle",
