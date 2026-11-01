@@ -617,7 +617,7 @@ fun ModernBillingAnalyticsCard(
                     Column {
                         Text(
                             text = appStrings.billingAnalytics,
-                            color = TextPrimary,
+                            color = Color.White,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -720,7 +720,7 @@ fun ModernBillingAnalyticsCard(
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
                             text = "৳${formatAmount(totalGenerated)}",
-                            color = TextPrimary,
+                            color = Color.White,
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Black,
                             maxLines = 1
@@ -788,7 +788,7 @@ fun ModernBillingAnalyticsCard(
                     ) {
                         Text(
                             text = "${collectedPercent}%",
-                            color = TextPrimary,
+                            color = Color.White,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -809,7 +809,7 @@ fun ModernBillingAnalyticsCard(
             ) {
                 // Left: Collected Status Card
                 val collectedAnnotated = buildAnnotatedString {
-                    withStyle(SpanStyle(color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)) {
+                    withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)) {
                         append("৳${formatAmount(monthlyCollection)} ")
                     }
                     withStyle(SpanStyle(color = Color(0xFF00E676), fontWeight = FontWeight.Bold, fontSize = 11.5.sp)) {
@@ -889,7 +889,7 @@ fun ModernBillingAnalyticsCard(
 
                 // Right: Outstanding Status Card
                 val outstandingAnnotated = buildAnnotatedString {
-                    withStyle(SpanStyle(color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)) {
+                    withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)) {
                         append("৳${formatAmount(totalDue)} ")
                     }
                     withStyle(SpanStyle(color = Color(0xFFFF9100), fontWeight = FontWeight.Bold, fontSize = 11.5.sp)) {

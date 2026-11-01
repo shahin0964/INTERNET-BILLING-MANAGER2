@@ -52,6 +52,8 @@ fun BottomNavBar(
     onScreenSelected: (BottomNavScreen) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = ThemeManager.currentTheme.isDark
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -65,7 +67,7 @@ fun BottomNavBar(
                 .shadow(
                     elevation = 12.dp,
                     shape = RoundedCornerShape(32.dp),
-                    spotColor = Color(0xFF00E5FF).copy(alpha = 0.25f),
+                    spotColor = if (isDark) Color(0xFF00E5FF).copy(alpha = 0.25f) else Color(0x300066CC),
                     ambientColor = Color.Black
                 ),
             shape = RoundedCornerShape(32.dp),
@@ -73,14 +75,24 @@ fun BottomNavBar(
             tonalElevation = 8.dp,
             border = BorderStroke(
                 1.3.dp,
-                Brush.horizontalGradient(
-                    listOf(
-                        Color(0xFF00E5FF).copy(alpha = 0.4f),
-                        Color(0xFF2979FF).copy(alpha = 0.65f),
-                        Color(0xFFA855F7).copy(alpha = 0.4f),
-                        Color(0xFF00E5FF).copy(alpha = 0.4f)
+                if (isDark) {
+                    Brush.horizontalGradient(
+                        listOf(
+                            Color(0xFF00E5FF).copy(alpha = 0.4f),
+                            Color(0xFF2979FF).copy(alpha = 0.65f),
+                            Color(0xFFA855F7).copy(alpha = 0.4f),
+                            Color(0xFF00E5FF).copy(alpha = 0.4f)
+                        )
                     )
-                )
+                } else {
+                    Brush.horizontalGradient(
+                        listOf(
+                            AccentCyan.copy(alpha = 0.5f),
+                            Color(0xFFCBD5E1),
+                            AccentCyan.copy(alpha = 0.5f)
+                        )
+                    )
+                }
             )
         ) {
             Row(
@@ -103,15 +115,24 @@ fun BottomNavBar(
                                 if (isSelected) {
                                     Modifier
                                         .background(
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    AccentCyan.copy(alpha = 0.18f),
-                                                    Color(0xFF1E88E5).copy(alpha = 0.08f)
+                                            if (isDark) {
+                                                Brush.verticalGradient(
+                                                    listOf(
+                                                        AccentCyan.copy(alpha = 0.18f),
+                                                        Color(0xFF1E88E5).copy(alpha = 0.08f)
+                                                    )
                                                 )
-                                            )
+                                            } else {
+                                                Brush.verticalGradient(
+                                                    listOf(
+                                                        AccentCyan.copy(alpha = 0.14f),
+                                                        AccentCyan.copy(alpha = 0.06f)
+                                                    )
+                                                )
+                                            }
                                         )
                                         .border(
-                                            BorderStroke(1.dp, AccentCyan.copy(alpha = 0.4f)),
+                                            BorderStroke(1.dp, AccentCyan.copy(alpha = 0.45f)),
                                             RoundedCornerShape(22.dp)
                                         )
                                 } else {
@@ -137,7 +158,7 @@ fun BottomNavBar(
                                 text = title,
                                 color = tint,
                                 fontSize = 9.5.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
                                 maxLines = 1
                             )
                         }
