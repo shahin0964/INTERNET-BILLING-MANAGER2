@@ -367,6 +367,8 @@ fun EditTemplateDialog(
         mutableStateOf(AutoSmsManager.getTemplateText(template.key, context))
     }
 
+    val isBangla = LanguageManager.isBengali()
+
     val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
         focusedBorderColor = AccentCyan,
         unfocusedBorderColor = CardBorder,
