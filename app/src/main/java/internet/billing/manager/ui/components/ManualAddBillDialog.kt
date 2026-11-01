@@ -44,15 +44,36 @@ fun ManualAddBillDialog(
     var notesInput by remember { mutableStateOf("") }
     var customerDropdownExpanded by remember { mutableStateOf(false) }
 
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentCyan,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentCyan
+    )
+    val dialogTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.5.sp,
+        fontWeight = FontWeight.Medium
+    )
+
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .padding(16.dp)
@@ -108,12 +129,8 @@ fun ManualAddBillDialog(
                             Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = AccentCyan)
                         },
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        ),
+                        colors = dialogTextFieldColors,
+                        textStyle = dialogTextStyle,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -166,15 +183,11 @@ fun ManualAddBillDialog(
                 OutlinedTextField(
                     value = monthYearInput,
                     onValueChange = { monthYearInput = it },
-                    placeholder = { Text("e.g. 2026-10") },
+                    placeholder = { Text("e.g. 2026-10", color = TextMuted) },
                     singleLine = true,
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
+                    colors = dialogTextFieldColors,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -189,12 +202,8 @@ fun ManualAddBillDialog(
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
+                    colors = dialogTextFieldColors,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -206,15 +215,11 @@ fun ManualAddBillDialog(
                 OutlinedTextField(
                     value = notesInput,
                     onValueChange = { notesInput = it },
-                    placeholder = { Text("Manual bill entry, adjustment, etc.") },
+                    placeholder = { Text("Manual bill entry, adjustment, etc.", color = TextMuted) },
                     singleLine = true,
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    ),
+                    colors = dialogTextFieldColors,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -250,5 +255,6 @@ fun ManualAddBillDialog(
                 }
             }
         }
+    }
     }
 }

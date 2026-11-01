@@ -70,15 +70,17 @@ fun CustomerDetailsDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.90f)
-                .padding(vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.94f)
+                    .fillMaxHeight(0.90f)
+                    .padding(vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -513,6 +515,7 @@ fun CustomerDetailsDialog(
             }
         }
     }
+    }
 
     if (showDueDayPicker) {
         BillDueDayPickerDialog(
@@ -543,14 +546,16 @@ fun BillDueDayPickerDialog(
     var textInput by remember { mutableStateOf(currentDay.toString()) }
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .padding(16.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .padding(16.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -649,8 +654,8 @@ fun BillDueDayPickerDialog(
                             selectedDay = num
                         }
                     },
-                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)") },
-                    placeholder = { Text("10") },
+                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)", color = TextSecondary) },
+                    placeholder = { Text("10", color = TextMuted) },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Event,
@@ -669,6 +674,11 @@ fun BillDueDayPickerDialog(
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(
+                        color = TextPrimary,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -678,6 +688,10 @@ fun BillDueDayPickerDialog(
                         unfocusedTextColor = TextPrimary,
                         focusedLabelColor = AccentCyan,
                         unfocusedLabelColor = TextSecondary,
+                        focusedPlaceholderColor = TextMuted,
+                        unfocusedPlaceholderColor = TextMuted,
+                        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
                         cursorColor = AccentCyan
                     )
                 )
@@ -729,6 +743,7 @@ fun BillDueDayPickerDialog(
                 }
             }
         }
+    }
     }
 }
 

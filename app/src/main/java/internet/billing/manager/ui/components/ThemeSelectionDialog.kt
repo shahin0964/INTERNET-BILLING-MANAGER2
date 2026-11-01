@@ -32,14 +32,16 @@ fun ThemeSelectionDialog(
     val currentTheme = ThemeManager.currentTheme
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -221,3 +223,4 @@ fun ThemeSelectionDialog(
         }
     }
 }
+

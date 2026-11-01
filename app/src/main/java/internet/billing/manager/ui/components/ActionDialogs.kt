@@ -62,12 +62,14 @@ fun CollectPaymentDialog(
     val paymentMethods = listOf("Cash", "bKash", "Nagad", "Bank")
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .padding(14.dp)
@@ -157,15 +159,24 @@ fun CollectPaymentDialog(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text("${appStrings.paymentAmount} (৳)") },
+                    label = { Text("${appStrings.paymentAmount} (৳)", color = TextSecondary) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AccentGreen,
                         unfocusedBorderColor = CardBorder,
                         focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentGreen,
+                        unfocusedLabelColor = TextSecondary,
+                        focusedPlaceholderColor = TextMuted,
+                        unfocusedPlaceholderColor = TextMuted,
+                        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+                        cursorColor = AccentGreen
                     )
                 )
 
@@ -249,14 +260,23 @@ fun CollectPaymentDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text(appStrings.noteRemarks) },
+                    label = { Text(appStrings.noteRemarks, color = TextSecondary) },
                     singleLine = true,
+                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = AccentGreen,
                         unfocusedBorderColor = CardBorder,
                         focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
+                        unfocusedTextColor = TextPrimary,
+                        focusedLabelColor = AccentGreen,
+                        unfocusedLabelColor = TextSecondary,
+                        focusedPlaceholderColor = TextMuted,
+                        unfocusedPlaceholderColor = TextMuted,
+                        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+                        cursorColor = AccentGreen
                     )
                 )
 
@@ -287,6 +307,7 @@ fun CollectPaymentDialog(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -305,13 +326,34 @@ fun AddExpenseDialog(
     val monthYearFormat = SimpleDateFormat("yyyy-MM", Locale.getDefault())
     val currentMonthYear = remember { monthYearFormat.format(Date()) }
 
+    val expenseTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentPurple,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentPurple,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentPurple
+    )
+    val expenseTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.5.sp,
+        fontWeight = FontWeight.Medium
+    )
+
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .padding(14.dp)
@@ -346,15 +388,12 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text(appStrings.expenseName) },
+                    label = { Text(appStrings.expenseName, color = TextSecondary) },
                     singleLine = true,
+                    textStyle = expenseTextStyle,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentPurple,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                    shape = RoundedCornerShape(10.dp),
+                    colors = expenseTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -400,16 +439,13 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = amountText,
                     onValueChange = { amountText = it },
-                    label = { Text(appStrings.expenseAmount) },
+                    label = { Text(appStrings.expenseAmount, color = TextSecondary) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    textStyle = expenseTextStyle,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentPurple,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                    shape = RoundedCornerShape(10.dp),
+                    colors = expenseTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -417,15 +453,12 @@ fun AddExpenseDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text(appStrings.noteRemarks) },
+                    label = { Text(appStrings.noteRemarks, color = TextSecondary) },
                     singleLine = true,
+                    textStyle = expenseTextStyle,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentPurple,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
+                    shape = RoundedCornerShape(10.dp),
+                    colors = expenseTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -464,6 +497,7 @@ fun AddExpenseDialog(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -475,12 +509,14 @@ fun GenerateBillDialog(
     onConfirm: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier.padding(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
@@ -555,6 +591,7 @@ fun GenerateBillDialog(
             }
         }
     }
+    }
 }
 
 @Composable
@@ -609,19 +646,40 @@ fun EditBusinessInfoDialog(
         } else null
     }
 
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentCyan,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentCyan
+    )
+    val dialogTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.5.sp,
+        fontWeight = FontWeight.Medium
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.90f)
-                .padding(vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.94f)
+                    .fillMaxHeight(0.90f)
+                    .padding(vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -733,20 +791,13 @@ fun EditBusinessInfoDialog(
                 OutlinedTextField(
                     value = companyName,
                     onValueChange = { companyName = it },
-                    label = { Text(appStrings.ispNameLabel) },
-                    placeholder = { Text(appStrings.ispNameLabel) },
+                    label = { Text(appStrings.ispNameLabel, color = TextSecondary) },
+                    placeholder = { Text(appStrings.ispNameLabel, color = TextMuted) },
                     singleLine = true,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
+                    colors = dialogTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -759,40 +810,26 @@ fun EditBusinessInfoDialog(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text(appStrings.supportHotline) },
-                        placeholder = { Text("01XXXXXXXXX") },
+                        label = { Text(appStrings.supportHotline, color = TextSecondary) },
+                        placeholder = { Text("01XXXXXXXXX", color = TextMuted) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         singleLine = true,
+                        textStyle = dialogTextStyle,
                         modifier = Modifier.weight(1.7f),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedLabelColor = AccentCyan,
-                            unfocusedLabelColor = TextSecondary,
-                            cursorColor = AccentCyan
-                        )
+                        colors = dialogTextFieldColors
                     )
 
                     OutlinedTextField(
                         value = currencySymbol,
                         onValueChange = { currencySymbol = it },
-                        label = { Text(appStrings.currencySymbol) },
-                        placeholder = { Text("৳") },
+                        label = { Text(appStrings.currencySymbol, color = TextSecondary) },
+                        placeholder = { Text("৳", color = TextMuted) },
                         singleLine = true,
+                        textStyle = dialogTextStyle,
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedLabelColor = AccentCyan,
-                            unfocusedLabelColor = TextSecondary,
-                            cursorColor = AccentCyan
-                        )
+                        colors = dialogTextFieldColors
                     )
                 }
 
@@ -802,21 +839,14 @@ fun EditBusinessInfoDialog(
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
-                    label = { Text(appStrings.companyEmail) },
-                    placeholder = { Text("info@isp.com") },
+                    label = { Text(appStrings.companyEmail, color = TextSecondary) },
+                    placeholder = { Text("info@isp.com", color = TextMuted) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                     singleLine = true,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
+                    colors = dialogTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -825,20 +855,13 @@ fun EditBusinessInfoDialog(
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
-                    label = { Text(appStrings.officeAddress) },
-                    placeholder = { Text(appStrings.officeAddress) },
+                    label = { Text(appStrings.officeAddress, color = TextSecondary) },
+                    placeholder = { Text(appStrings.officeAddress, color = TextMuted) },
                     singleLine = true,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
+                    colors = dialogTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -936,5 +959,6 @@ fun EditBusinessInfoDialog(
                 }
             }
         }
+    }
     }
 }

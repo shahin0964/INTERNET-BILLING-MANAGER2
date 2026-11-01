@@ -62,15 +62,17 @@ fun AdvancedFeaturesDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.88f)
-                .padding(vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.94f)
+                    .fillMaxHeight(0.88f)
+                    .padding(vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -352,6 +354,7 @@ fun AdvancedFeaturesDialog(
         }
     }
 }
+}
 
 @Composable
 fun EditTemplateDialog(
@@ -364,79 +367,90 @@ fun EditTemplateDialog(
         mutableStateOf(AutoSmsManager.getTemplateText(template.key, context))
     }
 
-    val isBangla = LanguageManager.isBengali()
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentCyan
+    )
+    val dialogTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Normal
+    )
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-        ) {
-            Column(
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
                 modifier = Modifier
-                    .padding(14.dp)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
+                    .padding(8.dp)
             ) {
-                Text(
-                    text = if (isBangla) "টেমপ্লেট এডিট: ${template.title}" else "Edit Template: ${template.title}",
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 14.5.sp
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = if (isBangla) "ভেরিয়েবলসমূহ: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}"
-                           else "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
-                    color = AccentCyan,
-                    fontSize = 10.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = currentText,
-                    onValueChange = { currentText = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 4,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Column(
+                    modifier = Modifier
+                        .padding(14.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    OutlinedButton(
-                        onClick = {
-                            currentText = template.defaultText
-                        },
-                        modifier = Modifier.weight(1f).height(40.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(1.dp, CardBorder)
-                    ) {
-                        Text(if (isBangla) "ডিফল্ট রিসেট" else "Reset Default", color = TextSecondary, fontSize = 11.5.sp)
-                    }
+                    Text(
+                        text = if (isBangla) "টেমপ্লেট এডিট: ${template.title}" else "Edit Template: ${template.title}",
+                        color = TextPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isBangla) "ভেরিয়েবলসমূহ: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}"
+                               else "Placeholders: {NAME}, {BILL}, {DUE}, {MONTH}, {DUE_DAY}, {LAST_DATE}, {COMPANY}, {PHONE}, {PPPOE}, {PACKAGE}",
+                        color = AccentCyan,
+                        fontSize = 10.5.sp
+                    )
 
-                    Button(
-                        onClick = {
-                            onSave(currentText)
-                        },
-                        modifier = Modifier.weight(1f).height(40.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = currentText,
+                        onValueChange = { currentText = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 4,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors,
+                        textStyle = dialogTextStyle
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(if (isBangla) "সংরক্ষণ করুন" else "Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        OutlinedButton(
+                            onClick = {
+                                currentText = template.defaultText
+                            },
+                            modifier = Modifier.weight(1f).height(40.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            border = BorderStroke(1.dp, CardBorder)
+                        ) {
+                            Text(if (isBangla) "ডিফল্ট রিসেট" else "Reset Default", color = TextSecondary, fontSize = 11.5.sp)
+                        }
+
+                        Button(
+                            onClick = {
+                                onSave(currentText)
+                            },
+                            modifier = Modifier.weight(1f).height(40.dp),
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan)
+                        ) {
+                            Text(if (isBangla) "সংরক্ষণ করুন" else "Save", color = BgDark, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -607,15 +621,17 @@ fun BulkSmsSendDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.88f)
-                .padding(vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.94f)
+                    .fillMaxHeight(0.88f)
+                    .padding(vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -882,6 +898,7 @@ fun BulkSmsSendDialog(
         }
     }
 }
+}
 
 @Composable
 fun AutoSmsHubDialog(
@@ -1060,15 +1077,17 @@ fun AutoSmsHubDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.95f)
-                .fillMaxHeight(0.92f)
-                .padding(vertical = 8.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .fillMaxHeight(0.92f)
+                    .padding(vertical = 8.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -1641,4 +1660,5 @@ fun AutoSmsHubDialog(
             }
         }
     }
+}
 }

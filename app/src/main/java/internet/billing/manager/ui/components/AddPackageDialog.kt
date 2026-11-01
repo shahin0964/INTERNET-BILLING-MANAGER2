@@ -39,86 +39,95 @@ fun AddPackageDialog(
 
     val colorOptions = listOf("#2979FF", "#00E676", "#7C4DFF", "#FF9100", "#00E5FF", "#FF4081")
 
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentCyan,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentCyan
+    )
+    val dialogTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.5.sp,
+        fontWeight = FontWeight.Medium
+    )
+
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(14.dp),
-            color = BgCard,
-            border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (packageToEdit == null) appStrings.addPackage else appStrings.editPackage,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(28.dp)
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(14.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = appStrings.close,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(16.dp)
+                        Text(
+                            text = if (packageToEdit == null) appStrings.addPackage else appStrings.editPackage,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = appStrings.close,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text(appStrings.packageName, color = TextSecondary) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = dialogTextFieldColors,
+                        textStyle = dialogTextStyle
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedTextField(
+                            value = speedText,
+                            onValueChange = { speedText = it },
+                            label = { Text(appStrings.speedMbps, color = TextSecondary) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            colors = dialogTextFieldColors,
+                            textStyle = dialogTextStyle
+                        )
+                        OutlinedTextField(
+                            value = priceText,
+                            onValueChange = { priceText = it },
+                            label = { Text(appStrings.monthlyPrice, color = TextSecondary) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            modifier = Modifier.weight(1f),
+                            colors = dialogTextFieldColors,
+                            textStyle = dialogTextStyle
                         )
                     }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text(appStrings.packageName) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(
-                        value = speedText,
-                        onValueChange = { speedText = it },
-                        label = { Text(appStrings.speedMbps) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-                    OutlinedTextField(
-                        value = priceText,
-                        onValueChange = { priceText = it },
-                        label = { Text(appStrings.monthlyPrice) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary
-                        )
-                    )
-                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -272,3 +281,4 @@ fun AddPackageDialog(
         }
     }
 }
+

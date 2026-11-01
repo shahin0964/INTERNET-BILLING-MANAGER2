@@ -95,242 +95,210 @@ fun AddEditCustomerDialog(
     }
     var previousDuesList by remember { mutableStateOf<List<PreviousDueItem>>(emptyList()) }
 
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentCyan,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedLeadingIconColor = AccentCyan,
+        unfocusedLeadingIconColor = TextSecondary,
+        focusedTrailingIconColor = AccentCyan,
+        unfocusedTrailingIconColor = TextSecondary,
+        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+        cursorColor = AccentCyan
+    )
+    val dialogTextStyle = androidx.compose.ui.text.TextStyle(
+        color = TextPrimary,
+        fontSize = 13.5.sp,
+        fontWeight = FontWeight.Medium
+    )
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.94f)
-                .fillMaxHeight(0.90f)
-                .padding(vertical = 8.dp)
-        ) {
-            Column(
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(14.dp)
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth(0.94f)
+                    .fillMaxHeight(0.90f)
+                    .padding(vertical = 8.dp)
             ) {
-                // Top Header Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(14.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        text = if (customerToEdit == null) appStrings.addCustomerTitle else appStrings.editCustomerTitle,
-                        fontSize = 16.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(28.dp)
+                    // Top Header Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = TextSecondary,
-                            modifier = Modifier.size(17.dp)
+                        Text(
+                            text = if (customerToEdit == null) appStrings.addCustomerTitle else appStrings.editCustomerTitle,
+                            fontSize = 16.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(17.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 1. Customer Name *
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("${appStrings.fullName} *", color = TextSecondary) },
+                        placeholder = { Text(appStrings.fullName, color = TextMuted) },
+                        singleLine = true,
+                        textStyle = dialogTextStyle,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 2. Phone Number * and Code Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = phone,
+                            onValueChange = { phone = it },
+                            label = { Text("${appStrings.phoneNumber} *", color = TextSecondary) },
+                            placeholder = { Text("01XXXXXXXXX", color = TextMuted) },
+                            singleLine = true,
+                            textStyle = dialogTextStyle,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                            modifier = Modifier.weight(1.8f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = dialogTextFieldColors
+                        )
+                        OutlinedTextField(
+                            value = customerCode,
+                            onValueChange = { customerCode = it },
+                            label = { Text(appStrings.customerCode, color = TextSecondary) },
+                            placeholder = { Text("U001", color = TextMuted) },
+                            singleLine = true,
+                            textStyle = dialogTextStyle,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = dialogTextFieldColors
                         )
                     }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-                Divider(color = CardBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
-                Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                // 1. Customer Name *
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("${appStrings.fullName} *") },
-                    placeholder = { Text(appStrings.fullName) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 2. Phone Number * and Code Row
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                    // 3. PPPoE Username / ID *
                     OutlinedTextField(
-                        value = phone,
-                        onValueChange = { phone = it },
-                        label = { Text("${appStrings.phoneNumber} *") },
-                        placeholder = { Text("01XXXXXXXXX") },
+                        value = pppoeUsername,
+                        onValueChange = { pppoeUsername = it },
+                        label = { Text("${appStrings.pppoeUsername} *", color = TextSecondary) },
+                        placeholder = { Text(appStrings.pppoeUsername, color = TextMuted) },
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-                        modifier = Modifier.weight(1.8f),
+                        textStyle = dialogTextStyle,
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedLabelColor = AccentCyan,
-                            unfocusedLabelColor = TextSecondary,
-                            cursorColor = AccentCyan
-                        )
+                        colors = dialogTextFieldColors
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 4. Static IP (Optional)
                     OutlinedTextField(
-                        value = customerCode,
-                        onValueChange = { customerCode = it },
-                        label = { Text(appStrings.customerCode) },
-                        placeholder = { Text("U001") },
+                        value = staticIp,
+                        onValueChange = { staticIp = it },
+                        label = { Text(appStrings.staticIp, color = TextSecondary) },
+                        placeholder = { Text("e.g. 192.168.1.100", color = TextMuted) },
                         singleLine = true,
-                        modifier = Modifier.weight(1f),
+                        textStyle = dialogTextStyle,
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedLabelColor = AccentCyan,
-                            unfocusedLabelColor = TextSecondary,
-                            cursorColor = AccentCyan
-                        )
+                        colors = dialogTextFieldColors
                     )
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                // 3. PPPoE Username / ID *
-                OutlinedTextField(
-                    value = pppoeUsername,
-                    onValueChange = { pppoeUsername = it },
-                    label = { Text("${appStrings.pppoeUsername} *") },
-                    placeholder = { Text(appStrings.pppoeUsername) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 4. Static IP (Optional)
-                OutlinedTextField(
-                    value = staticIp,
-                    onValueChange = { staticIp = it },
-                    label = { Text(appStrings.staticIp) },
-                    placeholder = { Text("e.g. 192.168.1.100") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 5. Address / Location
-                OutlinedTextField(
-                    value = address,
-                    onValueChange = { address = it },
-                    label = { Text(appStrings.address) },
-                    placeholder = { Text(appStrings.address) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 6. Notes (Optional)
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text(appStrings.notes) },
-                    placeholder = { Text("Remarks, ONU MAC, etc.") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 7. Internet Package * (Dropdown Selector)
-                var packageMenuExpanded by remember { mutableStateOf(false) }
-                Box(modifier = Modifier.fillMaxWidth()) {
+                    // 5. Address / Location
                     OutlinedTextField(
-                        value = when {
-                            selectedPackage != null -> "${selectedPackage!!.name} • ৳${selectedPackage!!.monthlyPrice.toInt()}/mo"
-                            packages.isNotEmpty() -> appStrings.selectPackage
-                            else -> "Custom Package (Manual Price)"
-                        },
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("${appStrings.selectPackage} *") },
-                        trailingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Select Package",
-                                tint = AccentCyan
-                            )
-                        },
+                        value = address,
+                        onValueChange = { address = it },
+                        label = { Text(appStrings.address, color = TextSecondary) },
+                        placeholder = { Text(appStrings.address, color = TextMuted) },
+                        singleLine = true,
+                        textStyle = dialogTextStyle,
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = AccentCyan,
-                            unfocusedBorderColor = CardBorder,
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedLabelColor = AccentCyan,
-                            unfocusedLabelColor = TextSecondary,
-                            focusedContainerColor = BgCardLight.copy(alpha = 0.35f),
-                            unfocusedContainerColor = BgCardLight.copy(alpha = 0.35f)
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        colors = dialogTextFieldColors
                     )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 6. Notes (Optional)
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { notes = it },
+                        label = { Text(appStrings.notes, color = TextSecondary) },
+                        placeholder = { Text("Remarks, ONU MAC, etc.", color = TextMuted) },
+                        singleLine = true,
+                        textStyle = dialogTextStyle,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = dialogTextFieldColors
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // 7. Internet Package * (Dropdown Selector)
+                    var packageMenuExpanded by remember { mutableStateOf(false) }
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        OutlinedTextField(
+                            value = when {
+                                selectedPackage != null -> "${selectedPackage!!.name} • ৳${selectedPackage!!.monthlyPrice.toInt()}/mo"
+                                packages.isNotEmpty() -> appStrings.selectPackage
+                                else -> "Custom Package (Manual Price)"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = { Text("${appStrings.selectPackage} *", color = TextSecondary) },
+                            textStyle = dialogTextStyle,
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowDropDown,
+                                    contentDescription = "Select Package",
+                                    tint = AccentCyan
+                                )
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = dialogTextFieldColors,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
                     // Overlay to capture clicks across the whole input box
                     Box(
@@ -429,21 +397,14 @@ fun AddEditCustomerDialog(
                 OutlinedTextField(
                     value = monthlyBillText,
                     onValueChange = { monthlyBillText = it },
-                    label = { Text("${appStrings.monthlyFee} *") },
-                    placeholder = { Text("e.g. 500") },
+                    label = { Text("${appStrings.monthlyFee} *", color = TextSecondary) },
+                    placeholder = { Text("e.g. 500", color = TextMuted) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
+                    colors = dialogTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -492,24 +453,17 @@ fun AddEditCustomerDialog(
                             billDueDay = 1
                         }
                     },
-                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)") },
-                    placeholder = { Text("10") },
+                    label = { Text(if (LanguageManager.isBengali()) "নির্দিষ্ট দিন (১ - ৩১ তারিখ)" else "Custom Day (1 - 31)", color = TextSecondary) },
+                    placeholder = { Text("10", color = TextMuted) },
                     leadingIcon = {
                         Icon(Icons.Default.Event, contentDescription = null, tint = AccentCyan, modifier = Modifier.size(18.dp))
                     },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
+                    textStyle = dialogTextStyle,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentCyan,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentCyan,
-                        unfocusedLabelColor = TextSecondary,
-                        cursorColor = AccentCyan
-                    )
+                    colors = dialogTextFieldColors
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -611,7 +565,8 @@ fun AddEditCustomerDialog(
                                         value = selectedMonth,
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("Month", fontSize = 11.sp) },
+                                        label = { Text("Month", color = TextSecondary, fontSize = 11.sp) },
+                                        textStyle = dialogTextStyle.copy(fontSize = 12.sp),
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Default.ArrowDropDown,
@@ -620,16 +575,7 @@ fun AddEditCustomerDialog(
                                             )
                                         },
                                         shape = RoundedCornerShape(8.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = AccentCyan,
-                                            unfocusedBorderColor = CardBorder,
-                                            focusedTextColor = TextPrimary,
-                                            unfocusedTextColor = TextPrimary,
-                                            focusedLabelColor = AccentCyan,
-                                            unfocusedLabelColor = TextSecondary,
-                                            focusedContainerColor = BgCardLight.copy(alpha = 0.3f),
-                                            unfocusedContainerColor = BgCardLight.copy(alpha = 0.3f)
-                                        ),
+                                        colors = dialogTextFieldColors,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     Box(
@@ -675,7 +621,8 @@ fun AddEditCustomerDialog(
                                         value = selectedYear,
                                         onValueChange = {},
                                         readOnly = true,
-                                        label = { Text("Year", fontSize = 11.sp) },
+                                        label = { Text("Year", color = TextSecondary, fontSize = 11.sp) },
+                                        textStyle = dialogTextStyle.copy(fontSize = 12.sp),
                                         trailingIcon = {
                                             Icon(
                                                 imageVector = Icons.Default.ArrowDropDown,
@@ -684,16 +631,7 @@ fun AddEditCustomerDialog(
                                             )
                                         },
                                         shape = RoundedCornerShape(8.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = AccentCyan,
-                                            unfocusedBorderColor = CardBorder,
-                                            focusedTextColor = TextPrimary,
-                                            unfocusedTextColor = TextPrimary,
-                                            focusedLabelColor = AccentCyan,
-                                            unfocusedLabelColor = TextSecondary,
-                                            focusedContainerColor = BgCardLight.copy(alpha = 0.3f),
-                                            unfocusedContainerColor = BgCardLight.copy(alpha = 0.3f)
-                                        ),
+                                        colors = dialogTextFieldColors,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     Box(
@@ -744,21 +682,14 @@ fun AddEditCustomerDialog(
                                 OutlinedTextField(
                                     value = dueInputText,
                                     onValueChange = { dueInputText = it },
-                                    label = { Text("Due Amount (৳)") },
-                                    placeholder = { Text("e.g. 500") },
+                                    label = { Text("Due Amount (৳)", color = TextSecondary) },
+                                    placeholder = { Text("e.g. 500", color = TextMuted) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     singleLine = true,
+                                    textStyle = dialogTextStyle,
                                     modifier = Modifier.weight(1.5f),
                                     shape = RoundedCornerShape(8.dp),
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        focusedBorderColor = AccentCyan,
-                                        unfocusedBorderColor = CardBorder,
-                                        focusedTextColor = TextPrimary,
-                                        unfocusedTextColor = TextPrimary,
-                                        focusedLabelColor = AccentCyan,
-                                        unfocusedLabelColor = TextSecondary,
-                                        cursorColor = AccentCyan
-                                    )
+                                    colors = dialogTextFieldColors
                                 )
 
                                 Button(

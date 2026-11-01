@@ -55,15 +55,17 @@ fun AppUpdateDialog(
         },
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth(0.92f)
-                .fillMaxHeight(0.86f)
-                .padding(vertical = 10.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .fillMaxHeight(0.86f)
+                    .padding(vertical = 10.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -662,3 +664,4 @@ fun AppUpdateDialog(
         }
     }
 }
+

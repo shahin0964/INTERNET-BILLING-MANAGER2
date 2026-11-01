@@ -270,14 +270,16 @@ fun SettingsScreen(
     if (showAboutDialog) {
         val appVersionName = AppUpdateManager.getCurrentVersionName(context)
         Dialog(onDismissRequest = { showAboutDialog = false }) {
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = BgCard,
-                border = BorderStroke(1.dp, CardBorder),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp)
-            ) {
+            InternetBillingTheme {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = BgCard,
+                    contentColor = TextPrimary,
+                    border = BorderStroke(1.dp, CardBorder),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                ) {
                 val scrollState = rememberScrollState()
                 Column(
                     modifier = Modifier
@@ -455,6 +457,7 @@ fun SettingsScreen(
             }
         }
     }
+}
 
     if (showThemeDialog) {
         ThemeSelectionDialog(

@@ -36,14 +36,16 @@ fun LanguageSelectionDialog(
     val currentLang = LanguageManager.currentLanguage
 
     Dialog(onDismissRequest = onDismiss) {
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = BgCard,
-            border = BorderStroke(1.dp, CardBorder),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp)
-        ) {
+        InternetBillingTheme {
+            Surface(
+                shape = RoundedCornerShape(16.dp),
+                color = BgCard,
+                contentColor = TextPrimary,
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 12.dp)
+            ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -151,6 +153,7 @@ fun LanguageSelectionDialog(
             }
         }
     }
+}
 }
 
 @Composable
