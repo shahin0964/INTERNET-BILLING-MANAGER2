@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.data.model.IspSettings
@@ -70,7 +72,10 @@ fun ReceiptCustomizationScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier
@@ -92,28 +97,39 @@ fun ReceiptCustomizationScreen(
                     Text(
                         text = if (isBangla) "রসিদ কাস্টমাইজেশন" else "Receipt Customization",
                         color = TextPrimary,
-                        fontSize = 16.5.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
                         text = if (isBangla) "মানি রসিদ ও হোয়াটসঅ্যাপ শেয়ার" else "Money receipt & WhatsApp sharing",
                         color = TextSecondary,
-                        fontSize = 10.5.sp
+                        fontSize = 10.5.sp,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 // Reset Button
-                IconButton(
-                    onClick = {
-                        settings = ReceiptCustomizationManager.resetToDefaults(context)
-                        Toast.makeText(context, if (isBangla) "ডিফল্ট সেটিংস রিস্টোর করা হয়েছে" else "Reset to defaults", Toast.LENGTH_SHORT).show()
-                    },
+                Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(BgCard)
+                        .border(BorderStroke(1.dp, CardBorderSubtle), CircleShape)
+                        .clickable {
+                            settings = ReceiptCustomizationManager.resetToDefaults(context)
+                            Toast.makeText(context, if (isBangla) "ডিফল্ট সেটিংস রিস্টোর করা হয়েছে" else "Reset to defaults", Toast.LENGTH_SHORT).show()
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.RestartAlt,
@@ -124,15 +140,16 @@ fun ReceiptCustomizationScreen(
                 }
 
                 // Save Button
-                IconButton(
-                    onClick = {
-                        ReceiptCustomizationManager.saveSettings(context, settings)
-                        Toast.makeText(context, if (isBangla) "রসিদ সেটিংস সংরক্ষিত হয়েছে!" else "Receipt settings saved!", Toast.LENGTH_SHORT).show()
-                    },
+                Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(AccentCyan)
+                        .clickable {
+                            ReceiptCustomizationManager.saveSettings(context, settings)
+                            Toast.makeText(context, if (isBangla) "রসিদ সেটিংস সংরক্ষিত হয়েছে!" else "Receipt settings saved!", Toast.LENGTH_SHORT).show()
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Save,

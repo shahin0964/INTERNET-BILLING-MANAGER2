@@ -21,6 +21,9 @@ interface PaymentDao {
     @Query("SELECT SUM(amount) FROM payments WHERE dateMillis >= :startMillis AND dateMillis <= :endMillis")
     fun getTotalCollectedBetween(startMillis: Long, endMillis: Long): Flow<Double?>
 
+    @Query("SELECT * FROM payments WHERE dateMillis >= :startMillis AND dateMillis <= :endMillis ORDER BY dateMillis DESC")
+    fun getPaymentsBetween(startMillis: Long, endMillis: Long): Flow<List<PaymentTransaction>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPayment(payment: PaymentTransaction): Long
 

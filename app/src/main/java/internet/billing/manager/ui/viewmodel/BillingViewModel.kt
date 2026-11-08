@@ -107,17 +107,17 @@ class BillingViewModel(
     private val _dailyBillFilter = MutableStateFlow("Today") // "All", "Today", "Yesterday", "This Month"
     val dailyBillFilter: StateFlow<String> = _dailyBillFilter.asStateFlow()
 
-    val dailyBillEntries: StateFlow<List<BillEntry>> = combine(
+    val dailyBillEntries: StateFlow<List<PaymentTransaction>> = combine(
         _dailyBillFilter,
         currentMonthYearKey
     ) { filter, monthKey ->
         Pair(filter, monthKey)
     }.flatMapLatest { (filter, monthKey) ->
         when (filter) {
-            "Today" -> repository.getBillsForToday()
-            "Yesterday" -> repository.getBillsForYesterday()
-            "This Month" -> repository.getBillsForMonth(monthKey)
-            else -> repository.getAllBills()
+            "Today" -> repository.getPaymentsForToday()
+            "Yesterday" -> repository.getPaymentsForYesterday()
+            "This Month" -> repository.getPaymentsForMonth(monthKey)
+            else -> repository.getAllPayments()
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

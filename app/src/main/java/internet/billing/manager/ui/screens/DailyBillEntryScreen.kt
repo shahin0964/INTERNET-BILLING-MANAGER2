@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.PaymentStatusBadge
+import internet.billing.manager.ui.localization.AppLanguage
+import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
@@ -32,15 +34,31 @@ fun DailyBillEntryScreen(
     onBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isBangla = LanguageManager.currentLanguage == AppLanguage.BANGLA
     val dailyEntries by viewModel.dailyBillEntries.collectAsState()
     val activeFilter by viewModel.dailyBillFilter.collectAsState()
 
     val totalAmount = remember(dailyEntries) {
-        dailyEntries.sumOf { it.billAmount }
+        dailyEntries.sumOf { it.amount }
     }
 
-    val todayHeaderStr = remember {
-        SimpleDateFormat("dd MMMM yyyy – EEEE", Locale.getDefault()).format(Date())
+    val headerDateStr = remember(activeFilter) {
+        val cal = Calendar.getInstance()
+        when (activeFilter) {
+            "Yesterday" -> {
+                cal.add(Calendar.DAY_OF_YEAR, -1)
+                SimpleDateFormat("dd MMMM yyyy – EEEE", Locale.getDefault()).format(cal.time)
+            }
+            "This Month" -> {
+                SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(cal.time)
+            }
+            "All" -> {
+                if (isBangla) "সর্বমোট আদায়কৃত বিল এন্ট্রি" else "All Time Payment Entries"
+            }
+            else -> {
+                SimpleDateFormat("dd MMMM yyyy – EEEE", Locale.getDefault()).format(cal.time)
+            }
+        }
     }
 
     val filters = listOf("All", "Today", "Yesterday", "This Month")
@@ -98,6 +116,13 @@ fun DailyBillEntryScreen(
         ) {
             filters.forEach { filter ->
                 val isSelected = activeFilter == filter
+                val label = when (filter) {
+                    "All" -> if (isBangla) "সকল" else "All"
+                    "Today" -> if (isBangla) "আজ" else "Today"
+                    "Yesterday" -> if (isBangla) "গতকাল" else "Yesterday"
+                    "This Month" -> if (isBangla) "চলতি মাস" else "This Month"
+                    else -> filter
+                }
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -108,7 +133,7 @@ fun DailyBillEntryScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = filter,
+                        text = label,
                         color = if (isSelected) AccentCyan else TextSecondary,
                         fontSize = 11.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
@@ -151,14 +176,17 @@ fun DailyBillEntryScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = todayHeaderStr,
+                            text = headerDateStr,
                             color = TextPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 12.5.sp
                         )
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
-                            text = "${dailyEntries.size} Bill Entries • Total: ৳${totalAmount.toInt()}",
+                            text = if (isBangla)
+                                "${dailyEntries.size} টি আদায় • মোট: ৳${totalAmount.toInt()}"
+                            else
+                                "${dailyEntries.size} Collections • Total: ৳${totalAmount.toInt()}",
                             color = AccentCyan,
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Medium
@@ -186,20 +214,20 @@ fun DailyBillEntryScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
-                        imageVector = Icons.Default.ReceiptLong,
+                        imageVector = Icons.Default.AccountBalanceWallet,
                         contentDescription = null,
                         tint = TextMuted,
                         modifier = Modifier.size(38.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "No bill entries for $activeFilter",
+                        text = if (isBangla) "$activeFilter ফিল্টারে কোনো বিল আদায়ের রেকর্ড নেই" else "No payment collections for $activeFilter",
                         color = TextSecondary,
                         fontSize = 13.sp
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Tap 'Generate Bill' or 'Collect Payment' to record entries",
+                        text = if (isBangla) "বিল আদায় করা হলে এখানে স্বয়ংক্রিয়ভাবে তালিকাভুক্ত হবে" else "Recorded customer payments will appear here",
                         color = TextMuted,
                         fontSize = 10.5.sp
                     )
@@ -212,6 +240,9 @@ fun DailyBillEntryScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(dailyEntries, key = { it.id }) { entry ->
+                    val timeStr = remember(entry.dateMillis) {
+                        SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(entry.dateMillis))
+                    }
                     GlassCard(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp),
@@ -224,18 +255,21 @@ fun DailyBillEntryScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Box(
                                     modifier = Modifier
                                         .size(30.dp)
                                         .clip(CircleShape)
-                                        .background(AccentBlue.copy(alpha = 0.15f)),
+                                        .background(AccentGreen.copy(alpha = 0.15f)),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Person,
+                                        imageVector = Icons.Default.Check,
                                         contentDescription = null,
-                                        tint = AccentBlue,
+                                        tint = AccentGreen,
                                         modifier = Modifier.size(15.dp)
                                     )
                                 }
@@ -249,22 +283,40 @@ fun DailyBillEntryScreen(
                                     )
                                     Spacer(modifier = Modifier.height(1.dp))
                                     Text(
-                                        text = "Code: ${entry.customerCode}",
+                                        text = "${entry.customerCode} • ${entry.paymentMethod} • $timeStr",
                                         color = TextSecondary,
-                                        fontSize = 10.5.sp
+                                        fontSize = 10.sp
                                     )
                                 }
                             }
 
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "৳${entry.billAmount.toInt()}",
-                                    color = TextPrimary,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                PaymentStatusBadge(isPaid = entry.isPaid)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "+৳${entry.amount.toInt()}",
+                                        color = AccentGreen,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    PaymentStatusBadge(isPaid = true)
+                                }
+
+                                // Delete Payment Option
+                                IconButton(
+                                    onClick = { viewModel.paymentToDelete = entry },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DeleteOutline,
+                                        contentDescription = "Delete Payment",
+                                        tint = AccentRed.copy(alpha = 0.85f),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
                             }
                         }
                     }

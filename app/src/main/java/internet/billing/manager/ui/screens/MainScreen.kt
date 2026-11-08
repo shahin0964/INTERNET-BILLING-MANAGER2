@@ -242,6 +242,7 @@ fun MainScreen(
     if (viewModel.showAddCustomerDialog) {
         AddEditCustomerDialog(
             customerToEdit = viewModel.customerToEdit,
+            existingCustomers = allCustomers,
             packages = allPackages,
             onDismiss = {
                 viewModel.showAddCustomerDialog = false
@@ -267,9 +268,15 @@ fun MainScreen(
         )
     }
 
+    val monthlyBills by viewModel.monthlyBills.collectAsState()
+    val billedCustomerIds = remember(monthlyBills) {
+        monthlyBills.map { it.customerId }.toSet()
+    }
+
     if (viewModel.showGenerateBillDialog) {
         GenerateBillDialog(
             allCustomers = allCustomers,
+            billedCustomerIds = billedCustomerIds,
             activeCustomerCount = activeCount,
             totalMonthlyBill = monthlyBill,
             monthYear = monthYearKey,

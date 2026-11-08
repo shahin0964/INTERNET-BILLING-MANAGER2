@@ -47,7 +47,7 @@ fun CollectionScreen(
     val discount = ispSettings?.discount ?: 0.0
     val previousDue = (totalDue - monthlyBill).coerceAtLeast(0.0)
     val otherExpenses = (outflow - dynamicBandwidthBill).coerceAtLeast(0.0)
-    val monthlyProfit = (monthlyBill - bandwidthBill - otherExpenses).coerceAtLeast(0.0)
+    val monthlyProfit = (totalCollected - bandwidthBill - otherExpenses).coerceAtLeast(0.0)
 
     LazyColumn(
         modifier = modifier

@@ -506,6 +506,7 @@ fun AddExpenseDialog(
 @Composable
 fun GenerateBillDialog(
     allCustomers: List<Customer> = emptyList(),
+    billedCustomerIds: Set<Long> = emptySet(),
     activeCustomerCount: Int,
     totalMonthlyBill: Double,
     monthYear: String,
@@ -522,6 +523,19 @@ fun GenerateBillDialog(
     var billAmountText by remember { mutableStateOf("") }
     var notesText by remember { mutableStateOf("") }
 
+    // Filter out customers whose bill for this month has already been generated
+    val unbilledCustomers = remember(allCustomers, billedCustomerIds) {
+        allCustomers.filter { it.id !in billedCustomerIds }
+    }
+
+    val unbilledActiveCustomers = remember(allCustomers, billedCustomerIds) {
+        allCustomers.filter { it.status == Customer.STATUS_ACTIVE && it.id !in billedCustomerIds }
+    }
+    val unbilledActiveCount = unbilledActiveCustomers.size
+    val unbilledActiveTotal = remember(unbilledActiveCustomers) {
+        unbilledActiveCustomers.sumOf { it.monthlyBill }
+    }
+
     // When a customer is picked, initialize their monthly bill
     LaunchedEffect(selectedCustomer) {
         if (selectedCustomer != null) {
@@ -532,12 +546,12 @@ fun GenerateBillDialog(
         }
     }
 
-    val filteredCustomers = remember(allCustomers, customerSearchQuery) {
+    val filteredCustomers = remember(unbilledCustomers, customerSearchQuery) {
         if (customerSearchQuery.isBlank()) {
-            allCustomers.sortedBy { it.name.ifBlank { it.pppoeUsername } }
+            unbilledCustomers.sortedBy { it.name.ifBlank { it.pppoeUsername } }
         } else {
             val q = customerSearchQuery.trim()
-            allCustomers.filter { cust ->
+            unbilledCustomers.filter { cust ->
                 cust.name.contains(q, ignoreCase = true) ||
                 cust.pppoeUsername.contains(q, ignoreCase = true) ||
                 cust.customerCode.contains(q, ignoreCase = true) ||
@@ -742,11 +756,14 @@ fun GenerateBillDialog(
                                     Text(
                                         text = if (allCustomers.isEmpty()) {
                                             if (isBangla) "কোনো গ্রাহক পাওয়া যায়নি। আগে গ্রাহক যোগ করুন।" else "No customers found. Add customers first."
+                                        } else if (unbilledCustomers.isEmpty()) {
+                                            if (isBangla) "চলতি মাসের ($monthYear) জন্য সকল গ্রাহকের বিল ইতিমধ্যে তৈরি করা হয়েছে।" else "All customers already have bills generated for $monthYear."
                                         } else {
                                             if (isBangla) "কোনো গ্রাহকের মিল পাওয়া যায়নি" else "No matching customers found"
                                         },
                                         color = TextMuted,
-                                        fontSize = 12.sp
+                                        fontSize = 12.sp,
+                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 }
                             } else {
@@ -975,7 +992,12 @@ fun GenerateBillDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("${appStrings.activeCustomersToBill}:", color = TextSecondary, fontSize = 11.5.sp)
-                                Text("$activeCustomerCount ${appStrings.usersCountSuffix}", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                Text(
+                                    text = "$unbilledActiveCount ${appStrings.usersCountSuffix}",
+                                    color = if (unbilledActiveCount > 0) AccentGreen else TextMuted,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp
+                                )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
                             Row(
@@ -983,7 +1005,7 @@ fun GenerateBillDialog(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text("${appStrings.estimatedTotalBill}:", color = TextSecondary, fontSize = 11.5.sp)
-                                Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                                Text("৳${unbilledActiveTotal.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
                             }
                         }
 
@@ -1010,11 +1032,20 @@ fun GenerateBillDialog(
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 },
+                                enabled = unbilledActiveCount > 0,
                                 modifier = Modifier.weight(1.5f).height(40.dp),
                                 shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = AccentPurple,
+                                    disabledContainerColor = AccentPurple.copy(alpha = 0.3f)
+                                )
                             ) {
-                                Text(appStrings.generateNow, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                                Text(
+                                    text = if (unbilledActiveCount > 0) appStrings.generateNow else (if (isBangla) "সকল বিল তৈরি সম্পন্ন" else "All Bills Generated"),
+                                    color = if (unbilledActiveCount > 0) Color.White else TextMuted,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.5.sp
+                                )
                             }
                         }
                     }

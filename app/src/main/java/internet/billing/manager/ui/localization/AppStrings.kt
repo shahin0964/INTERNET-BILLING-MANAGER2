@@ -337,7 +337,7 @@ object EnglishStrings : AppStrings {
     override val bandwidthBillTitle = "Bandwidth Bill"
     override val monthlyProfitTitle = "Monthly Profit"
     override val bandwidthBillSubtitle = "Upstream cost"
-    override val monthlyProfitSubtitle = "Total Bill - Expenses"
+    override val monthlyProfitSubtitle = "Total Paid - Expenses"
     override val paymentHistory = "Payment History"
     override val noHistoryFound = "No collection history found"
 
@@ -574,7 +574,7 @@ object BanglaStrings : AppStrings {
     override val bandwidthBillTitle = "ব্যান্ডউইথ বিল"
     override val monthlyProfitTitle = "মাসিক লাভ"
     override val bandwidthBillSubtitle = "আপস্ট্রিম খরচ"
-    override val monthlyProfitSubtitle = "মোট বিল - মোট খরচ"
+    override val monthlyProfitSubtitle = "মোট আদায় - মোট খরচ"
     override val paymentHistory = "আদায়ের ইতিহাস"
     override val noHistoryFound = "কোনো আদায়ের ইতিহাস পাওয়া যায়নি"
 

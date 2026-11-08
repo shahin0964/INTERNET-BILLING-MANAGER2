@@ -276,6 +276,42 @@ class BillingRepository(
         return billDao.getBillsBetween(start, end)
     }
 
+    fun getAllPayments(): Flow<List<PaymentTransaction>> = paymentDao.getAllPayments()
+
+    fun getPaymentsForMonth(monthYear: String): Flow<List<PaymentTransaction>> =
+        paymentDao.getPaymentsForMonth(monthYear)
+
+    fun getPaymentsForToday(): Flow<List<PaymentTransaction>> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val start = calendar.timeInMillis
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val end = calendar.timeInMillis
+        return paymentDao.getPaymentsBetween(start, end)
+    }
+
+    fun getPaymentsForYesterday(): Flow<List<PaymentTransaction>> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.DAY_OF_YEAR, -1)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val start = calendar.timeInMillis
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val end = calendar.timeInMillis
+        return paymentDao.getPaymentsBetween(start, end)
+    }
+
     suspend fun generateMonthlyBills(monthYear: String, customers: List<Customer>) {
         val activeCustomers = customers.filter { it.status == Customer.STATUS_ACTIVE }
         val alreadyBilledIds = billDao.getBilledCustomerIdsForMonth(monthYear).toSet()

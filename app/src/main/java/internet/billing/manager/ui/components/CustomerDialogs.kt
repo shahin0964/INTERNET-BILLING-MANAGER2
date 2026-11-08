@@ -35,9 +35,20 @@ import internet.billing.manager.ui.theme.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+fun generateNextCustomerCode(existingCustomers: List<Customer>): String {
+    if (existingCustomers.isEmpty()) return "U1"
+    val existingCodes = existingCustomers.map { it.customerCode.trim().lowercase() }.toSet()
+    var candidate = existingCustomers.size + 1
+    while ("u$candidate" in existingCodes) {
+        candidate++
+    }
+    return "U$candidate"
+}
+
 @Composable
 fun AddEditCustomerDialog(
     customerToEdit: Customer? = null,
+    existingCustomers: List<Customer> = emptyList(),
     packages: List<InternetPackage>,
     onDismiss: () -> Unit,
     onSave: (Customer, List<PreviousDueItem>) -> Unit
@@ -45,7 +56,7 @@ fun AddEditCustomerDialog(
     var name by remember { mutableStateOf(customerToEdit?.name ?: "") }
     var phone by remember { mutableStateOf(customerToEdit?.phone ?: "") }
     var customerCode by remember {
-        mutableStateOf(customerToEdit?.customerCode ?: "U${(10..99).random()}")
+        mutableStateOf(customerToEdit?.customerCode ?: generateNextCustomerCode(existingCustomers))
     }
     var pppoeUsername by remember { mutableStateOf(customerToEdit?.pppoeUsername ?: "") }
     var staticIp by remember { mutableStateOf(customerToEdit?.staticIp ?: "") }
