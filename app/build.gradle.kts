@@ -9,8 +9,8 @@ android {
     namespace = "internet.billing.manager"
     compileSdk = 35
 
-    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 61
-    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.61"
+    val appVersionCode = (project.findProperty("versionCode") as? String)?.toIntOrNull() ?: 62
+    val appVersionName = (project.findProperty("versionName") as? String) ?: "1.0.62"
 
     defaultConfig {
         applicationId = "internet.billing.manager"
@@ -83,6 +83,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+
+    // Google Play Services Auth for Google Sign-In & Drive REST API
+    implementation("com.google.android.gms:play-services-auth:21.3.0")
 
     debugImplementation(libs.androidx.ui.tooling)
 }

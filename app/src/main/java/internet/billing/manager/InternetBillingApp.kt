@@ -22,6 +22,7 @@ class InternetBillingApp : Application() {
         internet.billing.manager.util.AutoSmsManager.initialize(this)
         internet.billing.manager.util.AutoBillingManager.checkAndRunAutoBilling(this)
         internet.billing.manager.util.AutoBackupManager.initialize(this)
+        internet.billing.manager.util.GoogleDriveSyncManager.initialize(this)
     }
 
     val database: AppDatabase

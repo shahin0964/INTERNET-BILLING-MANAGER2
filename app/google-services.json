@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "590405464921",
+    "project_id": "internet-billing-manager",
+    "storage_bucket": "internet-billing-manager.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:590405464921:android:219065f2387da524e29248",
+        "android_client_info": {
+          "package_name": "internet.billing.manager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "590405464921-q32pqrivpba6pec5n9ksba8up3jces60.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "internet.billing.manager",
+            "certificate_hash": "8fd1a743d2263672e7f10b1001d3cbc954b89925"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjFrEkRYlU3VZ9Whj8YH8gNdBSeSiaYpM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

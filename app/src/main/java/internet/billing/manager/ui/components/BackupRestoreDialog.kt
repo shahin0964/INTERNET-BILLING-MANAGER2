@@ -1,7 +1,6 @@
 package internet.billing.manager.ui.components
 
 import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -29,10 +28,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 import internet.billing.manager.MainActivity
 import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.util.AutoBackupManager
+import internet.billing.manager.util.GoogleDriveSyncManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -49,78 +51,55 @@ fun BackupRestoreDialog(
     var selectedTab by remember { mutableStateOf(0) }
 
     var backupInfo by remember { mutableStateOf(AutoBackupManager.getBackupInfo(context)) }
-    var driveBackupInfo by remember { mutableStateOf(AutoBackupManager.getDriveBackupInfo(context)) }
+    var accountInfo by remember { mutableStateOf(GoogleDriveSyncManager.getAccountInfo(context)) }
+    var driveStatus by remember { mutableStateOf(GoogleDriveSyncManager.getDriveBackupStatus(context)) }
+    var isAutoBackup1130Pm by remember { mutableStateOf(GoogleDriveSyncManager.isAutoBackupEnabled(context)) }
 
     var isBackingUp by remember { mutableStateOf(false) }
     var isRestoring by remember { mutableStateOf(false) }
-    var isSavingToDrive by remember { mutableStateOf(false) }
-    var isValidatingDriveFile by remember { mutableStateOf(false) }
+    var isSyncingDrive by remember { mutableStateOf(false) }
+    var isDownloadingDrive by remember { mutableStateOf(false) }
 
     var showLocalRestoreConfirm by remember { mutableStateOf(false) }
     var showDriveRestoreConfirm by remember { mutableStateOf(false) }
     var driveValidationResult by remember { mutableStateOf<AutoBackupManager.BackupValidationResult?>(null) }
 
-    fun refreshAllInfo() {
+    fun refreshAll() {
         backupInfo = AutoBackupManager.getBackupInfo(context)
-        driveBackupInfo = AutoBackupManager.getDriveBackupInfo(context)
+        accountInfo = GoogleDriveSyncManager.getAccountInfo(context)
+        driveStatus = GoogleDriveSyncManager.getDriveBackupStatus(context)
+        isAutoBackup1130Pm = GoogleDriveSyncManager.isAutoBackupEnabled(context)
     }
 
-    // Google Drive SAF File Saver
-    val createDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/octet-stream")
-    ) { uri: Uri? ->
-        if (uri != null) {
-            isSavingToDrive = true
-            coroutineScope.launch {
-                val success = withContext(Dispatchers.IO) {
-                    AutoBackupManager.saveBackupToUri(context, uri)
-                }
-                refreshAllInfo()
-                isSavingToDrive = false
-                if (success) {
-                    Toast.makeText(
-                        context,
-                        if (isBangla) "গুগল ড্রাইভে ব্যাকআপ সফলভাবে সংরক্ষিত হয়েছে!" else "Backup saved to Google Drive successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    Toast.makeText(
-                        context,
-                        if (isBangla) "গুগল ড্রাইভে সেভ ব্যর্থ হয়েছে!" else "Failed to save backup to Google Drive!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+    // Google Sign-In Launcher
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            accountInfo = GoogleDriveSyncManager.getAccountInfo(context)
+            driveStatus = GoogleDriveSyncManager.getDriveBackupStatus(context)
+            Toast.makeText(
+                context,
+                if (isBangla) "গুগল সাইন-ইন সফল: ${account.email}" else "Google Sign-In successful: ${account.email}",
+                Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: ApiException) {
+            val msg = when (e.statusCode) {
+                10 -> if (isBangla) "গুগল ক্লাউড কনসোলে SHA-1/SHA-256 ফিঙ্গারপ্রিন্ট দেওয়া আবশ্যক (Error 10)।"
+                else "Developer error (Code 10): Ensure SHA-1/SHA-256 fingerprint is registered in Google Cloud Console."
+                12500 -> if (isBangla) "গুগল সাইন-ইন বাতিল বা সংযোগ ব্যর্থ হয়েছে (Error 12500)।"
+                else "Google Sign-In failed or was cancelled (Code 12500)."
+                else -> "Google Sign-In error (${e.statusCode}): ${e.localizedMessage ?: ""}"
             }
+            Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Sign-In error: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Google Drive SAF File Picker for Restore
-    val openDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument()
-    ) { uri: Uri? ->
-        if (uri != null) {
-            isValidatingDriveFile = true
-            coroutineScope.launch {
-                val validation = withContext(Dispatchers.IO) {
-                    AutoBackupManager.validateBackupUri(context, uri)
-                }
-                isValidatingDriveFile = false
-                if (validation.isValid) {
-                    driveValidationResult = validation
-                    showDriveRestoreConfirm = true
-                } else {
-                    Toast.makeText(
-                        context,
-                        if (isBangla) "ব্যাকআপ ফাইল সঠিক নয়: ${validation.errorMessage ?: ""}"
-                        else "Invalid backup file: ${validation.errorMessage ?: ""}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-            }
-        }
-    }
-
-    val isBusy = isBackingUp || isRestoring || isSavingToDrive || isValidatingDriveFile
+    val isBusy = isBackingUp || isRestoring || isSyncingDrive || isDownloadingDrive
 
     Dialog(
         onDismissRequest = {
@@ -183,7 +162,7 @@ fun BackupRestoreDialog(
                                 text = if (selectedTab == 0) {
                                     if (isBangla) "সিঙ্গেল ফাইল অটো-ওভাররাইট ব্যাকআপ" else "Single-File Auto-Overwrite Backup"
                                 } else {
-                                    if (isBangla) "গুগল ড্রাইভ ক্লাউড ব্যাকআপ" else "Google Drive Cloud Backup"
+                                    if (isBangla) "গুগল ড্রাইভ ক্লাউড ব্যাকআপ (রাত ১১:৩০)" else "Google Drive Cloud Backup (11:30 PM)"
                                 },
                                 color = TextSecondary,
                                 fontSize = 11.5.sp
@@ -235,7 +214,7 @@ fun BackupRestoreDialog(
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isBangla) "২৪/৭ অটো-ব্যাকআপ" else "24/7 Local Backup",
+                                text = if (isBangla) "২৪/৭ লোকাল ব্যাকআপ" else "24/7 Local Backup",
                                 color = if (selectedTab == 0) BgDark else TextSecondary,
                                 fontSize = 11.5.sp,
                                 fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium
@@ -396,7 +375,7 @@ fun BackupRestoreDialog(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Action 1: Backup Now
+                        // Button 1: Backup Now
                         Button(
                             onClick = {
                                 isBackingUp = true
@@ -404,7 +383,7 @@ fun BackupRestoreDialog(
                                     withContext(Dispatchers.IO) {
                                         AutoBackupManager.performBackup(context)
                                     }
-                                    refreshAllInfo()
+                                    refreshAll()
                                     isBackingUp = false
                                     Toast.makeText(
                                         context,
@@ -452,7 +431,7 @@ fun BackupRestoreDialog(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Action 2: Restore from Local File
+                        // Button 2: Restore Data
                         OutlinedButton(
                             onClick = { showLocalRestoreConfirm = true },
                             colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentCyan),
@@ -495,7 +474,7 @@ fun BackupRestoreDialog(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Action 3: Share / Export File
+                        // Button 3: Share
                         OutlinedButton(
                             onClick = {
                                 val ok = AutoBackupManager.shareBackup(context)
@@ -532,278 +511,490 @@ fun BackupRestoreDialog(
 
                     } else {
                         // -------------------------------------------------------------
-                        // TAB 1: GOOGLE DRIVE CLOUD BACKUP & RESTORE
+                        // TAB 1: GOOGLE DRIVE CLOUD (GOOGLE SIGN-IN & 11:30 PM AUTO-SYNC)
                         // -------------------------------------------------------------
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(AccentCyan.copy(alpha = 0.08f))
-                                .border(1.dp, AccentCyan.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                                .padding(12.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(AccentCyan)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBangla) "গুগল ড্রাইভ ক্লাউড • স্বতন্ত্র ও সুরক্ষিত" else "Google Drive Cloud • Independent & Secure",
-                                    color = AccentCyan,
-                                    fontSize = 12.5.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
+                        if (!accountInfo.isSignedIn) {
+                            // SIGN-IN REQUIRED VIEW
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(AccentCyan.copy(alpha = 0.08f))
+                                    .border(1.dp, AccentCyan.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Cloud,
+                                        contentDescription = null,
+                                        tint = AccentCyan,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "গুগল ড্রাইভ ক্লাউড ব্যাকআপ • সাইন-ইন প্রয়োজন" else "Google Drive Cloud • Sign-In Required",
+                                        color = AccentCyan,
+                                        fontSize = 12.5.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
                             }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = if (isBangla)
+                                    "আপনার গুগল অ্যাকাউন্ট দিয়ে একবার সাইন-ইন করে রাখলে প্রতিদিন রাত ১১:৩০ মিনিটে সম্পূর্ণ ডাটাবেজ (IBM_AutoBackup.db) স্বয়ংক্রিয়ভাবে গুগল ড্রাইভে ব্যাকআপ ওভাররাইট হয়ে যাবে। ফোন হারালে বা পরিবর্তন করলেও যেকোনো ডিভাইস থেকে এক ক্লিকে রিস্টোর করতে পারবেন।"
+                                else
+                                    "Sign in with your Google Account once to enable automatic daily cloud backups at 11:30 PM directly to your Google Drive. Overwrites a single file (IBM_AutoBackup.db) automatically.",
+                                color = TextSecondary,
+                                fontSize = 11.5.sp,
+                                lineHeight = 16.sp
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Local Protection Guarantee Pill
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AccentGreen.copy(alpha = 0.07f))
+                                    .border(1.dp, AccentGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 10.dp, vertical = 7.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = AccentGreen,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "ফোনের ২৪/৭ লোকাল অটো-ব্যাকআপ সর্বদা ব্যাকগ্রাউন্ডে সক্রিয় ও সুরক্ষিত থাকবে।" else "24/7 phone local auto-backup remains fully protected & active.",
+                                        color = AccentGreen,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            // Button: Sign In with Google
+                            Button(
+                                onClick = {
+                                    val client = GoogleDriveSyncManager.getGoogleSignInClient(context)
+                                    googleSignInLauncher.launch(client.signInIntent)
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                shape = RoundedCornerShape(10.dp),
+                                enabled = !isBusy,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(46.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AccountCircle,
+                                contentDescription = null,
+                                tint = BgDark,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isBangla) "গুগল দিয়ে সাইন-ইন করুন (Sign in with Google)" else "Sign in with Google",
+                                color = BgDark,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp
+                            )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // 24/7 Protection Guarantee Pill
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(AccentGreen.copy(alpha = 0.07f))
-                                .border(1.dp, AccentGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
-                                .padding(horizontal = 10.dp, vertical = 7.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Default.Security,
-                                    contentDescription = null,
-                                    tint = AccentGreen,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBangla) "ফোনের ২৪/৭ অটো-ব্যাকআপ সর্বদা ব্যাকগ্রাউন্ডে চালু ও সুরক্ষিত থাকবে।" else "24/7 phone auto-backup remains fully protected & uninterrupted.",
-                                    color = AccentGreen,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = if (isBangla)
-                                "আপনার ইন্টারনেট বিলিং ম্যানেজারের সম্পূর্ণ ডাটাবেজ গুগল ড্রাইভে ক্লাউড ফাইল হিসেবে সুরক্ষিত রাখুন। ফোন পরিবর্তন করলে বা ডাটা হারালে সহজেই গুগল ড্রাইভ থেকে এক ক্লিকে সম্পূর্ণ হিসাব রিস্টোর করতে পারবেন।"
-                            else
-                                "Save a secure cloud copy in your Google Drive. You can restore your complete business data anytime on any phone directly by picking your backup file from Google Drive.",
-                            color = TextSecondary,
-                            fontSize = 11.5.sp,
-                            lineHeight = 16.sp
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Drive Info Card
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(BgCardLight)
-                                .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
-                                .padding(12.dp)
-                        ) {
-                            Column {
+                        } else {
+                            // SIGNED IN VIEW
+                            // Connected Account Card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(BgCardLight)
+                                    .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = if (isBangla) "গুগল ড্রাইভ ক্লাউড বিবরণ" else "GOOGLE DRIVE CLOUD DETAILS",
-                                        color = TextMuted,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(38.dp)
+                                                .clip(CircleShape)
+                                                .background(AccentCyan.copy(alpha = 0.2f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = accountInfo.displayName.take(1).uppercase(),
+                                                color = AccentCyan,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp
+                                            )
+                                        }
 
-                                    Text(
-                                        text = if (driveBackupInfo.exists) "SYNCED ✓" else "NOT SYNCED",
-                                        color = if (driveBackupInfo.exists) AccentCyan else AccentOrange,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold
+                                        Spacer(modifier = Modifier.width(10.dp))
+
+                                        Column {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = accountInfo.displayName,
+                                                    color = TextPrimary,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 13.sp
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(4.dp))
+                                                        .background(AccentGreen.copy(alpha = 0.15f))
+                                                        .padding(horizontal = 5.dp, vertical = 2.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "CONNECTED ✓",
+                                                        color = AccentGreen,
+                                                        fontSize = 9.sp,
+                                                        fontWeight = FontWeight.Bold
+                                                    )
+                                                }
+                                            }
+                                            Text(
+                                                text = accountInfo.email,
+                                                color = TextMuted,
+                                                fontSize = 11.sp
+                                            )
+                                        }
+                                    }
+
+                                    TextButton(
+                                        onClick = {
+                                            GoogleDriveSyncManager.signOut(context) {
+                                                refreshAll()
+                                            }
+                                        },
+                                        contentPadding = PaddingValues(horizontal = 8.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isBangla) "সাইন আউট" else "Sign Out",
+                                            color = AccentRed,
+                                            fontSize = 11.5.sp,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // 11:30 PM Auto-Backup Switch Card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(AccentCyan.copy(alpha = 0.06f))
+                                    .border(1.dp, AccentCyan.copy(alpha = 0.2f), RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(AccentCyan.copy(alpha = 0.15f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Schedule,
+                                                contentDescription = null,
+                                                tint = AccentCyan,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(10.dp))
+
+                                        Column {
+                                            Text(
+                                                text = if (isBangla) "রাত ১১:৩০ মিনিটে অটো-ব্যাকআপ" else "Daily 11:30 PM Auto-Backup",
+                                                color = TextPrimary,
+                                                fontSize = 12.5.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = if (isBangla) "প্রতিদিন রাত ১১:৩০ মিনিটে ব্যাকগ্রাউন্ডে স্বয়ংক্রিয় ক্লাউড সিঙ্ক" else "Silent background sync to Google Drive every night at 11:30 PM",
+                                                color = TextSecondary,
+                                                fontSize = 10.5.sp
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = isAutoBackup1130Pm,
+                                        onCheckedChange = { checked ->
+                                            isAutoBackup1130Pm = checked
+                                            GoogleDriveSyncManager.setAutoBackupEnabled(context, checked)
+                                            Toast.makeText(
+                                                context,
+                                                if (checked) {
+                                                    if (isBangla) "রাত ১১:৩০ মিনিটের ক্লাউড অটো-ব্যাকআপ সক্রিয় করা হয়েছে!" else "11:30 PM Cloud Auto-Backup enabled!"
+                                                } else {
+                                                    if (isBangla) "রাত ১১:৩০ মিনিটের ক্লাউড অটো-ব্যাকআপ নিষ্ক্রিয় করা হয়েছে।" else "11:30 PM Cloud Auto-Backup disabled."
+                                                },
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = BgDark,
+                                            checkedTrackColor = AccentCyan,
+                                            uncheckedThumbColor = TextMuted,
+                                            uncheckedTrackColor = BgCardLight
+                                        )
                                     )
                                 }
-
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                InfoRow(
-                                    label = if (isBangla) "ক্লাউড সার্ভিস" else "Cloud Service",
-                                    value = "Google Drive",
-                                    valueColor = AccentCyan
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                InfoRow(
-                                    label = if (isBangla) "টার্গেট ফাইল" else "Target File",
-                                    value = "IBM_AutoBackup.db",
-                                    valueColor = TextPrimary
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                InfoRow(
-                                    label = if (isBangla) "সর্বশেষ ক্লাউড ব্যাকআপ" else "Last Cloud Backup",
-                                    value = driveBackupInfo.formattedDate,
-                                    valueColor = TextPrimary
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                InfoRow(
-                                    label = if (isBangla) "ক্লাউড ফাইল সাইজ" else "Cloud File Size",
-                                    value = driveBackupInfo.formattedSize,
-                                    valueColor = AccentOrange
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                InfoRow(
-                                    label = if (isBangla) "লোকাল ২৪/৭ প্রটেকশন" else "Local 24/7 Protection",
-                                    value = if (isBangla) "সক্রিয় ও সুরক্ষিত ✓" else "Active & Protected ✓",
-                                    valueColor = AccentGreen
-                                )
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                        // Button 1: Save to Google Drive via SAF
-                        Button(
-                            onClick = {
-                                createDocumentLauncher.launch("IBM_AutoBackup.db")
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
-                            shape = RoundedCornerShape(10.dp),
-                            enabled = !isBusy,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                        ) {
-                            if (isSavingToDrive) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = BgDark,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBangla) "গুগল ড্রাইভে সেভ হচ্ছে..." else "Saving to Drive...",
-                                    color = BgDark,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.CloudUpload,
-                                    contentDescription = null,
-                                    tint = BgDark,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBangla) "গুগল ড্রাইভে সেভ করুন (Save to Drive)" else "Save / Upload to Google Drive",
-                                    color = BgDark,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Button 2: Restore from Google Drive
-                        OutlinedButton(
-                            onClick = {
-                                openDocumentLauncher.launch(
-                                    arrayOf("*/*", "application/octet-stream", "application/x-sqlite3")
-                                )
-                            },
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentGreen),
-                            border = BorderStroke(1.dp, AccentGreen.copy(alpha = 0.6f)),
-                            shape = RoundedCornerShape(10.dp),
-                            enabled = !isBusy,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(44.dp)
-                        ) {
-                            if (isValidatingDriveFile || isRestoring) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    color = AccentGreen,
-                                    strokeWidth = 2.dp
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isValidatingDriveFile) {
-                                        if (isBangla) "ফাইল যাচাই করা হচ্ছে..." else "Verifying file..."
-                                    } else {
-                                        if (isBangla) "রিস্টোর করা হচ্ছে..." else "Restoring..."
-                                    },
-                                    color = AccentGreen,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.CloudDownload,
-                                    contentDescription = null,
-                                    tint = AccentGreen,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = if (isBangla) "গুগল ড্রাইভ থেকে রিস্টোর করুন" else "Restore from Google Drive",
-                                    color = AccentGreen,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 13.5.sp
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        // Button 3: Send directly to Google Drive App
-                        OutlinedButton(
-                            onClick = {
-                                val ok = AutoBackupManager.openGoogleDriveDirectUpload(context)
-                                refreshAllInfo()
-                                if (!ok) {
-                                    Toast.makeText(
-                                        context,
-                                        if (isBangla) "গুগল ড্রাইভ অ্যাপ চালু করা যায়নি" else "Could not open Google Drive app",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                            // Local Protection Guarantee Pill
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(AccentGreen.copy(alpha = 0.07f))
+                                    .border(1.dp, AccentGreen.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 10.dp, vertical = 7.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Security,
+                                        contentDescription = null,
+                                        tint = AccentGreen,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "ফোনের ২৪/৭ লোকাল অটো-ব্যাকআপ সর্বদা ব্যাকগ্রাউন্ডে সক্রিয় ও সুরক্ষিত থাকবে।" else "24/7 phone local auto-backup remains fully protected & active.",
+                                        color = AccentGreen,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium
+                                    )
                                 }
-                            },
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                            border = BorderStroke(1.dp, CardBorder),
-                            shape = RoundedCornerShape(10.dp),
-                            enabled = !isBusy,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(42.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.DriveFolderUpload,
-                                contentDescription = null,
-                                tint = AccentCyan,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = if (isBangla) "সরাসরি গুগল ড্রাইভ অ্যাপে আপলোড" else "Open in Google Drive App",
-                                color = TextPrimary,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 12.5.sp
-                            )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Cloud Details Card
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(BgCardLight)
+                                    .border(1.dp, CardBorder, RoundedCornerShape(12.dp))
+                                    .padding(12.dp)
+                            ) {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = if (isBangla) "গুগল ড্রাইভ বিবরণ" else "GOOGLE DRIVE DETAILS",
+                                            color = TextMuted,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+
+                                        Text(
+                                            text = if (driveStatus.isCloudFilePresent) "SYNCED ✓" else "NOT SYNCED",
+                                            color = if (driveStatus.isCloudFilePresent) AccentCyan else AccentOrange,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+
+                                    InfoRow(
+                                        label = if (isBangla) "ক্লাউড সার্ভিস" else "Cloud Service",
+                                        value = "Google Drive REST API",
+                                        valueColor = AccentCyan
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    InfoRow(
+                                        label = if (isBangla) "টার্গেট ফাইল" else "Target File",
+                                        value = "IBM_AutoBackup.db",
+                                        valueColor = TextPrimary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    InfoRow(
+                                        label = if (isBangla) "সর্বশেষ ক্লাউড ব্যাকআপ" else "Last Cloud Sync",
+                                        value = driveStatus.formattedDate,
+                                        valueColor = TextPrimary
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    InfoRow(
+                                        label = if (isBangla) "ক্লাউড ফাইল সাইজ" else "Cloud File Size",
+                                        value = driveStatus.formattedSize,
+                                        valueColor = AccentOrange
+                                    )
+
+                                    Spacer(modifier = Modifier.height(6.dp))
+
+                                    InfoRow(
+                                        label = if (isBangla) "অটো-ব্যাকআপ শিডিউল" else "Auto-Backup Schedule",
+                                        value = driveStatus.backupTimeText,
+                                        valueColor = AccentGreen
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Action 1: Backup Now to Google Drive
+                            Button(
+                                onClick = {
+                                    isSyncingDrive = true
+                                    coroutineScope.launch {
+                                        val result = GoogleDriveSyncManager.uploadToDrive(context)
+                                        refreshAll()
+                                        isSyncingDrive = false
+                                        result.fold(
+                                            onSuccess = { msg ->
+                                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                            },
+                                            onFailure = { err ->
+                                                Toast.makeText(context, "Upload failed: ${err.localizedMessage}", Toast.LENGTH_LONG).show()
+                                            }
+                                        )
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentCyan),
+                                shape = RoundedCornerShape(10.dp),
+                                enabled = !isBusy,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                            ) {
+                                if (isSyncingDrive) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = BgDark,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "গুগল ড্রাইভে আপলোড হচ্ছে..." else "Uploading to Google Drive...",
+                                        color = BgDark,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.CloudUpload,
+                                        contentDescription = null,
+                                        tint = BgDark,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "এখনই গুগল ড্রাইভে ব্যাকআপ নিন (Backup Now)" else "Backup to Google Drive Now",
+                                        color = BgDark,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Action 2: Restore from Google Drive
+                            OutlinedButton(
+                                onClick = {
+                                    isDownloadingDrive = true
+                                    coroutineScope.launch {
+                                        val validation = GoogleDriveSyncManager.downloadAndValidateFromDrive(context)
+                                        isDownloadingDrive = false
+                                        if (validation.isValid) {
+                                            driveValidationResult = validation
+                                            showDriveRestoreConfirm = true
+                                        } else {
+                                            Toast.makeText(
+                                                context,
+                                                if (isBangla) "ড্রাইভ ব্যাকআপ যাচাই ব্যর্থ: ${validation.errorMessage ?: ""}"
+                                                else "Drive validation failed: ${validation.errorMessage ?: ""}",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
+                                    }
+                                },
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentGreen),
+                                border = BorderStroke(1.dp, AccentGreen.copy(alpha = 0.6f)),
+                                shape = RoundedCornerShape(10.dp),
+                                enabled = !isBusy,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(44.dp)
+                            ) {
+                                if (isDownloadingDrive || isRestoring) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        color = AccentGreen,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isDownloadingDrive) {
+                                            if (isBangla) "ড্রাইভ থেকে ডাউনলোড ও যাচাই হচ্ছে..." else "Downloading from Drive..."
+                                        } else {
+                                            if (isBangla) "রিস্টোর করা হচ্ছে..." else "Restoring..."
+                                        },
+                                        color = AccentGreen,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.CloudDownload,
+                                        contentDescription = null,
+                                        tint = AccentGreen,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isBangla) "গুগল ড্রাইভ থেকে রিস্টোর করুন" else "Restore from Google Drive",
+                                        color = AccentGreen,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.5.sp
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -913,8 +1104,8 @@ fun BackupRestoreDialog(
             text = {
                 Column {
                     Text(
-                        text = if (isBangla) "গুগল ড্রাইভ ব্যাকআপ ফাইল সফলভাবে যাচাই করা হয়েছে। এই ফাইলে নিম্নলিখিত রেকর্ড পাওয়া গেছে:"
-                        else "Google Drive backup snapshot verified successfully. Found following records in file:",
+                        text = if (isBangla) "গুগল ড্রাইভ ব্যাকআপ ফাইল সফলভাবে ডাউনলোড ও যাচাই করা হয়েছে। এই ফাইলে নিম্নলিখিত রেকর্ড পাওয়া গেছে:"
+                        else "Google Drive backup snapshot downloaded and verified successfully. Found following records in file:",
                         color = TextSecondary,
                         fontSize = 12.5.sp,
                         lineHeight = 17.sp
