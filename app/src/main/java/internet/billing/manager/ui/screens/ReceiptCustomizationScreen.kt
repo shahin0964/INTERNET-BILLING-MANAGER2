@@ -655,7 +655,7 @@ fun ReceiptCustomizationScreen(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = "Hotline: ${ispSettings?.supportPhone?.ifBlank { "01725208629" } ?: "01725208629"}",
+                                        text = "Hotline: ${ispSettings?.phone?.ifBlank { "01725208629" } ?: "01725208629"}",
                                         color = Color(0xFF475569),
                                         fontSize = 9.5.sp
                                     )

@@ -122,7 +122,7 @@ fun PaymentReceiptPopup(
                                         fontSize = 13.sp
                                     )
                                     Text(
-                                        text = "Hotline: ${ispSettings?.supportPhone?.ifBlank { "01XXXXXXXXX" } ?: "01XXXXXXXXX"}",
+                                        text = "Hotline: ${ispSettings?.phone?.ifBlank { "01XXXXXXXXX" } ?: "01XXXXXXXXX"}",
                                         color = Color(0xFF475569),
                                         fontSize = 9.sp
                                     )

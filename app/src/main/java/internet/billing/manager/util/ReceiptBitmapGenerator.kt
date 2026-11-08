@@ -60,7 +60,7 @@ object ReceiptBitmapGenerator {
 
         // 2. Header Section
         val companyName = ispSettings?.companyName?.ifBlank { "INTERNET SERVICE PROVIDER" } ?: "INTERNET SERVICE PROVIDER"
-        val hotline = ispSettings?.supportPhone?.ifBlank { ispSettings.phone } ?: ""
+        val hotline = ispSettings?.phone ?: ""
         val email = ispSettings?.email ?: ""
         val address = ispSettings?.address ?: ""
 
