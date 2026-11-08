@@ -440,6 +440,16 @@ class BillingViewModel(
         viewModelScope.launch {
             repository.addManualBill(customerId, monthYear, amount, notes)
             showAddManualBillDialog = false
+            showGenerateBillDialog = false
+            // Trigger Auto SMS Bill notification if enabled
+            if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoBillSmsEnabled) {
+                val cust = repository.getCustomerById(customerId)
+                if (cust != null && cust.phone.isNotBlank()) {
+                    val rawTpl = AutoSmsManager.getTemplateText("bill_generated", InternetBillingApp.instance)
+                    val msg = AutoSmsManager.formatMessage(rawTpl, cust, ispSettings.value, extraAmount = amount)
+                    AutoSmsManager.sendSingleSms(InternetBillingApp.instance, cust.phone, msg)
+                }
+            }
         }
     }
 }

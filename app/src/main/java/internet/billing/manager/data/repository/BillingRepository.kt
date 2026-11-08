@@ -194,22 +194,35 @@ class BillingRepository(
 
     suspend fun addManualBill(customerId: Long, monthYear: String, amount: Double, notes: String): Long {
         val customer = customerDao.getCustomerById(customerId) ?: return 0L
+        val existing = billDao.getBillForCustomerMonth(customerId, monthYear)
         val updatedDue = customer.dueAmount + amount
         customerDao.updateDue(customerId, updatedDue)
-        val id = billDao.insertBill(
-            BillEntry(
-                customerId = customerId,
-                customerName = customer.name.ifBlank { customer.pppoeUsername },
-                customerCode = customer.customerCode,
-                monthYear = monthYear,
-                billAmount = amount,
-                paidAmount = 0.0,
-                dueAmount = amount,
+        val id = if (existing != null) {
+            val updatedBill = existing.copy(
+                billAmount = existing.billAmount + amount,
+                dueAmount = existing.dueAmount + amount,
                 isPaid = false,
                 billDateMillis = System.currentTimeMillis(),
-                notes = notes.ifBlank { "Manual bill for $monthYear" }
+                notes = if (notes.isNotBlank()) notes else existing.notes.ifBlank { "Bill for $monthYear" }
             )
-        )
+            billDao.updateBill(updatedBill)
+            existing.id
+        } else {
+            billDao.insertBill(
+                BillEntry(
+                    customerId = customerId,
+                    customerName = customer.name.ifBlank { customer.pppoeUsername },
+                    customerCode = customer.customerCode,
+                    monthYear = monthYear,
+                    billAmount = amount,
+                    paidAmount = 0.0,
+                    dueAmount = amount,
+                    isPaid = false,
+                    billDateMillis = System.currentTimeMillis(),
+                    notes = notes.ifBlank { "Bill for $monthYear" }
+                )
+            )
+        }
         AutoBackupManager.scheduleDebouncedBackup(InternetBillingApp.instance)
         return id
     }

@@ -252,11 +252,16 @@ fun MainScreen(
 
     if (viewModel.showGenerateBillDialog) {
         GenerateBillDialog(
+            allCustomers = allCustomers,
             activeCustomerCount = activeCount,
             totalMonthlyBill = monthlyBill,
             monthYear = monthYearKey,
             onDismiss = { viewModel.showGenerateBillDialog = false },
-            onConfirm = { viewModel.generateBills() }
+            onConfirm = { viewModel.generateBills() },
+            onConfirmSingle = { customerId, amount, notes ->
+                viewModel.addManualBill(customerId, monthYearKey, amount, notes)
+                viewModel.showGenerateBillDialog = false
+            }
         )
     }
 

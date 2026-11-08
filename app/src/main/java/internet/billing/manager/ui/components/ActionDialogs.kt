@@ -9,6 +9,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Search
+import android.widget.Toast
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -502,95 +505,522 @@ fun AddExpenseDialog(
 
 @Composable
 fun GenerateBillDialog(
+    allCustomers: List<Customer> = emptyList(),
     activeCustomerCount: Int,
     totalMonthlyBill: Double,
     monthYear: String,
     onDismiss: () -> Unit,
-    onConfirm: () -> Unit
+    onConfirm: () -> Unit,
+    onConfirmSingle: ((customerId: Long, amount: Double, notes: String) -> Unit)? = null
 ) {
+    val context = LocalContext.current
+    val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
+    var selectedTab by remember { mutableStateOf(0) } // 0 = Single User, 1 = All Users
+
+    var customerSearchQuery by remember { mutableStateOf("") }
+    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
+    var billAmountText by remember { mutableStateOf("") }
+    var notesText by remember { mutableStateOf("") }
+
+    // When a customer is picked, initialize their monthly bill
+    LaunchedEffect(selectedCustomer) {
+        if (selectedCustomer != null) {
+            billAmountText = selectedCustomer!!.monthlyBill.takeIf { it > 0 }?.toInt()?.toString() ?: "500"
+            if (notesText.isBlank()) {
+                notesText = if (isBangla) "$monthYear মাসের বিল" else "Bill for $monthYear"
+            }
+        }
+    }
+
+    val filteredCustomers = remember(allCustomers, customerSearchQuery) {
+        if (customerSearchQuery.isBlank()) {
+            allCustomers.sortedBy { it.name.ifBlank { it.pppoeUsername } }
+        } else {
+            val q = customerSearchQuery.trim()
+            allCustomers.filter { cust ->
+                cust.name.contains(q, ignoreCase = true) ||
+                cust.pppoeUsername.contains(q, ignoreCase = true) ||
+                cust.customerCode.contains(q, ignoreCase = true) ||
+                cust.phone.contains(q, ignoreCase = true)
+            }.sortedBy { it.name.ifBlank { it.pppoeUsername } }
+        }
+    }
+
+    val dialogTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = AccentCyan,
+        unfocusedBorderColor = CardBorder,
+        focusedTextColor = TextPrimary,
+        unfocusedTextColor = TextPrimary,
+        focusedLabelColor = AccentCyan,
+        unfocusedLabelColor = TextSecondary,
+        focusedPlaceholderColor = TextMuted,
+        unfocusedPlaceholderColor = TextMuted,
+        focusedContainerColor = BgCardLight.copy(alpha = 0.5f),
+        unfocusedContainerColor = BgCardLight.copy(alpha = 0.3f),
+        cursorColor = AccentCyan
+    )
+
     Dialog(onDismissRequest = onDismiss) {
         InternetBillingTheme {
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = BgCard,
                 contentColor = TextPrimary,
-                border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 8.dp)
+                border = BorderStroke(1.dp, CardBorder),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 10.dp)
             ) {
-            Column(
-                modifier = Modifier.padding(14.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = appStrings.generateMonthlyBills,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA)
-                        "সকল সক্রিয় গ্রাহকদের জন্য $monthYear মাসের বিল তৈরি হবে। এর ফলে গ্রাহকদের বকেয়া আপডেট হবে এবং দৈনিক বিলিং এন্ট্রি তৈরি হবে।"
-                    else
-                        "Generate bill entries for $monthYear for all active customers. This will update customer due balances and create daily billing entries.",
-                    fontSize = 11.5.sp,
-                    color = TextSecondary,
-                    lineHeight = 16.sp
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(BgCardLight)
-                        .padding(10.dp)
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // 1. Header with Icon & Close Button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("${appStrings.activeCustomersToBill}:", color = TextSecondary, fontSize = 11.5.sp)
-                        Text("$activeCustomerCount ${appStrings.usersCountSuffix}", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(AccentCyan.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Receipt,
+                                    contentDescription = null,
+                                    tint = AccentCyan,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (isBangla) "বিল জেনারেট / তৈরি" else "Generate Bills",
+                                    fontSize = 15.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "Month: $monthYear",
+                                    fontSize = 11.sp,
+                                    color = AccentCyan,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(30.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = TextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // 2. Mode Selector Tabs: [নির্দিষ্ট গ্রাহক (Single)] / [সকল গ্রাহক (All Users)]
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(BgCardLight)
+                            .padding(3.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text("${appStrings.estimatedTotalBill}:", color = TextSecondary, fontSize = 11.5.sp)
-                        Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
-                    }
-                }
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selectedTab == 0) AccentCyan else Color.Transparent)
+                                .clickable { selectedTab = 0 }
+                                .padding(vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (isBangla) "নির্দিষ্ট গ্রাহক" else "Single User",
+                                color = if (selectedTab == 0) BgDark else TextSecondary,
+                                fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 12.sp
+                            )
+                        }
 
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f).height(38.dp),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(appStrings.cancel, color = TextSecondary, fontSize = 12.sp)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (selectedTab == 1) AccentCyan else Color.Transparent)
+                                .clickable { selectedTab = 1 }
+                                .padding(vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (isBangla) "সকল সক্রিয় গ্রাহক" else "All Active Users",
+                                color = if (selectedTab == 1) BgDark else TextSecondary,
+                                fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Medium,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
-                    Button(
-                        onClick = onConfirm,
-                        modifier = Modifier.weight(1.5f).height(38.dp),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
-                    ) {
-                        Text(appStrings.generateNow, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    if (selectedTab == 0) {
+                        // --- TAB 0: Single User Mode ---
+                        if (selectedCustomer == null) {
+                            // Instruction & Search Bar
+                            Text(
+                                text = if (isBangla) "যে গ্রাহকের বিল তৈরি করতে চান তাকে নির্বাচন করুন:"
+                                else "Select the customer you want to generate a bill for:",
+                                fontSize = 11.5.sp,
+                                color = TextSecondary,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = customerSearchQuery,
+                                onValueChange = { customerSearchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        text = if (isBangla) "নাম, ইউজারনেম বা কোড খুঁজুন..." else "Search name, username, code...",
+                                        color = TextMuted,
+                                        fontSize = 12.sp
+                                    )
+                                },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = AccentCyan,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                },
+                                trailingIcon = {
+                                    if (customerSearchQuery.isNotBlank()) {
+                                        IconButton(
+                                            onClick = { customerSearchQuery = "" },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Close,
+                                                contentDescription = "Clear",
+                                                tint = TextSecondary,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                        }
+                                    }
+                                },
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = dialogTextFieldColors,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Customer List
+                            if (filteredCustomers.isEmpty()) {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (allCustomers.isEmpty()) {
+                                            if (isBangla) "কোনো গ্রাহক পাওয়া যায়নি। আগে গ্রাহক যোগ করুন।" else "No customers found. Add customers first."
+                                        } else {
+                                            if (isBangla) "কোনো গ্রাহকের মিল পাওয়া যায়নি" else "No matching customers found"
+                                        },
+                                        color = TextMuted,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            } else {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 220.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .border(BorderStroke(1.dp, CardBorder), RoundedCornerShape(10.dp))
+                                        .background(BgCardLight.copy(alpha = 0.3f))
+                                        .verticalScroll(rememberScrollState())
+                                        .padding(4.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    filteredCustomers.forEach { cust ->
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .clickable { selectedCustomer = cust }
+                                                .background(BgCard)
+                                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = cust.name.ifBlank { cust.pppoeUsername },
+                                                    color = TextPrimary,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    fontSize = 12.5.sp
+                                                )
+                                                Text(
+                                                    text = "PPPoE: ${cust.pppoeUsername} • Code: ${cust.customerCode}",
+                                                    color = TextMuted,
+                                                    fontSize = 10.5.sp
+                                                )
+                                            }
+                                            Column(horizontalAlignment = Alignment.End) {
+                                                Text(
+                                                    text = "৳${cust.monthlyBill.toInt()}",
+                                                    color = AccentCyan,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp
+                                                )
+                                                Text(
+                                                    text = cust.status,
+                                                    color = if (cust.status == Customer.STATUS_ACTIVE) AccentGreen else AccentOrange,
+                                                    fontSize = 9.5.sp
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            // Customer is Selected
+                            val cust = selectedCustomer!!
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .border(BorderStroke(1.dp, AccentCyan.copy(alpha = 0.5f)), RoundedCornerShape(10.dp))
+                                    .background(AccentCyan.copy(alpha = 0.08f))
+                                    .padding(10.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = cust.name.ifBlank { cust.pppoeUsername },
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.5.sp
+                                        )
+                                        Text(
+                                            text = "Username: ${cust.pppoeUsername} • Code: ${cust.customerCode}",
+                                            color = TextSecondary,
+                                            fontSize = 11.sp
+                                        )
+                                        if (cust.phone.isNotBlank()) {
+                                            Text(
+                                                text = "Phone: ${cust.phone}",
+                                                color = TextMuted,
+                                                fontSize = 10.5.sp
+                                            )
+                                        }
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = { selectedCustomer = null },
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp),
+                                        border = BorderStroke(1.dp, CardBorder)
+                                    ) {
+                                        Text(
+                                            text = if (isBangla) "পরিবর্তন" else "Change",
+                                            fontSize = 11.sp,
+                                            color = AccentCyan
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Bill Amount Input
+                            Text(
+                                text = if (isBangla) "বিলের পরিমাণ (৳) *" else "Bill Amount (৳) *",
+                                color = TextSecondary,
+                                fontSize = 11.5.sp,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = billAmountText,
+                                onValueChange = { billAmountText = it },
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = dialogTextFieldColors,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // Notes Input
+                            Text(
+                                text = if (isBangla) "বিবরণ / নোট (ঐচ্ছিক)" else "Notes / Remarks (Optional)",
+                                color = TextSecondary,
+                                fontSize = 11.5.sp,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            OutlinedTextField(
+                                value = notesText,
+                                onValueChange = { notesText = it },
+                                singleLine = true,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = dialogTextFieldColors,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Action Buttons for Single User
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.weight(1f).height(40.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, CardBorder)
+                            ) {
+                                Text(appStrings.cancel, color = TextSecondary, fontSize = 12.sp)
+                            }
+
+                            Button(
+                                onClick = {
+                                    val cust = selectedCustomer
+                                    val amt = billAmountText.toDoubleOrNull() ?: 0.0
+                                    if (cust == null) {
+                                        Toast.makeText(context, if (isBangla) "অনুগ্রহ করে একজন গ্রাহক নির্বাচন করুন" else "Please select a customer", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    if (amt <= 0.0) {
+                                        Toast.makeText(context, if (isBangla) "সঠিক বিলের পরিমাণ লিখুন" else "Please enter a valid bill amount", Toast.LENGTH_SHORT).show()
+                                        return@Button
+                                    }
+                                    onConfirmSingle?.invoke(cust.id, amt, notesText.trim())
+                                    Toast.makeText(
+                                        context,
+                                        if (isBangla) "${cust.name.ifBlank { cust.pppoeUsername }} এর জন্য ৳${amt.toInt()} বিল তৈরি হয়েছে"
+                                        else "Bill of ৳${amt.toInt()} generated for ${cust.name.ifBlank { cust.pppoeUsername }}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                enabled = selectedCustomer != null,
+                                modifier = Modifier.weight(1.5f).height(40.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = AccentCyan,
+                                    disabledContainerColor = AccentCyan.copy(alpha = 0.3f)
+                                )
+                            ) {
+                                Text(
+                                    text = if (isBangla) "বিল তৈরি করুন" else "Generate Bill",
+                                    color = if (selectedCustomer != null) BgDark else TextMuted,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 12.5.sp
+                                )
+                            }
+                        }
+
+                    } else {
+                        // --- TAB 1: All Active Users Mode ---
+                        Text(
+                            text = if (isBangla)
+                                "সকল সক্রিয় গ্রাহকদের জন্য $monthYear মাসের বিল তৈরি হবে। এর ফলে গ্রাহকদের বকেয়া আপডেট হবে এবং দৈনিক বিলিং এন্ট্রি তৈরি হবে।"
+                            else
+                                "Generate bill entries for $monthYear for all active customers. This will update customer due balances and create daily billing entries.",
+                            fontSize = 11.5.sp,
+                            color = TextSecondary,
+                            lineHeight = 16.sp,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(BgCardLight)
+                                .padding(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("${appStrings.activeCustomersToBill}:", color = TextSecondary, fontSize = 11.5.sp)
+                                Text("$activeCustomerCount ${appStrings.usersCountSuffix}", color = AccentGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("${appStrings.estimatedTotalBill}:", color = TextSecondary, fontSize = 11.5.sp)
+                                Text("৳${totalMonthlyBill.toInt()}", color = AccentCyan, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = onDismiss,
+                                modifier = Modifier.weight(1f).height(40.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, CardBorder)
+                            ) {
+                                Text(appStrings.cancel, color = TextSecondary, fontSize = 12.sp)
+                            }
+                            Button(
+                                onClick = {
+                                    onConfirm()
+                                    Toast.makeText(
+                                        context,
+                                        if (isBangla) "সকল সক্রিয় গ্রাহকের বিল তৈরি করা হয়েছে" else "Bills generated for all active subscribers",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                },
+                                modifier = Modifier.weight(1.5f).height(40.dp),
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = AccentPurple)
+                            ) {
+                                Text(appStrings.generateNow, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.5.sp)
+                            }
+                        }
                     }
                 }
             }
         }
-    }
     }
 }
 
