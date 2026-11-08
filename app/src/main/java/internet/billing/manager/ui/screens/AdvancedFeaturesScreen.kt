@@ -29,6 +29,7 @@ fun AdvancedFeaturesScreen(
     onBack: () -> Unit,
     onNavigateToAutoSms: () -> Unit,
     onNavigateToNetworkTools: () -> Unit,
+    onNavigateToReceiptCustomization: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
@@ -71,7 +72,7 @@ fun AdvancedFeaturesScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (isBangla) "সিম অটোমেশন ও নেটওয়ার্ক টুলস" else "SIM automation & network tools",
+                    text = if (isBangla) "রসিদ ডিজাইন, সিম অটোমেশন ও নেটওয়ার্ক টুলস" else "Receipt design, SIM automation & network tools",
                     color = TextSecondary,
                     fontSize = 11.sp
                 )
@@ -86,7 +87,21 @@ fun AdvancedFeaturesScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // Row 1: Network Tools (নেটওয়ার্ক টুলস)
+            // Row 1: Receipt Customization (রসিদ কাস্টমাইজেশন)
+            item {
+                AdvancedFeatureRowCard(
+                    icon = Icons.Default.ReceiptLong,
+                    iconTint = AccentPurple,
+                    title = if (isBangla) "রসিদ কাস্টমাইজেশন (Receipt Customization)" else "Receipt Customization",
+                    subtitle = if (isBangla) "মানি রসিদ ডিজাইন, বিকাশ/নগদ নম্বর ও হোয়াটসঅ্যাপে রসিদ পাঠানো" else "Money receipt design, bKash/Nagad & direct WhatsApp sharing",
+                    badgeText = "NEW",
+                    badgeColor = AccentCyan,
+                    showChevron = true,
+                    onClick = onNavigateToReceiptCustomization
+                )
+            }
+
+            // Row 2: Network Tools (নেটওয়ার্ক টুলস)
             item {
                 AdvancedFeatureRowCard(
                     icon = Icons.Default.Build,
@@ -100,7 +115,7 @@ fun AdvancedFeaturesScreen(
                 )
             }
 
-            // Row 2: Auto SMS System (SIM) - Navigates to dedicated AutoSmsScreen!
+            // Row 3: Auto SMS System (SIM) - Navigates to dedicated AutoSmsScreen!
             item {
                 AdvancedFeatureRowCard(
                     icon = Icons.Default.Chat,

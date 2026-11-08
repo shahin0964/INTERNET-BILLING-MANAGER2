@@ -11,6 +11,7 @@ import internet.billing.manager.data.local.CategorySum
 import internet.billing.manager.data.model.*
 import internet.billing.manager.data.repository.BillingRepository
 import internet.billing.manager.util.AutoSmsManager
+import internet.billing.manager.util.ReceiptCustomizationManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -229,6 +230,8 @@ class BillingViewModel(
 
     var showCollectPaymentDialog by mutableStateOf(false)
     var customerForPayment by mutableStateOf<Customer?>(null)
+    var showPaymentReceiptPopup by mutableStateOf(false)
+    var lastPaymentReceiptData by mutableStateOf<PaymentReceiptData?>(null)
 
     var showGenerateBillDialog by mutableStateOf(false)
     var showAddManualBillDialog by mutableStateOf(false)
@@ -328,14 +331,24 @@ class BillingViewModel(
     fun collectPayment(customerId: Long, amount: Double, method: String, note: String) {
         viewModelScope.launch {
             repository.recordPayment(customerId, amount, method, note)
+            val updatedCust = repository.getCustomerById(customerId)
             // Trigger Auto SMS Receipt if enabled
             if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoPaymentSmsEnabled) {
-                val cust = repository.getCustomerById(customerId)
-                if (cust != null && cust.phone.isNotBlank()) {
+                if (updatedCust != null && updatedCust.phone.isNotBlank()) {
                     val rawTpl = AutoSmsManager.getTemplateText("payment_received", InternetBillingApp.instance)
-                    val msg = AutoSmsManager.formatMessage(rawTpl, cust, ispSettings.value, extraAmount = amount)
-                    AutoSmsManager.sendSingleSms(InternetBillingApp.instance, cust.phone, msg)
+                    val msg = AutoSmsManager.formatMessage(rawTpl, updatedCust, ispSettings.value, extraAmount = amount)
+                    AutoSmsManager.sendSingleSms(InternetBillingApp.instance, updatedCust.phone, msg)
                 }
+            }
+            // Trigger Auto Receipt Popup if enabled
+            if (updatedCust != null && ReceiptCustomizationManager.isAutoPopupEnabled(InternetBillingApp.instance)) {
+                lastPaymentReceiptData = PaymentReceiptData(
+                    customer = updatedCust,
+                    amount = amount,
+                    method = method,
+                    note = note
+                )
+                showPaymentReceiptPopup = true
             }
             showCollectPaymentDialog = false
             customerForPayment = null
@@ -529,3 +542,12 @@ class BillingViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+data class PaymentReceiptData(
+    val customer: Customer,
+    val amount: Double,
+    val method: String,
+    val note: String,
+    val timestamp: Long = System.currentTimeMillis()
+)
+

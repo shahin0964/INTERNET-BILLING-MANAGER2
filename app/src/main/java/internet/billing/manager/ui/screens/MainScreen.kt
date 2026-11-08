@@ -29,7 +29,8 @@ enum class ActiveScreen {
     SETTINGS,
     ADVANCED_FEATURES,
     AUTO_SMS,
-    NETWORK_TOOLS
+    NETWORK_TOOLS,
+    RECEIPT_CUSTOMIZATION
 }
 
 @Composable
@@ -51,6 +52,10 @@ fun MainScreen(
 
     // 1. Handle back button when inside nested sub-screens
     BackHandler(enabled = currentScreen == ActiveScreen.NETWORK_TOOLS) {
+        currentScreen = ActiveScreen.ADVANCED_FEATURES
+    }
+
+    BackHandler(enabled = currentScreen == ActiveScreen.RECEIPT_CUSTOMIZATION) {
         currentScreen = ActiveScreen.ADVANCED_FEATURES
     }
 
@@ -197,6 +202,18 @@ fun MainScreen(
                         },
                         onNavigateToNetworkTools = {
                             currentScreen = ActiveScreen.NETWORK_TOOLS
+                        },
+                        onNavigateToReceiptCustomization = {
+                            currentScreen = ActiveScreen.RECEIPT_CUSTOMIZATION
+                        }
+                    )
+                }
+
+                ActiveScreen.RECEIPT_CUSTOMIZATION -> {
+                    ReceiptCustomizationScreen(
+                        ispSettings = ispSettings,
+                        onBack = {
+                            currentScreen = ActiveScreen.ADVANCED_FEATURES
                         }
                     )
                 }
@@ -452,6 +469,22 @@ fun MainScreen(
                 ) {
                     Text("বাতিল / Cancel", color = TextSecondary)
                 }
+            }
+        )
+    }
+
+    // 5. Payment Receipt Popup (with WhatsApp Money Receipt sharing)
+    val receiptData = viewModel.lastPaymentReceiptData
+    if (viewModel.showPaymentReceiptPopup && receiptData != null) {
+        PaymentReceiptPopup(
+            customer = receiptData.customer,
+            amount = receiptData.amount,
+            method = receiptData.method,
+            note = receiptData.note,
+            ispSettings = ispSettings,
+            onDismiss = {
+                viewModel.showPaymentReceiptPopup = false
+                viewModel.lastPaymentReceiptData = null
             }
         )
     }
