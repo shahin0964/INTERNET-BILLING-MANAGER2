@@ -25,6 +25,7 @@
             <data android:scheme="smsto" />
         </intent>
         <package android:name="com.whatsapp" />
+        <package android:name="com.google.android.apps.docs" />
     </queries>
 
     <application
