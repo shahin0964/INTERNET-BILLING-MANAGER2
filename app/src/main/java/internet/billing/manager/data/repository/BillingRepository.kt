@@ -278,9 +278,6 @@ class BillingRepository(
 
     fun getAllPayments(): Flow<List<PaymentTransaction>> = paymentDao.getAllPayments()
 
-    fun getPaymentsForMonth(monthYear: String): Flow<List<PaymentTransaction>> =
-        paymentDao.getPaymentsForMonth(monthYear)
-
     fun getPaymentsForToday(): Flow<List<PaymentTransaction>> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
