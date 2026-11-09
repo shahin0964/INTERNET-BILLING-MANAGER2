@@ -437,6 +437,15 @@ object ReceiptBitmapGenerator {
             else -> null
         }
 
+        // Format phone for WhatsApp JID (e.g. 8801708732389@s.whatsapp.net)
+        val cleanPhone = phone.replace(Regex("[^0-9]"), "")
+        val targetPhone = when {
+            cleanPhone.startsWith("880") -> cleanPhone
+            cleanPhone.startsWith("0") -> "88$cleanPhone"
+            cleanPhone.length == 10 -> "880$cleanPhone"
+            else -> cleanPhone
+        }
+
         // Grant explicit URI read permission to WhatsApp and WhatsApp Business
         listOf("com.whatsapp", "com.whatsapp.w4b").forEach { pkg ->
             try {
@@ -449,6 +458,9 @@ object ReceiptBitmapGenerator {
             putExtra(Intent.EXTRA_STREAM, imageUri)
             clipData = ClipData.newRawUri("Money Receipt", imageUri)
             putExtra(Intent.EXTRA_TEXT, caption)
+            if (targetPhone.isNotBlank()) {
+                putExtra("jid", "$targetPhone@s.whatsapp.net")
+            }
             if (targetPackage != null) {
                 setPackage(targetPackage)
             }
@@ -460,19 +472,35 @@ object ReceiptBitmapGenerator {
             context.startActivity(intent)
         } catch (e: Exception) {
             try {
-                val chooserIntent = Intent(Intent.ACTION_SEND).apply {
+                // Retry without jid
+                val fallbackIntent = Intent(Intent.ACTION_SEND).apply {
                     type = "image/png"
                     putExtra(Intent.EXTRA_STREAM, imageUri)
                     clipData = ClipData.newRawUri("Money Receipt", imageUri)
                     putExtra(Intent.EXTRA_TEXT, caption)
+                    if (targetPackage != null) {
+                        setPackage(targetPackage)
+                    }
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(Intent.createChooser(chooserIntent, "Share Receipt").apply {
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                })
+                context.startActivity(fallbackIntent)
             } catch (ex: Exception) {
-                Toast.makeText(context, "WhatsApp এ শেয়ার করা সম্ভব হয়নি: ${ex.message}", Toast.LENGTH_SHORT).show()
+                try {
+                    val chooserIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "image/png"
+                        putExtra(Intent.EXTRA_STREAM, imageUri)
+                        clipData = ClipData.newRawUri("Money Receipt", imageUri)
+                        putExtra(Intent.EXTRA_TEXT, caption)
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(Intent.createChooser(chooserIntent, "Share Receipt").apply {
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    })
+                } catch (ex2: Exception) {
+                    Toast.makeText(context, "WhatsApp এ শেয়ার করা সম্ভব হয়নি: ${ex2.message}", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
