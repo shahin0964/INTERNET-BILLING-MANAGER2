@@ -798,7 +798,8 @@ fun ReceiptCustomizationScreen(
                             // Signature Row
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.Bottom
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(90.dp))
@@ -807,10 +808,16 @@ fun ReceiptCustomizationScreen(
                                 }
 
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = settings.signatureName.ifBlank { "Authority" },
+                                        color = Color(0xFF0F172A),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 8.5.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
                                     Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(110.dp))
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text("Authorized Signature", color = Color(0xFF64748B), fontSize = 8.5.sp)
-                                    Text(settings.signatureName, color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.sp)
                                 }
                             }
 

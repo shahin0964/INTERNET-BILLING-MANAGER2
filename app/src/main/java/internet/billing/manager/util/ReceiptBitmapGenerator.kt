@@ -359,18 +359,18 @@ object ReceiptBitmapGenerator {
         canvas.drawText("Received by", 195f, sigY + 24f, sigTextPaint)
 
         // Right: Authorized Signature
-        canvas.drawLine(width - 340f, sigY, width - 70f, sigY, sigLinePaint)
-        canvas.drawText("Authorized Signature", width - 205f, sigY + 24f, sigTextPaint)
-
         val authNamePaint = Paint().apply {
             color = Color.parseColor("#0F172A")
-            textSize = 13f
+            textSize = 15f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
         val sigName = receiptSettings.signatureName.ifBlank { "Authority" }
-        canvas.drawText(sigName, width - 205f, sigY + 44f, authNamePaint)
+        canvas.drawText(sigName, width - 205f, sigY - 8f, authNamePaint)
+
+        canvas.drawLine(width - 340f, sigY, width - 70f, sigY, sigLinePaint)
+        canvas.drawText("Authorized Signature", width - 205f, sigY + 24f, sigTextPaint)
 
         // 10. Bottom Corporate Ribbon / Banner
         val bannerHeight = 44f

@@ -72,6 +72,7 @@ fun DashboardScreen(
     val monthlyCollection by viewModel.totalCollectedThisMonth.collectAsState()
     val todayCollection by viewModel.totalCollectedToday.collectAsState()
     val totalDue by viewModel.totalOutstandingDue.collectAsState()
+    val monthlyDiscount by viewModel.totalDiscountThisMonth.collectAsState()
     val recentPayments by viewModel.recentPayments.collectAsState()
     val monthDisplay by viewModel.currentMonthYearDisplay.collectAsState()
 
@@ -79,9 +80,9 @@ fun DashboardScreen(
         SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
     }
 
-    // Billing Analytics Calculations
-    val totalPayable = totalDue + monthlyCollection
-    val collectedPercent = if (totalPayable > 0) ((monthlyCollection / totalPayable) * 100).toInt().coerceIn(0, 100) else 0
+    // Billing Analytics Calculations - Total month demand does not subtract when collected
+    val totalMonthDue = (totalDue + monthlyCollection + monthlyDiscount).coerceAtLeast(monthlyBill)
+    val collectedPercent = if (totalMonthDue > 0) ((monthlyCollection / totalMonthDue) * 100).toInt().coerceIn(0, 100) else 0
     val outstandingPercent = (100 - collectedPercent).coerceIn(0, 100)
 
     LazyColumn(
@@ -377,8 +378,9 @@ fun DashboardScreen(
         // 5. Modern Animated Billing Analytics Card
         item {
             ModernBillingAnalyticsCard(
-                totalDue = totalDue,
+                totalDueMonth = totalMonthDue,
                 monthlyCollection = monthlyCollection,
+                totalOutstanding = totalDue,
                 collectedPercent = collectedPercent,
                 outstandingPercent = outstandingPercent,
                 onNavigateToBilling = onNavigateToBilling
@@ -508,8 +510,9 @@ fun DashboardScreen(
 
 @Composable
 fun ModernBillingAnalyticsCard(
-    totalDue: Double,
+    totalDueMonth: Double,
     monthlyCollection: Double,
+    totalOutstanding: Double,
     collectedPercent: Int,
     outstandingPercent: Int,
     onNavigateToBilling: () -> Unit,
@@ -717,7 +720,7 @@ fun ModernBillingAnalyticsCard(
                         )
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
-                            text = "৳${formatAmount(totalDue)}",
+                            text = "৳${formatAmount(totalDueMonth)}",
                             color = Color.White,
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Black,
@@ -888,7 +891,7 @@ fun ModernBillingAnalyticsCard(
                 // Right: Outstanding Status Card
                 val outstandingAnnotated = buildAnnotatedString {
                     withStyle(SpanStyle(color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)) {
-                        append("৳${formatAmount(totalDue)} ")
+                        append("৳${formatAmount(totalOutstanding)} ")
                     }
                     withStyle(SpanStyle(color = Color(0xFFFF9100), fontWeight = FontWeight.Bold, fontSize = 11.5.sp)) {
                         append("($outstandingPercent%)")
