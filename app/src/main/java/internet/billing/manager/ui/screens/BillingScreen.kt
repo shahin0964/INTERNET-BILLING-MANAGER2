@@ -588,10 +588,11 @@ fun BillingScreen(
 
                         Spacer(modifier = Modifier.height(9.dp))
 
-                        // Bottom Actions: Collect Payment + WhatsApp
+                        // Bottom Actions: Collect Payment + Disconnect/Reconnect + WhatsApp
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             // Button 1: Collect Payment
                             Button(
@@ -601,27 +602,65 @@ fun BillingScreen(
                                 },
                                 shape = RoundedCornerShape(8.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                                 modifier = Modifier
-                                    .weight(1.5f)
+                                    .weight(1.3f)
                                     .height(34.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.CreditCard,
                                     contentDescription = null,
                                     tint = BgDark,
-                                    modifier = Modifier.size(14.dp)
+                                    modifier = Modifier.size(13.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = "Collect (৳${item.totalPayable.toInt()})",
                                     color = BgDark,
-                                    fontSize = 11.5.sp,
+                                    fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
 
-                            // Button 2: WhatsApp / Invoice Reminder
+                            // Button 2: Quick Disconnect / Reconnect
+                            val isSuspended = customer.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
+                            OutlinedButton(
+                                onClick = {
+                                    val targetStatus = if (isSuspended) Customer.STATUS_ACTIVE else Customer.STATUS_SUSPENDED
+                                    viewModel.updateCustomerStatus(customer, targetStatus)
+                                    val msg = if (isSuspended) {
+                                        "${displayName} এর লাইন পুনরায় চালু করা হয়েছে"
+                                    } else {
+                                        "${displayName} এর লাইন ডিসকানেক্ট / স্থগিত করা হয়েছে"
+                                    }
+                                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                border = BorderStroke(1.dp, if (isSuspended) AccentGreen else AccentOrange),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = (if (isSuspended) AccentGreen else AccentOrange).copy(alpha = 0.12f)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
+                                modifier = Modifier
+                                    .weight(1.1f)
+                                    .height(34.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (isSuspended) Icons.Default.CheckCircle else Icons.Default.PowerSettingsNew,
+                                    contentDescription = null,
+                                    tint = if (isSuspended) AccentGreen else AccentOrange,
+                                    modifier = Modifier.size(13.dp)
+                                )
+                                Spacer(modifier = Modifier.width(3.dp))
+                                Text(
+                                    text = if (isSuspended) "Reconnect" else "Disconnect",
+                                    color = if (isSuspended) AccentGreen else AccentOrange,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            // Button 3: WhatsApp / Invoice Reminder
                             OutlinedButton(
                                 onClick = {
                                     val phone = customer.phone.replace("+", "").replace("-", "").replace(" ", "")
@@ -649,9 +688,9 @@ fun BillingScreen(
                                 colors = ButtonDefaults.outlinedButtonColors(
                                     containerColor = Color(0xFF25D366).copy(alpha = 0.12f)
                                 ),
-                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp),
                                 modifier = Modifier
-                                    .weight(1f)
+                                    .weight(0.9f)
                                     .height(34.dp)
                             ) {
                                 Icon(
@@ -660,11 +699,11 @@ fun BillingScreen(
                                     tint = Color(0xFF25D366),
                                     modifier = Modifier.size(13.dp)
                                 )
-                                Spacer(modifier = Modifier.width(4.dp))
+                                Spacer(modifier = Modifier.width(3.dp))
                                 Text(
                                     text = "WhatsApp",
                                     color = Color(0xFF25D366),
-                                    fontSize = 11.sp,
+                                    fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }

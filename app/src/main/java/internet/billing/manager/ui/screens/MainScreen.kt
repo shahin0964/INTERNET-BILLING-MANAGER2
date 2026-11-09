@@ -264,6 +264,12 @@ fun MainScreen(
             },
             onCollect = { customerId, amount, method, note ->
                 viewModel.collectPayment(customerId, amount, method, note)
+            },
+            onStatusChange = { customerId, newStatus ->
+                val cust = allCustomers.find { it.id == customerId }
+                if (cust != null) {
+                    viewModel.updateCustomerStatus(cust, newStatus)
+                }
             }
         )
     }

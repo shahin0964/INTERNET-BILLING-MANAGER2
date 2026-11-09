@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Search
 import android.widget.Toast
@@ -51,8 +53,10 @@ fun CollectPaymentDialog(
     customers: List<Customer>,
     initialCustomer: Customer? = null,
     onDismiss: () -> Unit,
-    onCollect: (customerId: Long, amount: Double, method: String, note: String) -> Unit
+    onCollect: (customerId: Long, amount: Double, method: String, note: String) -> Unit,
+    onStatusChange: ((customerId: Long, newStatus: String) -> Unit)? = null
 ) {
+    val context = LocalContext.current
     var selectedCustomer by remember {
         mutableStateOf(initialCustomer ?: customers.firstOrNull())
     }
@@ -134,12 +138,29 @@ fun CollectPaymentDialog(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text(
-                                        text = cust.name.ifBlank { cust.pppoeUsername },
-                                        color = TextPrimary,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 12.sp
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = cust.name.ifBlank { cust.pppoeUsername },
+                                            color = TextPrimary,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        val isCustSuspended = cust.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background((if (isCustSuspended) AccentOrange else AccentGreen).copy(alpha = 0.15f))
+                                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                                        ) {
+                                            Text(
+                                                text = if (isCustSuspended) "Disconnected" else "Active",
+                                                color = if (isCustSuspended) AccentOrange else AccentGreen,
+                                                fontSize = 8.5.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
                                     Text(
                                         text = "${cust.customerCode} • ${cust.packageName}",
                                         color = TextSecondary,
@@ -306,6 +327,47 @@ fun CollectPaymentDialog(
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.5.sp
                     )
+                }
+
+                if (selectedCustomer != null && onStatusChange != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    val isSuspended = selectedCustomer!!.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
+                    OutlinedButton(
+                        onClick = {
+                            val cust = selectedCustomer ?: return@OutlinedButton
+                            val targetStatus = if (isSuspended) Customer.STATUS_ACTIVE else Customer.STATUS_SUSPENDED
+                            onStatusChange(cust.id, targetStatus)
+                            val statusMsg = if (isSuspended) {
+                                "${cust.name.ifBlank { cust.pppoeUsername }} এর লাইন পুনরায় চালু করা হয়েছে"
+                            } else {
+                                "${cust.name.ifBlank { cust.pppoeUsername }} এর লাইন ডিসকানেক্ট / স্থগিত করা হয়েছে"
+                            }
+                            Toast.makeText(context, statusMsg, Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(40.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, if (isSuspended) AccentGreen else AccentOrange),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            containerColor = (if (isSuspended) AccentGreen else AccentOrange).copy(alpha = 0.12f)
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isSuspended) Icons.Default.CheckCircle else Icons.Default.PowerSettingsNew,
+                            contentDescription = null,
+                            tint = if (isSuspended) AccentGreen else AccentOrange,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isSuspended) "লাইন পুনরায় চালু করুন (Reconnect Line)" else "লাইন ডিসকানেক্ট / স্থগিত করুন (Disconnect Line)",
+                            color = if (isSuspended) AccentGreen else AccentOrange,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.5.sp
+                        )
+                    }
                 }
             }
         }
