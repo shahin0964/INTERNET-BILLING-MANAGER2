@@ -75,12 +75,15 @@ fun DashboardScreen(
     val recentPayments by viewModel.recentPayments.collectAsState()
     val monthDisplay by viewModel.currentMonthYearDisplay.collectAsState()
 
+    val monthlyBills by viewModel.monthlyBills.collectAsState()
+    val generatedBillsSum = remember(monthlyBills) { monthlyBills.sumOf { it.billAmount } }
+
     val shortTodayStr = remember {
         SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
     }
 
-    // Billing Analytics Calculations
-    val totalGenerated = monthlyBill + totalDue
+    // Billing Analytics Calculations - Show only monthly generated bill
+    val totalGenerated = if (generatedBillsSum > 0) generatedBillsSum else monthlyBill
     val collectedPercent = if (totalGenerated > 0) ((monthlyCollection / totalGenerated) * 100).toInt().coerceIn(0, 100) else 0
     val outstandingPercent = (100 - collectedPercent).coerceIn(0, 100)
 
