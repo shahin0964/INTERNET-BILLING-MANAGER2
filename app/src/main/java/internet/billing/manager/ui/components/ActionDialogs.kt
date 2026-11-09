@@ -53,8 +53,7 @@ fun CollectPaymentDialog(
     customers: List<Customer>,
     initialCustomer: Customer? = null,
     onDismiss: () -> Unit,
-    onCollect: (customerId: Long, amount: Double, method: String, note: String) -> Unit,
-    onStatusChange: ((customerId: Long, newStatus: String) -> Unit)? = null
+    onCollect: (customerId: Long, amount: Double, discount: Double, method: String, note: String) -> Unit
 ) {
     val context = LocalContext.current
     var selectedCustomer by remember {
@@ -63,8 +62,10 @@ fun CollectPaymentDialog(
     var amountText by remember {
         mutableStateOf(selectedCustomer?.dueAmount?.takeIf { it > 0 }?.toInt()?.toString() ?: selectedCustomer?.monthlyBill?.toInt()?.toString() ?: "500")
     }
+    var discountText by remember { mutableStateOf("") }
     var selectedMethod by remember { mutableStateOf("Cash") }
     var note by remember { mutableStateOf("") }
+    var customerSearchQuery by remember { mutableStateOf("") }
 
     val paymentMethods = listOf("Cash", "bKash", "Nagad", "Bank")
 
@@ -77,301 +78,395 @@ fun CollectPaymentDialog(
                 border = androidx.compose.foundation.BorderStroke(1.dp, CardBorder),
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
             ) {
-            Column(
-                modifier = Modifier
-                    .padding(14.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                Column(
+                    modifier = Modifier
+                        .padding(14.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Text(
-                        text = appStrings.recordCollectionTitle,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(28.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = appStrings.close,
-                            tint = TextSecondary,
-                            modifier = Modifier.size(16.dp)
+                        Text(
+                            text = appStrings.recordCollectionTitle,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = appStrings.close,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Text(appStrings.selectCustomer, color = TextSecondary, fontSize = 11.sp)
-                Spacer(modifier = Modifier.height(6.dp))
-
-                // Customer Selection Dropdown or List
-                if (customers.isEmpty()) {
-                    Text(appStrings.noCustomersFound, color = AccentRed, fontSize = 12.sp)
-                } else {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(BgCardLight)
-                            .padding(6.dp)
-                    ) {
-                        customers.take(5).forEach { cust ->
-                            val isSelected = selectedCustomer?.id == cust.id
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .background(if (isSelected) AccentCyan.copy(alpha = 0.2f) else BgCardLight)
-                                    .clickable {
-                                        selectedCustomer = cust
-                                        amountText = if (cust.dueAmount > 0) cust.dueAmount.toInt().toString() else cust.monthlyBill.toInt().toString()
-                                    }
-                                    .padding(horizontal = 8.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = cust.name.ifBlank { cust.pppoeUsername },
-                                            color = TextPrimary,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        val isCustSuspended = cust.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(4.dp))
-                                                .background((if (isCustSuspended) AccentOrange else AccentGreen).copy(alpha = 0.15f))
-                                                .padding(horizontal = 4.dp, vertical = 1.dp)
-                                        ) {
-                                            Text(
-                                                text = if (isCustSuspended) "Disconnected" else "Active",
-                                                color = if (isCustSuspended) AccentOrange else AccentGreen,
-                                                fontSize = 8.5.sp,
-                                                fontWeight = FontWeight.Bold
-                                            )
-                                        }
-                                    }
-                                    Text(
-                                        text = "${cust.customerCode} • ${cust.packageName}",
-                                        color = TextSecondary,
-                                        fontSize = 10.sp
-                                    )
-                                }
+                    if (initialCustomer != null) {
+                        // Opened for a specific customer: Only show that customer's details
+                        val cust = selectedCustomer ?: initialCustomer
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(AccentCyan.copy(alpha = 0.12f))
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "${appStrings.dueLabel}: ৳${cust.dueAmount.toInt()}",
+                                    text = cust.name.ifBlank { cust.pppoeUsername },
+                                    color = TextPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.5.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${cust.customerCode} • ${cust.packageName}",
+                                    color = TextSecondary,
+                                    fontSize = 11.sp
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "মোট বকেয়া / Due",
+                                    color = TextSecondary,
+                                    fontSize = 9.5.sp
+                                )
+                                Text(
+                                    text = "৳${cust.dueAmount.toInt()}",
                                     color = if (cust.dueAmount > 0) AccentOrange else AccentGreen,
-                                    fontSize = 11.sp,
+                                    fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
                         }
+                    } else {
+                        // Opened from Collection screen: Allow picking any customer
+                        Text(appStrings.selectCustomer, color = TextSecondary, fontSize = 11.sp)
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        if (customers.isEmpty()) {
+                            Text(appStrings.noCustomersFound, color = AccentRed, fontSize = 12.sp)
+                        } else {
+                            if (customers.size > 5) {
+                                OutlinedTextField(
+                                    value = customerSearchQuery,
+                                    onValueChange = { customerSearchQuery = it },
+                                    placeholder = { Text("গ্রাহক খুঁজুন (নাম, কোড, ফোন)...", color = TextMuted, fontSize = 11.5.sp) },
+                                    singleLine = true,
+                                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 12.sp),
+                                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = AccentCyan,
+                                        unfocusedBorderColor = CardBorder,
+                                        focusedTextColor = TextPrimary,
+                                        unfocusedTextColor = TextPrimary,
+                                        cursorColor = AccentCyan
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                            }
+
+                            val displayedCustomers = if (customerSearchQuery.isBlank()) {
+                                customers.take(5)
+                            } else {
+                                customers.filter {
+                                    it.name.contains(customerSearchQuery, ignoreCase = true) ||
+                                    it.customerCode.contains(customerSearchQuery, ignoreCase = true) ||
+                                    it.phone.contains(customerSearchQuery, ignoreCase = true) ||
+                                    it.pppoeUsername.contains(customerSearchQuery, ignoreCase = true)
+                                }.take(5)
+                            }
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(BgCardLight)
+                                    .padding(6.dp)
+                            ) {
+                                displayedCustomers.forEach { cust ->
+                                    val isSelected = selectedCustomer?.id == cust.id
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(6.dp))
+                                            .background(if (isSelected) AccentCyan.copy(alpha = 0.2f) else BgCardLight)
+                                            .clickable {
+                                                selectedCustomer = cust
+                                                discountText = ""
+                                                amountText = if (cust.dueAmount > 0) cust.dueAmount.toInt().toString() else cust.monthlyBill.toInt().toString()
+                                            }
+                                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column {
+                                            Text(
+                                                text = cust.name.ifBlank { cust.pppoeUsername },
+                                                color = TextPrimary,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 12.sp
+                                            )
+                                            Text(
+                                                text = "${cust.customerCode} • ${cust.packageName}",
+                                                color = TextSecondary,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                        Text(
+                                            text = "${appStrings.dueLabel}: ৳${cust.dueAmount.toInt()}",
+                                            color = if (cust.dueAmount > 0) AccentOrange else AccentGreen,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                OutlinedTextField(
-                    value = amountText,
-                    onValueChange = { amountText = it },
-                    label = { Text("${appStrings.paymentAmount} (৳)", color = TextSecondary) },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentGreen,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentGreen,
-                        unfocusedLabelColor = TextSecondary,
-                        focusedPlaceholderColor = TextMuted,
-                        unfocusedPlaceholderColor = TextMuted,
-                        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
-                        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
-                        cursorColor = AccentGreen
-                    )
-                )
-
-                if (selectedCustomer != null && selectedCustomer!!.dueAmount > selectedCustomer!!.monthlyBill && selectedCustomer!!.monthlyBill > 0) {
-                    Spacer(modifier = Modifier.height(6.dp))
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(AccentCyan.copy(alpha = 0.15f))
-                                .clickable {
-                                    amountText = selectedCustomer!!.monthlyBill.toInt().toString()
+                        OutlinedTextField(
+                            value = amountText,
+                            onValueChange = { amountText = it },
+                            label = { Text("আদায় / Amount (৳)", color = TextSecondary, fontSize = 11.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
+                            modifier = Modifier.weight(1.2f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AccentGreen,
+                                unfocusedBorderColor = CardBorder,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary,
+                                focusedLabelColor = AccentGreen,
+                                unfocusedLabelColor = TextSecondary,
+                                focusedPlaceholderColor = TextMuted,
+                                unfocusedPlaceholderColor = TextMuted,
+                                focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                                unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+                                cursorColor = AccentGreen
+                            )
+                        )
+
+                        OutlinedTextField(
+                            value = discountText,
+                            onValueChange = { newDiscount ->
+                                discountText = newDiscount
+                                val d = newDiscount.toDoubleOrNull() ?: 0.0
+                                val due = selectedCustomer?.dueAmount ?: 0.0
+                                if (due > 0 && d >= 0) {
+                                    amountText = (due - d).coerceAtLeast(0.0).toInt().toString()
                                 }
-                                .padding(vertical = 5.dp),
-                            contentAlignment = Alignment.Center
+                            },
+                            label = { Text("ছাড় / Discount (৳)", color = TextSecondary, fontSize = 11.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = AccentCyan,
+                                unfocusedBorderColor = CardBorder,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextPrimary,
+                                focusedLabelColor = AccentCyan,
+                                unfocusedLabelColor = TextSecondary,
+                                focusedPlaceholderColor = TextMuted,
+                                unfocusedPlaceholderColor = TextMuted,
+                                focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                                unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+                                cursorColor = AccentCyan
+                            )
+                        )
+                    }
+
+                    val enteredAmt = amountText.toDoubleOrNull() ?: 0.0
+                    val enteredDisc = discountText.toDoubleOrNull() ?: 0.0
+                    val totalDeduct = enteredAmt + enteredDisc
+                    val custTotalDue = selectedCustomer?.dueAmount ?: 0.0
+                    val remainDue = (custTotalDue - totalDeduct).coerceAtLeast(0.0)
+
+                    if (enteredDisc > 0 || (custTotalDue > 0 && totalDeduct > 0)) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(BgCardLight.copy(alpha = 0.6f))
+                                .padding(horizontal = 8.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "১ মাসের বিল (৳${selectedCustomer!!.monthlyBill.toInt()})",
+                                text = "বিল থেকে কমবে: ৳${totalDeduct.toInt()}" + (if (enteredDisc > 0) " (ছাড় ৳${enteredDisc.toInt()})" else ""),
                                 color = AccentCyan,
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(AccentOrange.copy(alpha = 0.15f))
-                                .clickable {
-                                    amountText = selectedCustomer!!.dueAmount.toInt().toString()
-                                }
-                                .padding(vertical = 5.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "মোট বকেয়া (৳${selectedCustomer!!.dueAmount.toInt()})",
-                                color = AccentOrange,
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(appStrings.paymentMethod, color = TextSecondary, fontSize = 11.sp)
-                Spacer(modifier = Modifier.height(5.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    paymentMethods.forEach { method ->
-                        val isSelected = selectedMethod == method
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(if (isSelected) AccentGreen.copy(alpha = 0.25f) else BgCardLight)
-                                .clickable { selectedMethod = method }
-                                .padding(vertical = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = method,
-                                color = if (isSelected) AccentGreen else TextSecondary,
                                 fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = FontWeight.Medium
+                            )
+                            Text(
+                                text = "অবশিষ্ট বকেয়া: ৳${remainDue.toInt()}",
+                                color = if (remainDue > 0) AccentOrange else AccentGreen,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                OutlinedTextField(
-                    value = note,
-                    onValueChange = { note = it },
-                    label = { Text(appStrings.noteRemarks, color = TextSecondary) },
-                    singleLine = true,
-                    textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = AccentGreen,
-                        unfocusedBorderColor = CardBorder,
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedLabelColor = AccentGreen,
-                        unfocusedLabelColor = TextSecondary,
-                        focusedPlaceholderColor = TextMuted,
-                        unfocusedPlaceholderColor = TextMuted,
-                        focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
-                        unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
-                        cursorColor = AccentGreen
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Button(
-                    onClick = {
-                        val cust = selectedCustomer ?: return@Button
-                        val amount = amountText.toDoubleOrNull() ?: 0.0
-                        if (amount > 0) {
-                            onCollect(cust.id, amount, selectedMethod, note)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(42.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
-                    enabled = selectedCustomer != null && (amountText.toDoubleOrNull() ?: 0.0) > 0
-                ) {
-                    Text(
-                        text = "${appStrings.confirmAndCollect} ৳${amountText.ifBlank { "0" }}",
-                        color = BgDark,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 13.5.sp
-                    )
-                }
-
-                if (selectedCustomer != null && onStatusChange != null) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    val isSuspended = selectedCustomer!!.status.equals(Customer.STATUS_SUSPENDED, ignoreCase = true)
-                    OutlinedButton(
-                        onClick = {
-                            val cust = selectedCustomer ?: return@OutlinedButton
-                            val targetStatus = if (isSuspended) Customer.STATUS_ACTIVE else Customer.STATUS_SUSPENDED
-                            onStatusChange(cust.id, targetStatus)
-                            val statusMsg = if (isSuspended) {
-                                "${cust.name.ifBlank { cust.pppoeUsername }} এর লাইন পুনরায় চালু করা হয়েছে"
-                            } else {
-                                "${cust.name.ifBlank { cust.pppoeUsername }} এর লাইন ডিসকানেক্ট / স্থগিত করা হয়েছে"
+                    if (selectedCustomer != null && selectedCustomer!!.dueAmount > selectedCustomer!!.monthlyBill && selectedCustomer!!.monthlyBill > 0) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(AccentCyan.copy(alpha = 0.15f))
+                                    .clickable {
+                                        val disc = discountText.toDoubleOrNull() ?: 0.0
+                                        amountText = (selectedCustomer!!.monthlyBill - disc).coerceAtLeast(0.0).toInt().toString()
+                                    }
+                                    .padding(vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "১ মাসের বিল (৳${selectedCustomer!!.monthlyBill.toInt()})",
+                                    color = AccentCyan,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
-                            Toast.makeText(context, statusMsg, Toast.LENGTH_SHORT).show()
-                            onDismiss()
+
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(AccentOrange.copy(alpha = 0.15f))
+                                    .clickable {
+                                        val disc = discountText.toDoubleOrNull() ?: 0.0
+                                        amountText = (selectedCustomer!!.dueAmount - disc).coerceAtLeast(0.0).toInt().toString()
+                                    }
+                                    .padding(vertical = 5.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "মোট বকেয়া (৳${selectedCustomer!!.dueAmount.toInt()})",
+                                    color = AccentOrange,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(appStrings.paymentMethod, color = TextSecondary, fontSize = 11.sp)
+                    Spacer(modifier = Modifier.height(5.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        paymentMethods.forEach { method ->
+                            val isSelected = selectedMethod == method
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(if (isSelected) AccentGreen.copy(alpha = 0.25f) else BgCardLight)
+                                    .clickable { selectedMethod = method }
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = method,
+                                    color = if (isSelected) AccentGreen else TextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        label = { Text(appStrings.noteRemarks, color = TextSecondary) },
+                        singleLine = true,
+                        textStyle = androidx.compose.ui.text.TextStyle(color = TextPrimary, fontSize = 13.5.sp),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = AccentGreen,
+                            unfocusedBorderColor = CardBorder,
+                            focusedTextColor = TextPrimary,
+                            unfocusedTextColor = TextPrimary,
+                            focusedLabelColor = AccentGreen,
+                            unfocusedLabelColor = TextSecondary,
+                            focusedPlaceholderColor = TextMuted,
+                            unfocusedPlaceholderColor = TextMuted,
+                            focusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.55f else 0.85f),
+                            unfocusedContainerColor = BgCardLight.copy(alpha = if (ThemeManager.currentTheme.isDark) 0.35f else 0.65f),
+                            cursorColor = AccentGreen
+                        )
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Button(
+                        onClick = {
+                            val cust = selectedCustomer ?: return@Button
+                            val amount = amountText.toDoubleOrNull() ?: 0.0
+                            val discount = discountText.toDoubleOrNull() ?: 0.0
+                            if (amount > 0 || discount > 0) {
+                                onCollect(cust.id, amount, discount, selectedMethod, note)
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp),
+                            .height(42.dp),
                         shape = RoundedCornerShape(10.dp),
-                        border = BorderStroke(1.dp, if (isSuspended) AccentGreen else AccentOrange),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = (if (isSuspended) AccentGreen else AccentOrange).copy(alpha = 0.12f)
-                        )
+                        colors = ButtonDefaults.buttonColors(containerColor = AccentGreen),
+                        enabled = selectedCustomer != null && ((amountText.toDoubleOrNull() ?: 0.0) + (discountText.toDoubleOrNull() ?: 0.0)) > 0
                     ) {
-                        Icon(
-                            imageVector = if (isSuspended) Icons.Default.CheckCircle else Icons.Default.PowerSettingsNew,
-                            contentDescription = null,
-                            tint = if (isSuspended) AccentGreen else AccentOrange,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        val amt = amountText.toDoubleOrNull() ?: 0.0
+                        val disc = discountText.toDoubleOrNull() ?: 0.0
+                        val btnText = if (disc > 0) {
+                            "${appStrings.confirmAndCollect} ৳${amt.toInt()} (ছাড়: ৳${disc.toInt()})"
+                        } else {
+                            "${appStrings.confirmAndCollect} ৳${amt.toInt()}"
+                        }
                         Text(
-                            text = if (isSuspended) "লাইন পুনরায় চালু করুন (Reconnect Line)" else "লাইন ডিসকানেক্ট / স্থগিত করুন (Disconnect Line)",
-                            color = if (isSuspended) AccentGreen else AccentOrange,
+                            text = btnText,
+                            color = BgDark,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 12.5.sp
+                            fontSize = 13.5.sp
                         )
                     }
                 }
             }
         }
-    }
     }
 }
 

@@ -262,14 +262,8 @@ fun MainScreen(
                 viewModel.showCollectPaymentDialog = false
                 viewModel.customerForPayment = null
             },
-            onCollect = { customerId, amount, method, note ->
-                viewModel.collectPayment(customerId, amount, method, note)
-            },
-            onStatusChange = { customerId, newStatus ->
-                val cust = allCustomers.find { it.id == customerId }
-                if (cust != null) {
-                    viewModel.updateCustomerStatus(cust, newStatus)
-                }
+            onCollect = { customerId, amount, discount, method, note ->
+                viewModel.collectPayment(customerId, amount, discount, method, note)
             }
         )
     }
@@ -492,6 +486,7 @@ fun MainScreen(
         PaymentReceiptPopup(
             customer = receiptData.customer,
             amount = receiptData.amount,
+            discount = receiptData.discount,
             method = receiptData.method,
             note = receiptData.note,
             ispSettings = ispSettings,

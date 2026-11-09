@@ -81,9 +81,13 @@ class BillingRepository(
         return paymentDao.getTotalCollectedBetween(startOfDay, endOfDay)
     }
 
+    fun getTotalDiscountForMonth(monthYear: String): Flow<Double?> =
+        paymentDao.getTotalDiscountForMonth(monthYear)
+
     suspend fun recordPayment(
         customerId: Long,
         amount: Double,
+        discount: Double = 0.0,
         method: String,
         note: String
     ) {
@@ -95,6 +99,7 @@ class BillingRepository(
             customerName = customer.name.ifBlank { customer.pppoeUsername },
             customerCode = customer.customerCode,
             amount = amount,
+            discount = discount,
             paymentMethod = method,
             dateMillis = System.currentTimeMillis(),
             monthYear = currentMonthYear,
@@ -102,8 +107,10 @@ class BillingRepository(
         )
         paymentDao.insertPayment(transaction)
 
+        val totalDeduction = amount + discount
+
         // 1. Deduct from customer total due amount
-        val newDue = (customer.dueAmount - amount).coerceAtLeast(0.0)
+        val newDue = (customer.dueAmount - totalDeduction).coerceAtLeast(0.0)
         customerDao.updateDue(customerId, newDue)
 
         // 2. Fetch all unpaid bills for this customer in chronological order (oldest first - FIFO)
@@ -111,7 +118,7 @@ class BillingRepository(
         val pastUnpaidBills = unpaidBills.filter { it.monthYear < currentMonthYear }
         val currentMonthBill = unpaidBills.firstOrNull { it.monthYear == currentMonthYear }
 
-        var remainingPayment = amount
+        var remainingPayment = totalDeduction
 
         // Step A: Pay past recorded bills first (oldest first)
         for (bill in pastUnpaidBills) {
@@ -165,14 +172,15 @@ class BillingRepository(
         paymentDao.deletePayment(payment)
 
         val customer = customerDao.getCustomerById(payment.customerId) ?: return
-        val restoredDue = customer.dueAmount + payment.amount
+        val totalToRestore = payment.amount + payment.discount
+        val restoredDue = customer.dueAmount + totalToRestore
         customerDao.updateDue(customer.id, restoredDue)
 
         // Reverse bill payments in LIFO order (newest paid bills first)
         val customerBills = billDao.getAllBillsForCustomer(payment.customerId)
             .sortedWith(compareByDescending<BillEntry> { it.monthYear }.thenByDescending { it.id })
 
-        var remainingToReverse = payment.amount
+        var remainingToReverse = totalToRestore
         for (bill in customerBills) {
             if (remainingToReverse <= 0.0) break
             if (bill.paidAmount > 0.0) {

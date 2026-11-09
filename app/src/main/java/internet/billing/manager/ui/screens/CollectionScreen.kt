@@ -43,8 +43,9 @@ fun CollectionScreen(
     val dynamicBandwidthBill by viewModel.monthlyBandwidthBill.collectAsState()
     val recentPayments by viewModel.recentPayments.collectAsState()
 
+    val totalDiscountThisMonth by viewModel.totalDiscountThisMonth.collectAsState()
     val bandwidthBill = if (dynamicBandwidthBill > 0.0) dynamicBandwidthBill else (ispSettings?.bandwidthBill ?: 0.0)
-    val discount = ispSettings?.discount ?: 0.0
+    val discount = totalDiscountThisMonth
     val previousDue = (totalDue - monthlyBill).coerceAtLeast(0.0)
     val otherExpenses = (outflow - dynamicBandwidthBill).coerceAtLeast(0.0)
     val monthlyProfit = (totalCollected - bandwidthBill - otherExpenses).coerceAtLeast(0.0)
@@ -478,12 +479,22 @@ fun CollectionScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(
-                                text = "+৳${tx.amount.toInt()}",
-                                color = AccentGreen,
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "+৳${tx.amount.toInt()}",
+                                    color = AccentGreen,
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (tx.discount > 0) {
+                                    Text(
+                                        text = "ছাড়: ৳${tx.discount.toInt()}",
+                                        color = AccentCyan,
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                            }
                             IconButton(
                                 onClick = { viewModel.paymentToDelete = tx },
                                 modifier = Modifier.size(28.dp)

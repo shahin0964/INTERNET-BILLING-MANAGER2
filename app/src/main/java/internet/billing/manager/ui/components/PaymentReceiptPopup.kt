@@ -35,6 +35,7 @@ import java.util.*
 fun PaymentReceiptPopup(
     customer: Customer,
     amount: Double,
+    discount: Double = 0.0,
     method: String,
     note: String,
     ispSettings: IspSettings?,
@@ -160,6 +161,14 @@ fun PaymentReceiptPopup(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 12.sp
                             )
+                            if (discount > 0) {
+                                Text(
+                                    text = "Discount / ছাড়: ৳ ${"%,.2f".format(discount)}",
+                                    color = Color(0xFF0D9488),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 10.5.sp
+                                )
+                            }
                             if (customer.phone.isNotBlank()) {
                                 Text(
                                     text = "Customer Phone: ${customer.phone}",

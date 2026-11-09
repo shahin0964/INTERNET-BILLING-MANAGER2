@@ -18,6 +18,10 @@ interface PaymentDao {
     @Query("SELECT SUM(amount) FROM payments WHERE monthYear = :monthYear")
     fun getTotalCollectedForMonth(monthYear: String): Flow<Double?>
 
+    @Query("SELECT SUM(discount) FROM payments WHERE monthYear = :monthYear")
+    fun getTotalDiscountForMonth(monthYear: String): Flow<Double?>
+
+
     @Query("SELECT SUM(amount) FROM payments WHERE dateMillis >= :startMillis AND dateMillis <= :endMillis")
     fun getTotalCollectedBetween(startMillis: Long, endMillis: Long): Flow<Double?>
 

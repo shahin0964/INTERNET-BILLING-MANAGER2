@@ -90,6 +90,11 @@ class BillingViewModel(
         repository.getTotalCollectedForMonth(key).map { it ?: 0.0 }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
+    val totalDiscountThisMonth: StateFlow<Double> = currentMonthYearKey.flatMapLatest { key ->
+        repository.getTotalDiscountForMonth(key).map { it ?: 0.0 }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
+
+
     val totalCollectedToday: StateFlow<Double> = repository.getTotalCollectedToday()
         .map { it ?: 0.0 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
@@ -328,9 +333,9 @@ class BillingViewModel(
         }
     }
 
-    fun collectPayment(customerId: Long, amount: Double, method: String, note: String) {
+    fun collectPayment(customerId: Long, amount: Double, discount: Double = 0.0, method: String, note: String) {
         viewModelScope.launch {
-            repository.recordPayment(customerId, amount, method, note)
+            repository.recordPayment(customerId, amount, discount, method, note)
             val updatedCust = repository.getCustomerById(customerId)
             // Trigger Auto SMS Receipt if enabled
             if (AutoSmsManager.isAutoSmsEnabled && AutoSmsManager.isAutoPaymentSmsEnabled) {
@@ -345,6 +350,7 @@ class BillingViewModel(
                 lastPaymentReceiptData = PaymentReceiptData(
                     customer = updatedCust,
                     amount = amount,
+                    discount = discount,
                     method = method,
                     note = note
                 )
@@ -546,6 +552,7 @@ class BillingViewModelFactory(
 data class PaymentReceiptData(
     val customer: Customer,
     val amount: Double,
+    val discount: Double = 0.0,
     val method: String,
     val note: String,
     val timestamp: Long = System.currentTimeMillis()

@@ -301,6 +301,14 @@ fun DailyBillEntryScreen(
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold
                                     )
+                                    if (entry.discount > 0) {
+                                        Text(
+                                            text = "ছাড়: ৳${entry.discount.toInt()}",
+                                            color = AccentCyan,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.height(2.dp))
                                     PaymentStatusBadge(isPaid = true)
                                 }

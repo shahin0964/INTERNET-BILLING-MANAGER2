@@ -11,6 +11,7 @@ data class PaymentTransaction(
     val customerName: String,
     val customerCode: String,
     val amount: Double,
+    val discount: Double = 0.0,
     val paymentMethod: String = "Cash", // Cash, bKash, Nagad, Bank
     val dateMillis: Long = System.currentTimeMillis(),
     val monthYear: String = "", // e.g. "2026-10"
