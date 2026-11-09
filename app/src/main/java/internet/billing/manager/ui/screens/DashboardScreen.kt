@@ -75,16 +75,13 @@ fun DashboardScreen(
     val recentPayments by viewModel.recentPayments.collectAsState()
     val monthDisplay by viewModel.currentMonthYearDisplay.collectAsState()
 
-    val monthlyBills by viewModel.monthlyBills.collectAsState()
-    val generatedBillsSum = remember(monthlyBills) { monthlyBills.sumOf { it.billAmount } }
-
     val shortTodayStr = remember {
         SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date())
     }
 
-    // Billing Analytics Calculations - Show only monthly generated bill
-    val totalGenerated = if (generatedBillsSum > 0) generatedBillsSum else monthlyBill
-    val collectedPercent = if (totalGenerated > 0) ((monthlyCollection / totalGenerated) * 100).toInt().coerceIn(0, 100) else 0
+    // Billing Analytics Calculations
+    val totalPayable = totalDue + monthlyCollection
+    val collectedPercent = if (totalPayable > 0) ((monthlyCollection / totalPayable) * 100).toInt().coerceIn(0, 100) else 0
     val outstandingPercent = (100 - collectedPercent).coerceIn(0, 100)
 
     LazyColumn(
@@ -380,9 +377,8 @@ fun DashboardScreen(
         // 5. Modern Animated Billing Analytics Card
         item {
             ModernBillingAnalyticsCard(
-                totalGenerated = totalGenerated,
-                monthlyCollection = monthlyCollection,
                 totalDue = totalDue,
+                monthlyCollection = monthlyCollection,
                 collectedPercent = collectedPercent,
                 outstandingPercent = outstandingPercent,
                 onNavigateToBilling = onNavigateToBilling
@@ -512,15 +508,14 @@ fun DashboardScreen(
 
 @Composable
 fun ModernBillingAnalyticsCard(
-    totalGenerated: Double,
-    monthlyCollection: Double,
     totalDue: Double,
+    monthlyCollection: Double,
     collectedPercent: Int,
     outstandingPercent: Int,
     onNavigateToBilling: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val progressFraction = if (totalGenerated > 0) (collectedPercent / 100f) else 0f
+    val progressFraction = (collectedPercent / 100f).coerceIn(0f, 1f)
 
     // Outer Card with Cyber Neon Glow Border and Deep Space Navy Glass Background
     Box(
@@ -715,14 +710,14 @@ fun ModernBillingAnalyticsCard(
 
                     Column {
                         Text(
-                            text = appStrings.totalGenerated,
+                            text = appStrings.totalDueAmount,
                             color = Color(0xFF90A4AE),
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.height(1.dp))
                         Text(
-                            text = "৳${formatAmount(totalGenerated)}",
+                            text = "৳${formatAmount(totalDue)}",
                             color = Color.White,
                             fontSize = 19.sp,
                             fontWeight = FontWeight.Black,
