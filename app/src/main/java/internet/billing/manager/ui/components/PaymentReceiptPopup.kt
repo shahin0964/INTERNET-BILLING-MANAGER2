@@ -200,6 +200,11 @@ fun PaymentReceiptPopup(
                                     customerName = customer.name.ifBlank { customer.pppoeUsername },
                                     amount = amount
                                 )
+                                Toast.makeText(
+                                    context,
+                                    if (isBangla) "WhatsApp এ কাস্টমার সিলেক্ট করে রসিদ পাঠান" else "Select customer in WhatsApp to send receipt",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                                 onDismiss()
                             } catch (e: Exception) {
                                 e.printStackTrace()
@@ -225,6 +230,40 @@ fun PaymentReceiptPopup(
                             fontWeight = FontWeight.Bold,
                             fontSize = 13.5.sp
                         )
+                    }
+
+                    if (customer.phone.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedButton(
+                            onClick = {
+                                val caption = "প্রিয় ${customer.name.ifBlank { customer.pppoeUsername }}, আপনার ৳${amount.toInt()} টাকা বিল পরিশোধের মানি রসিদ পাঠানো হলো। ধন্যবাদ।"
+                                ReceiptBitmapGenerator.openDirectWhatsAppChat(
+                                    context = context,
+                                    phone = customer.phone,
+                                    message = caption
+                                )
+                                onDismiss()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFF25D366)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Chat,
+                                contentDescription = null,
+                                tint = Color(0xFF25D366),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isBangla) "সরাসরি WhatsApp চ্যাট খুলুন (${customer.phone})" else "Direct WhatsApp Chat (${customer.phone})",
+                                color = Color(0xFF25D366),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 12.sp
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))

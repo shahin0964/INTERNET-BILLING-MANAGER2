@@ -1,5 +1,6 @@
 package internet.billing.manager.util
 
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
@@ -393,12 +394,16 @@ object ReceiptBitmapGenerator {
     }
 
     fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri {
-        val cachePath = File(context.cacheDir, "receipts")
-        cachePath.mkdirs()
+        val cacheDir = context.externalCacheDir ?: context.cacheDir
+        val cachePath = File(cacheDir, "receipts")
+        if (!cachePath.exists()) {
+            cachePath.mkdirs()
+        }
         val file = File(cachePath, "Money_Receipt_${System.currentTimeMillis()}.png")
         FileOutputStream(file).use { out ->
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
         }
+        file.setReadable(true, false)
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
@@ -409,6 +414,74 @@ object ReceiptBitmapGenerator {
         customerName: String,
         amount: Double
     ) {
+        val caption = "প্রিয় $customerName, আপনার ৳${amount.toInt()} টাকা বিল পরিশোধের মানি রসিদ পাঠানো হলো। ধন্যবাদ।"
+
+        // Check installed WhatsApp variants
+        val pm = context.packageManager
+        val isWhatsAppInstalled = try {
+            pm.getPackageInfo("com.whatsapp", 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+        val isWhatsAppBusinessInstalled = try {
+            pm.getPackageInfo("com.whatsapp.w4b", 0)
+            true
+        } catch (_: Exception) {
+            false
+        }
+
+        val targetPackage = when {
+            isWhatsAppInstalled -> "com.whatsapp"
+            isWhatsAppBusinessInstalled -> "com.whatsapp.w4b"
+            else -> null
+        }
+
+        // Grant explicit URI read permission to WhatsApp and WhatsApp Business
+        listOf("com.whatsapp", "com.whatsapp.w4b").forEach { pkg ->
+            try {
+                context.grantUriPermission(pkg, imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            } catch (_: Exception) {}
+        }
+
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, imageUri)
+            clipData = ClipData.newRawUri("Money Receipt", imageUri)
+            putExtra(Intent.EXTRA_TEXT, caption)
+            if (targetPackage != null) {
+                setPackage(targetPackage)
+            }
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            try {
+                val chooserIntent = Intent(Intent.ACTION_SEND).apply {
+                    type = "image/png"
+                    putExtra(Intent.EXTRA_STREAM, imageUri)
+                    clipData = ClipData.newRawUri("Money Receipt", imageUri)
+                    putExtra(Intent.EXTRA_TEXT, caption)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                context.startActivity(Intent.createChooser(chooserIntent, "Share Receipt").apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            } catch (ex: Exception) {
+                Toast.makeText(context, "WhatsApp এ শেয়ার করা সম্ভব হয়নি: ${ex.message}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun openDirectWhatsAppChat(
+        context: Context,
+        phone: String,
+        message: String = ""
+    ) {
         val cleanPhone = phone.replace(Regex("[^0-9]"), "")
         val targetPhone = when {
             cleanPhone.startsWith("880") -> cleanPhone
@@ -416,48 +489,30 @@ object ReceiptBitmapGenerator {
             cleanPhone.length == 10 -> "880$cleanPhone"
             else -> cleanPhone
         }
+        if (targetPhone.isBlank()) {
+            Toast.makeText(context, "সঠিক মোবাইল নম্বর পাওয়া যায়নি", Toast.LENGTH_SHORT).show()
+            return
+        }
 
-        val caption = "প্রিয় $customerName, আপনার ৳${amount.toInt()} টাকা বিল পরিশোধের মানি রসিদ পাঠানো হলো। ধন্যবাদ।"
-
-        // Try direct intent targeting WhatsApp
-        try {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "image/png"
-                putExtra(Intent.EXTRA_STREAM, imageUri)
-                putExtra(Intent.EXTRA_TEXT, caption)
-                if (targetPhone.isNotBlank()) {
-                    putExtra("jid", "$targetPhone@s.whatsapp.net")
+        val url = "https://api.whatsapp.com/send?phone=$targetPhone&text=${Uri.encode(message)}"
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            try {
+                if (context.packageManager.getPackageInfo("com.whatsapp", 0) != null) {
+                    setPackage("com.whatsapp")
                 }
-                setPackage("com.whatsapp")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
+            } catch (_: Exception) {}
+        }
+        try {
             context.startActivity(intent)
         } catch (e: Exception) {
-            // Try WhatsApp Business fallback
             try {
-                val wbIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/png"
-                    putExtra(Intent.EXTRA_STREAM, imageUri)
-                    putExtra(Intent.EXTRA_TEXT, caption)
-                    if (targetPhone.isNotBlank()) {
-                        putExtra("jid", "$targetPhone@s.whatsapp.net")
-                    }
-                    setPackage("com.whatsapp.w4b")
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val fallbackIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                context.startActivity(wbIntent)
-            } catch (e2: Exception) {
-                // Fallback to generic share chooser
-                val chooserIntent = Intent(Intent.ACTION_SEND).apply {
-                    type = "image/png"
-                    putExtra(Intent.EXTRA_STREAM, imageUri)
-                    putExtra(Intent.EXTRA_TEXT, caption)
-                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(Intent.createChooser(chooserIntent, "Share Receipt via WhatsApp"))
+                context.startActivity(fallbackIntent)
+            } catch (ex: Exception) {
+                Toast.makeText(context, "WhatsApp ওপেন করা যাচ্ছে না: ${ex.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
