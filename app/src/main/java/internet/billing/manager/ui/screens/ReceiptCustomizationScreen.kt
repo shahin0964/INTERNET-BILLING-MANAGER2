@@ -30,6 +30,8 @@ import internet.billing.manager.ui.localization.LanguageManager
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.util.ReceiptCustomizationManager
 import internet.billing.manager.util.ReceiptCustomizationSettings
+import java.text.SimpleDateFormat
+import java.util.*
 
 @Composable
 fun ReceiptCustomizationScreen(
