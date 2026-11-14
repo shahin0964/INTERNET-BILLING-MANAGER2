@@ -5,6 +5,8 @@ import android.content.SharedPreferences
 
 data class ReceiptCustomizationSettings(
     val autoReceiptPopupEnabled: Boolean = true,
+    val companyName: String = "",
+    val companyTagline: String = "",
     val receiptTitle: String = "পেমেন্ট রসিদ (PAYMENT RECEIPT)",
     val footerNote: String = "আমাদের ইন্টারনেট সেবা ব্যবহার করার জন্য আপনাকে ধন্যবাদ",
     val specialNotes: String = "যেকোনো সেবা বা বিল সংক্রান্ত তথ্যের জন্য আমাদের হটলাইনে যোগাযোগ করুন।",
@@ -25,6 +27,8 @@ object ReceiptCustomizationManager {
     private const val PREFS_NAME = "ibm_receipt_customization_prefs"
 
     private const val KEY_AUTO_POPUP = "key_auto_receipt_popup"
+    private const val KEY_COMPANY_NAME = "key_company_name"
+    private const val KEY_COMPANY_TAGLINE = "key_company_tagline"
     private const val KEY_RECEIPT_TITLE = "key_receipt_title"
     private const val KEY_FOOTER_NOTE = "key_footer_note"
     private const val KEY_SPECIAL_NOTES = "key_special_notes"
@@ -52,6 +56,8 @@ object ReceiptCustomizationManager {
         val prefs = getPrefs(context)
         return ReceiptCustomizationSettings(
             autoReceiptPopupEnabled = prefs.getBoolean(KEY_AUTO_POPUP, true),
+            companyName = prefs.getString(KEY_COMPANY_NAME, "") ?: "",
+            companyTagline = prefs.getString(KEY_COMPANY_TAGLINE, "") ?: "",
             receiptTitle = prefs.getString(KEY_RECEIPT_TITLE, "পেমেন্ট রসিদ (PAYMENT RECEIPT)") ?: "পেমেন্ট রসিদ (PAYMENT RECEIPT)",
             footerNote = prefs.getString(KEY_FOOTER_NOTE, "আমাদের ইন্টারনেট সেবা ব্যবহার করার জন্য আপনাকে ধন্যবাদ") ?: "আমাদের ইন্টারনেট সেবা ব্যবহার করার জন্য আপনাকে ধন্যবাদ",
             specialNotes = prefs.getString(KEY_SPECIAL_NOTES, "যেকোনো সেবা বা বিল সংক্রান্ত তথ্যের জন্য আমাদের হটলাইনে যোগাযোগ করুন।") ?: "যেকোনো সেবা বা বিল সংক্রান্ত তথ্যের জন্য আমাদের হটলাইনে যোগাযোগ করুন।",
@@ -72,6 +78,8 @@ object ReceiptCustomizationManager {
     fun saveSettings(context: Context, settings: ReceiptCustomizationSettings) {
         getPrefs(context).edit().apply {
             putBoolean(KEY_AUTO_POPUP, settings.autoReceiptPopupEnabled)
+            putString(KEY_COMPANY_NAME, settings.companyName)
+            putString(KEY_COMPANY_TAGLINE, settings.companyTagline)
             putString(KEY_RECEIPT_TITLE, settings.receiptTitle)
             putString(KEY_FOOTER_NOTE, settings.footerNote)
             putString(KEY_SPECIAL_NOTES, settings.specialNotes)

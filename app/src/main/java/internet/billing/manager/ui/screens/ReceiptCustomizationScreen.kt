@@ -351,6 +351,48 @@ fun ReceiptCustomizationScreen(
 
                         Spacer(modifier = Modifier.height(12.dp))
 
+                        // Company Name
+                        Text(
+                            text = if (isBangla) "কোম্পানি বা নেটওয়ার্কের নাম (Company / ISP Name)" else "Company / ISP Name",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = settings.companyName,
+                            onValueChange = { settings = settings.copy(companyName = it) },
+                            placeholder = {
+                                val hint = ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) }
+                                    ?: if (isBangla) "কোম্পানির নাম লিখুন (ডিফল্ট: সেটিংসের নাম)" else "Enter company name (default: Settings)"
+                                Text(hint, color = TextMuted)
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = dialogTextFieldColors,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Company Tagline
+                        Text(
+                            text = if (isBangla) "ট্যাগলাইন বা স্লোগান (Tagline)" else "Tagline",
+                            color = TextSecondary,
+                            fontSize = 11.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = settings.companyTagline,
+                            onValueChange = { settings = settings.copy(companyTagline = it) },
+                            placeholder = { Text("FAST • STABLE • CONNECTED", color = TextMuted) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = dialogTextFieldColors,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         // Receipt Title
                         Text(
                             text = if (isBangla) "রসিদের শিরোনাম (Receipt Title / Header)" else "Receipt Title / Header",
@@ -671,6 +713,15 @@ fun ReceiptCustomizationScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     modifier = Modifier.weight(1.1f)
                                 ) {
+                                    val effectiveCompanyName = settings.companyName.ifBlank {
+                                        ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) }
+                                            ?: if (isBangla) "কোম্পানির নাম" else "Company Name"
+                                    }
+                                    val effectiveTagline = settings.companyTagline.ifBlank {
+                                        ispSettings?.tagline?.ifBlank { "FAST • STABLE • CONNECTED" } ?: "FAST • STABLE • CONNECTED"
+                                    }
+                                    val logoAcronym = effectiveCompanyName.split(" ").filter { it.isNotBlank() }.take(3).map { it.first() }.joinToString("").uppercase().ifBlank { "ISP" }
+
                                     Box(
                                         modifier = Modifier
                                             .size(28.dp)
@@ -678,18 +729,18 @@ fun ReceiptCustomizationScreen(
                                             .background(Color(0xFF0284C7)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("ISP", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                                        Text(logoAcronym.take(4), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                     }
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Column {
                                         Text(
-                                            text = ispSettings?.companyName?.ifBlank { if (isBangla) "কোম্পানির নাম" else "Company Name" } ?: if (isBangla) "কোম্পানির নাম" else "Company Name",
+                                            text = effectiveCompanyName,
                                             color = Color(0xFF0F172A),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "FAST • STABLE • CONNECTED",
+                                            text = effectiveTagline,
                                             color = Color(0xFF0284C7),
                                             fontSize = 7.5.sp,
                                             fontWeight = FontWeight.Bold

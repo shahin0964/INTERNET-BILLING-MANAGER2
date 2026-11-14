@@ -41,7 +41,13 @@ object ReceiptBitmapGenerator {
         canvas.drawColor(Color.WHITE)
 
         // 2. Company Info & Metadata
-        val companyName = ispSettings?.companyName?.ifBlank { "ISP Billing" } ?: "ISP Billing"
+        val companyName = receiptSettings.companyName.ifBlank {
+            ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) }
+                ?: "Internet Service Provider"
+        }
+        val tagline = receiptSettings.companyTagline.ifBlank {
+            ispSettings?.tagline?.ifBlank { "FAST • STABLE • CONNECTED" } ?: "FAST • STABLE • CONNECTED"
+        }
         val hotline = ispSettings?.phone.orEmpty()
         val email = ispSettings?.email.orEmpty()
         val address = ispSettings?.address.orEmpty()
@@ -58,14 +64,15 @@ object ReceiptBitmapGenerator {
         val circleR = 30f
         canvas.drawCircle(circleX, circleY, circleR, circlePaint)
 
+        val logoAcronym = companyName.split(" ").filter { it.isNotBlank() }.take(3).map { it.first() }.joinToString("").uppercase().ifBlank { "ISP" }
         val ispTextPaint = Paint().apply {
             color = Color.WHITE
-            textSize = 17f
+            textSize = if (logoAcronym.length > 3) 14f else 17f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
-        canvas.drawText("ISP", circleX, circleY + 6f, ispTextPaint)
+        canvas.drawText(logoAcronym.take(4), circleX, circleY + 6f, ispTextPaint)
 
         // Company Name & Tagline
         val companyPaint = Paint().apply {
@@ -82,7 +89,6 @@ object ReceiptBitmapGenerator {
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
-        val tagline = "FAST • STABLE • CONNECTED"
         canvas.drawText(tagline, 118f, 96f, taglinePaint)
 
         // Top Center: MONEY RECEIPT

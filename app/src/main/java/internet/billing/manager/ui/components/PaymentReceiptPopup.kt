@@ -118,6 +118,15 @@ fun PaymentReceiptPopup(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
+                                    val effectiveCompanyName = receiptSettings.companyName.ifBlank {
+                                        ispSettings?.companyName?.takeIf { it.isNotBlank() && !it.equals("U-turn Technologies", ignoreCase = true) }
+                                            ?: if (isBangla) "কোম্পানির নাম" else "Company Name"
+                                    }
+                                    val effectiveTagline = receiptSettings.companyTagline.ifBlank {
+                                        ispSettings?.tagline?.ifBlank { "FAST • STABLE • CONNECTED" } ?: "FAST • STABLE • CONNECTED"
+                                    }
+                                    val logoAcronym = effectiveCompanyName.split(" ").filter { it.isNotBlank() }.take(3).map { it.first() }.joinToString("").uppercase().ifBlank { "ISP" }
+
                                     Box(
                                         modifier = Modifier
                                             .size(24.dp)
@@ -125,18 +134,18 @@ fun PaymentReceiptPopup(
                                             .background(Color(0xFF0284C7)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        Text("ISP", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Text(logoAcronym.take(4), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
                                     }
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Column {
                                         Text(
-                                            text = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies",
+                                            text = effectiveCompanyName,
                                             color = Color(0xFF0F172A),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 12.sp
                                         )
                                         Text(
-                                            text = "FAST • STABLE • CONNECTED",
+                                            text = effectiveTagline,
                                             color = Color(0xFF0284C7),
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 8.sp
