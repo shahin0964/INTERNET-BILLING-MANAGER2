@@ -658,186 +658,248 @@ fun ReceiptCustomizationScreen(
                                 .fillMaxWidth()
                                 .padding(14.dp)
                         ) {
-                            // Header: ISP Details + Mobile Banking Box
+                            // 1. Header: ISP Brand (Left), MONEY RECEIPT (Center), Mobile Banking (Right)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = ispSettings?.companyName?.ifBlank { "HR_INTERNET" } ?: "HR_INTERNET",
-                                        color = Color(0xFF0F172A),
-                                        fontSize = 15.sp,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "Hotline: ${ispSettings?.phone?.ifBlank { "01725208629" } ?: "01725208629"}",
-                                        color = Color(0xFF475569),
-                                        fontSize = 9.5.sp
-                                    )
-                                    Text(
-                                        text = "Address: ${ispSettings?.address?.ifBlank { "Mirpur, Dhaka" } ?: "Mirpur, Dhaka"}",
-                                        color = Color(0xFF64748B),
-                                        fontSize = 9.sp
-                                    )
-                                }
-
-                                if (settings.showMobileBanking) {
-                                    val num = settings.bkashNumber.ifBlank { settings.nagadNumber.ifBlank { "01725208629" } }
+                                // Left: Logo + Company + Tagline
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1.1f)
+                                ) {
                                     Box(
                                         modifier = Modifier
-                                            .clip(RoundedCornerShape(6.dp))
-                                            .border(BorderStroke(1.2.dp, Color(0xFFE11D48)), RoundedCornerShape(6.dp))
-                                            .background(Color(0xFFFFF1F2))
-                                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                                            .size(28.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF0284C7)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("ISP", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column {
+                                        Text(
+                                            text = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies",
+                                            color = Color(0xFF0F172A),
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "FAST • STABLE • CONNECTED",
+                                            color = Color(0xFF0284C7),
+                                            fontSize = 7.5.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                // Center: MONEY RECEIPT
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.weight(0.9f)
+                                ) {
+                                    Row {
+                                        Text("MONEY ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Text("RECEIPT", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    }
+                                    Text("Thank you for being with us!", color = Color(0xFF64748B), fontSize = 7.sp)
+                                }
+
+                                // Right: Mobile Banking Box
+                                if (settings.showMobileBanking) {
+                                    val num = settings.bkashNumber.ifBlank { settings.nagadNumber.ifBlank { ispSettings?.phone.orEmpty().ifBlank { "01708732389" } } }
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .border(BorderStroke(1.2.dp, Color(0xFFE11D48)), RoundedCornerShape(8.dp))
+                                            .background(Color.White)
+                                            .padding(horizontal = 6.dp, vertical = 3.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
-                                                text = "bKash / Nagad",
-                                                color = Color(0xFFBE123C),
+                                                text = "bKash Mobile Banking",
+                                                color = Color(0xFFE11D48),
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 9.sp
+                                                fontSize = 7.5.sp
                                             )
                                             Text(
                                                 text = num,
                                                 color = Color(0xFF881337),
                                                 fontWeight = FontWeight.Bold,
-                                                fontSize = 10.sp
+                                                fontSize = 9.sp
                                             )
                                         }
                                     }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            // Pill Title: MONEY RECEIPT
+                            // 2. Contact Capsule Bar
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .border(BorderStroke(1.dp, Color(0xFF0284C7)), RoundedCornerShape(12.dp))
-                                    .background(Color(0xFFF0F9FF))
-                                    .padding(vertical = 4.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = settings.receiptTitle.ifBlank { "MONEY RECEIPT (মানি রসিদ)" },
-                                    color = Color(0xFF0369A1),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Divider(color = Color(0xFFCBD5E1), thickness = 0.8.dp)
-
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            // Demo Content Details
-                            Text(
-                                text = "Received with thanks from: ariful_net (Md. Ariful Islam)",
-                                color = Color(0xFF0F172A),
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 11.5.sp
-                            )
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text(
-                                text = "Amount: ৳ 1,500.00",
-                                color = Color(0xFF0284C7),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "In word: One Thousand Five Hundred Taka Only",
-                                color = Color(0xFF475569),
-                                fontSize = 10.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            // Grid Info Row
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Color(0xFFF8FAFC))
+                                    .background(Color(0xFFF1F5F9))
                                     .border(BorderStroke(0.8.dp, Color(0xFFE2E8F0)), RoundedCornerShape(6.dp))
-                                    .padding(6.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
-                                Column {
-                                    if (settings.showUsername) Text("PPPoE: ariful_net", color = Color(0xFF334155), fontSize = 9.5.sp)
-                                    if (settings.showPackage) Text("Package: 20 Mbps Fast", color = Color(0xFF334155), fontSize = 9.5.sp)
-                                    if (settings.showPhone) Text("Phone: 01712345678", color = Color(0xFF334155), fontSize = 9.5.sp)
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    if (settings.showPaymentMethod) Text("Method: Cash", color = Color(0xFF334155), fontSize = 9.5.sp)
-                                    Text("Paid: ৳ 1,500.00", color = Color(0xFF16A34A), fontWeight = FontWeight.Bold, fontSize = 9.5.sp)
-                                    if (settings.showRemainingDue) Text("Due: ৳ 0.00", color = Color(0xFF16A34A), fontWeight = FontWeight.Bold, fontSize = 9.5.sp)
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("☎ Hotline: ${ispSettings?.phone?.ifBlank { "01708732389" } ?: "01708732389"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
+                                    Text("✉ Email: ${ispSettings?.email?.ifBlank { "md.shahin0962@gmail.com" } ?: "md.shahin0962@gmail.com"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
+                                    Text("📍 Address: ${ispSettings?.address?.ifBlank { "Main Office" } ?: "Main Office"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                            if (settings.footerNote.isNotBlank()) {
-                                Text(
-                                    text = settings.footerNote,
-                                    color = Color(0xFF047857),
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
+                            // 3. Voucher Cheque Fields (Dashed Underlines)
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                // Row 1: Received with thanks from
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Received with thanks from: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                    Text("ar_rakib343/5/a-4m-fiber", color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 9.sp)
+                                }
+                                Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
+
+                                // Row 2: Amount
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Amount: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                    Text("৳ 500.00", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.5.sp)
+                                }
+                                Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
+
+                                // Row 3: In word
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("In word: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                    Text("Five Hundred Taka Only", color = Color(0xFF475569), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 8.5.sp)
+                                }
+                                Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
+
+                                // Row 4: For & Branch
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row {
+                                        Text("For: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Text("Sep 2026", color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
+                                    }
+                                    Row {
+                                        Text("Branch: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Text("Main Branch", color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
+                                    }
+                                }
+                                Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
+
+                                // Row 5: ACCT, PAID, DUE
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row {
+                                        Text("ACCT. ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        Text("U034", color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 8.5.sp)
+                                    }
+                                    Row {
+                                        Text("PAID ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        Text("৳ 500.00", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                    }
+                                    Row {
+                                        Text("DUE ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        Text("৳ 0.00", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                    }
+                                }
+                                Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                            // Signature Row
+                            // 4. Lower Section: Amount Box (Left) and Signatures (Right)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.Bottom
                             ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(90.dp))
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text("Received by", color = Color(0xFF64748B), fontSize = 8.5.sp)
+                                // Amount = [ ৳ 500.00 ] box
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(0xFFE0F2FE))
+                                        .border(BorderStroke(1.2.dp, Color(0xFF38BDF8)), RoundedCornerShape(8.dp))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("Amount = ", color = Color(0xFF0369A1), fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(4.dp))
+                                                .background(Color.White)
+                                                .border(BorderStroke(0.8.dp, Color(0xFFBAE6FD)), RoundedCornerShape(4.dp))
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text("৳ 500.00", color = Color(0xFF0F172A), fontWeight = FontWeight.Black, fontSize = 11.sp)
+                                        }
+                                    }
                                 }
 
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text(
-                                        text = settings.signatureName.ifBlank { "Authority" },
-                                        color = Color(0xFF0F172A),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 8.5.sp
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(110.dp))
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text("Authorized Signature", color = Color(0xFF64748B), fontSize = 8.5.sp)
+                                // Signatures (Received by & Authorized Signature)
+                                Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.Bottom) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(60.dp))
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text("Received by", color = Color(0xFF64748B), fontSize = 7.5.sp, fontWeight = FontWeight.Bold)
+                                    }
+
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Text(
+                                            text = settings.signatureName.ifBlank { "Authority" },
+                                            color = Color(0xFF0F172A),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 8.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Divider(color = Color(0xFF94A3B8), thickness = 1.dp, modifier = Modifier.width(80.dp))
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text("Authorized Signature", color = Color(0xFF64748B), fontSize = 7.5.sp, fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Corporate Motto Ribbon
+                            // 5. Corporate Motto Ribbon
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(Color(0xFF0F172A))
-                                    .padding(vertical = 3.dp),
-                                contentAlignment = Alignment.Center
+                                    .background(Color(0xFF1E1B4B))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
-                                Text(
-                                    text = settings.corporateMotto,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "⚡ ${settings.corporateMotto.ifBlank { "Stay Connected, Stay Ahead" }}",
+                                        color = Color.White,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 8.sp
+                                    )
+                                    Text(
+                                        text = "Receipt #: PAY-847915 • Sep 2026",
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        fontSize = 7.5.sp
+                                    )
+                                }
                             }
                         }
                     }

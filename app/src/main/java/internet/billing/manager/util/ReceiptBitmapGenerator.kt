@@ -28,367 +28,373 @@ object ReceiptBitmapGenerator {
         method: String,
         monthYear: String,
         totalDueRemaining: Double,
+        discount: Double = 0.0,
         dateMillis: Long = System.currentTimeMillis()
     ): Bitmap {
-        val width = 900
-        val height = 1250
+        val width = 1200
+        val height = 750
 
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        // 1. Background
-        val bgPaint = Paint().apply {
-            color = Color.WHITE
+        // 1. Background (Pure Crisp White)
+        canvas.drawColor(Color.WHITE)
+
+        // 2. Company Info & Metadata
+        val companyName = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies"
+        val hotline = ispSettings?.phone?.ifBlank { "01708732389" } ?: "01708732389"
+        val email = ispSettings?.email?.ifBlank { "md.shahin0962@gmail.com" } ?: "md.shahin0962@gmail.com"
+        val address = ispSettings?.address?.ifBlank { "Main Office" } ?: "Main Office"
+        val motto = receiptSettings.corporateMotto.ifBlank { "Stay Connected, Stay Ahead" }
+
+        // Top Left: ISP Circular Logo
+        val circlePaint = Paint().apply {
+            color = Color.parseColor("#0284C7") // Sky Blue
             style = Paint.Style.FILL
+            isAntiAlias = true
         }
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
+        val circleX = 75f
+        val circleY = 78f
+        val circleR = 30f
+        canvas.drawCircle(circleX, circleY, circleR, circlePaint)
 
-        // Outer Border
-        val borderPaint = Paint().apply {
-            color = Color.parseColor("#0284C7") // Cyan/Blue border
-            style = Paint.Style.STROKE
-            strokeWidth = 6f
+        val ispTextPaint = Paint().apply {
+            color = Color.WHITE
+            textSize = 17f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
-        canvas.drawRect(12f, 12f, width - 12f, height - 12f, borderPaint)
+        canvas.drawText("ISP", circleX, circleY + 6f, ispTextPaint)
 
-        // Inner Border
-        val innerBorderPaint = Paint().apply {
-            color = Color.parseColor("#E2E8F0")
-            style = Paint.Style.STROKE
-            strokeWidth = 2f
-        }
-        canvas.drawRect(20f, 20f, width - 20f, height - 20f, innerBorderPaint)
-
-        // 2. Header Section
-        val companyName = ispSettings?.companyName?.ifBlank { "INTERNET SERVICE PROVIDER" } ?: "INTERNET SERVICE PROVIDER"
-        val hotline = ispSettings?.phone ?: ""
-        val email = ispSettings?.email ?: ""
-        val address = ispSettings?.address ?: ""
-
-        val titlePaint = Paint().apply {
-            color = Color.parseColor("#0F172A") // Slate 900
-            textSize = 30f
+        // Company Name & Tagline
+        val companyPaint = Paint().apply {
+            color = Color.parseColor("#0F172A") // Deep Slate
+            textSize = 24f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
-        canvas.drawText(companyName, 40f, 65f, titlePaint)
+        canvas.drawText(companyName, 118f, 72f, companyPaint)
 
-        val subHeaderPaint = Paint().apply {
-            color = Color.parseColor("#475569")
-            textSize = 15f
+        val taglinePaint = Paint().apply {
+            color = Color.parseColor("#0284C7")
+            textSize = 11.5f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
+        val tagline = "FAST • STABLE • CONNECTED"
+        canvas.drawText(tagline, 118f, 96f, taglinePaint)
 
-        var headerY = 90f
-        if (hotline.isNotBlank()) {
-            canvas.drawText("Hotline: $hotline", 40f, headerY, subHeaderPaint)
-            headerY += 22f
+        // Top Center: MONEY RECEIPT
+        val moneyPaint = Paint().apply {
+            color = Color.parseColor("#0F172A")
+            textSize = 23f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
-        if (email.isNotBlank()) {
-            canvas.drawText("Email: $email", 40f, headerY, subHeaderPaint)
-            headerY += 22f
+        val receiptWordPaint = Paint().apply {
+            color = Color.parseColor("#0D9488") // Teal
+            textSize = 23f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
-        if (address.isNotBlank()) {
-            canvas.drawText("Address: $address", 40f, headerY, subHeaderPaint)
-            headerY += 22f
+        val thanksPaint = Paint().apply {
+            color = Color.parseColor("#64748B")
+            textSize = 12.5f
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
+        canvas.drawText("MONEY", 600f, 58f, moneyPaint)
+        canvas.drawText("RECEIPT", 600f, 85f, receiptWordPaint)
+        canvas.drawText("Thank you for being with us!", 600f, 108f, thanksPaint)
 
-        // 3. Mobile Banking Box (Top Right)
-        if (receiptSettings.showMobileBanking && (receiptSettings.bkashNumber.isNotBlank() || receiptSettings.nagadNumber.isNotBlank())) {
-            val mbBoxPaint = Paint().apply {
-                color = Color.parseColor("#FFF1F2") // Light Rose
-                style = Paint.Style.FILL
-            }
-            val mbBorderPaint = Paint().apply {
-                color = Color.parseColor("#E11D48") // Rose 600
-                style = Paint.Style.STROKE
-                strokeWidth = 2.5f
-            }
-            val mbRect = RectF(width - 320f, 35f, width - 40f, 130f)
-            canvas.drawRoundRect(mbRect, 12f, 12f, mbBoxPaint)
-            canvas.drawRoundRect(mbRect, 12f, 12f, mbBorderPaint)
-
-            val mbTitlePaint = Paint().apply {
-                color = Color.parseColor("#BE123C")
-                textSize = 14f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                isAntiAlias = true
-            }
-            canvas.drawText("Mobile Banking (বিকাশ / নগদ)", mbRect.centerX(), 62f, mbTitlePaint)
-
-            val mbNumPaint = Paint().apply {
-                color = Color.parseColor("#881337")
-                textSize = 17f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                isAntiAlias = true
-            }
-            val numberText = receiptSettings.bkashNumber.ifBlank { receiptSettings.nagadNumber }
-            canvas.drawText(numberText, mbRect.centerX(), 94f, mbNumPaint)
-
-            if (receiptSettings.nagadNumber.isNotBlank() && receiptSettings.bkashNumber.isNotBlank()) {
-                val secNumPaint = Paint().apply {
-                    color = Color.parseColor("#C2410C")
-                    textSize = 13f
-                    textAlign = Paint.Align.CENTER
-                    isAntiAlias = true
-                }
-                canvas.drawText("Nagad: ${receiptSettings.nagadNumber}", mbRect.centerX(), 116f, secNumPaint)
-            }
-        }
-
-        // 4. Center Title Pill: MONEY RECEIPT
-        val pillY = 170f
-        val pillPaint = Paint().apply {
-            color = Color.parseColor("#F0F9FF") // Sky 50
+        // Top Right: Mobile Banking Box
+        val mbBoxPaint = Paint().apply {
+            color = Color.parseColor("#FFFFFF")
             style = Paint.Style.FILL
+            isAntiAlias = true
         }
-        val pillBorderPaint = Paint().apply {
-            color = Color.parseColor("#0284C7")
+        val mbBorderPaint = Paint().apply {
+            color = Color.parseColor("#E11D48") // Rose 600
             style = Paint.Style.STROKE
             strokeWidth = 2f
+            isAntiAlias = true
         }
-        val pillRect = RectF(width / 2f - 220f, pillY, width / 2f + 220f, pillY + 44f)
-        canvas.drawRoundRect(pillRect, 22f, 22f, pillPaint)
-        canvas.drawRoundRect(pillRect, 22f, 22f, pillBorderPaint)
+        val mbRect = RectF(880f, 35f, 1160f, 125f)
+        canvas.drawRoundRect(mbRect, 14f, 14f, mbBoxPaint)
+        canvas.drawRoundRect(mbRect, 14f, 14f, mbBorderPaint)
 
-        val pillTextPaint = Paint().apply {
-            color = Color.parseColor("#0369A1")
+        val mbTitlePaint = Paint().apply {
+            color = Color.parseColor("#E11D48")
+            textSize = 15f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        val mbNumber = receiptSettings.bkashNumber.ifBlank {
+            receiptSettings.nagadNumber.ifBlank { hotline }
+        }
+        canvas.drawText("bKash Mobile Banking", mbRect.centerX(), 66f, mbTitlePaint)
+
+        val mbNumPaint = Paint().apply {
+            color = Color.parseColor("#881337")
             textSize = 19f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
-        val titleText = receiptSettings.receiptTitle.ifBlank { "MONEY RECEIPT (মানি রসিদ)" }
-        canvas.drawText(titleText, width / 2f, pillY + 29f, pillTextPaint)
+        canvas.drawText(mbNumber, mbRect.centerX(), 102f, mbNumPaint)
 
-        // 5. Receipt Metadata (Date, Receipt No)
-        val dateStr = SimpleDateFormat("dd MMMM, yyyy  hh:mm a", Locale.getDefault()).format(Date(dateMillis))
-        val metaPaint = Paint().apply {
-            color = Color.parseColor("#64748B")
-            textSize = 14f
+        // 3. Contact Info Capsule Bar
+        val capsuleBgPaint = Paint().apply {
+            color = Color.parseColor("#F1F5F9") // Slate 100
+            style = Paint.Style.FILL
             isAntiAlias = true
         }
-        canvas.drawText("Receipt Date: $dateStr", 40f, 248f, metaPaint)
+        val capsuleBorderPaint = Paint().apply {
+            color = Color.parseColor("#E2E8F0") // Slate 200
+            style = Paint.Style.STROKE
+            strokeWidth = 1.2f
+            isAntiAlias = true
+        }
+        val capsuleRect = RectF(40f, 142f, 1160f, 186f)
+        canvas.drawRoundRect(capsuleRect, 10f, 10f, capsuleBgPaint)
+        canvas.drawRoundRect(capsuleRect, 10f, 10f, capsuleBorderPaint)
 
-        val receiptNo = "REC-${dateMillis % 1000000}"
-        val recNoPaint = Paint().apply {
-            color = Color.parseColor("#0F172A")
-            textSize = 14f
+        val contactPaint = Paint().apply {
+            color = Color.parseColor("#334155")
+            textSize = 13.5f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            textAlign = Paint.Align.RIGHT
             isAntiAlias = true
         }
-        canvas.drawText("Voucher No: $receiptNo", width - 40f, 248f, recNoPaint)
+        canvas.drawText("☎ Hotline: $hotline", 65f, 169f, contactPaint)
+        canvas.drawText("✉ Email: $email", 440f, 169f, contactPaint)
+        canvas.drawText("📍 Address: $address", 800f, 169f, contactPaint)
 
-        // Divider
-        val dividerPaint = Paint().apply {
-            color = Color.parseColor("#CBD5E1")
-            strokeWidth = 1.5f
-            pathEffect = DashPathEffect(floatArrayOf(8f, 6f), 0f)
+        // 4. Voucher Body (Dashed Underlines)
+        val dashPaint = Paint().apply {
+            color = Color.parseColor("#94A3B8") // Slate 400
+            strokeWidth = 1.6f
+            pathEffect = DashPathEffect(floatArrayOf(6f, 4f), 0f)
+            style = Paint.Style.STROKE
+            isAntiAlias = true
         }
-        canvas.drawLine(40f, 265f, width - 40f, 265f, dividerPaint)
-
-        // 6. Customer Details Section
-        var curY = 305f
         val labelPaint = Paint().apply {
-            color = Color.parseColor("#475569")
+            color = Color.parseColor("#0F172A")
             textSize = 16f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
-        val valuePaint = Paint().apply {
+        val valPaint = Paint().apply {
             color = Color.parseColor("#0F172A")
+            textSize = 17f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+        val italicValPaint = Paint().apply {
+            color = Color.parseColor("#0F172A")
+            textSize = 16f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD_ITALIC)
+            isAntiAlias = true
+        }
+        val tealValPaint = Paint().apply {
+            color = Color.parseColor("#0D9488")
+            textSize = 17f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+        val dueColor = if (totalDueRemaining > 0) Color.parseColor("#DC2626") else Color.parseColor("#0D9488")
+        val dueValPaint = Paint().apply {
+            color = dueColor
+            textSize = 17f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            isAntiAlias = true
+        }
+
+        val rightMargin = 1160f
+        val leftMargin = 40f
+
+        // Row 1: Received with thanks from
+        val r1Y = 232f
+        val r1Label = "Received with thanks from "
+        canvas.drawText(r1Label, leftMargin, r1Y, labelPaint)
+        val r1LWidth = labelPaint.measureText(r1Label)
+        val customerNameStr = customer.name.ifBlank { customer.pppoeUsername }
+        val customerInfo = if (customer.address.isNotBlank()) {
+            "$customerNameStr/${customer.address}"
+        } else if (customer.packageName.isNotBlank()) {
+            "$customerNameStr/${customer.packageName}"
+        } else {
+            customerNameStr
+        }
+        canvas.drawText(customerInfo, leftMargin + r1LWidth, r1Y, valPaint)
+        canvas.drawLine(leftMargin + r1LWidth, r1Y + 6f, rightMargin, r1Y + 6f, dashPaint)
+
+        // Row 2: Amount
+        val r2Y = 278f
+        val r2Label = "Amount "
+        canvas.drawText(r2Label, leftMargin, r2Y, labelPaint)
+        val r2LWidth = labelPaint.measureText(r2Label)
+        val amountStr = "৳ ${"%,.2f".format(amount)}"
+        canvas.drawText(amountStr, leftMargin + r2LWidth, r2Y, valPaint)
+        canvas.drawLine(leftMargin + r2LWidth, r2Y + 6f, rightMargin, r2Y + 6f, dashPaint)
+
+        // Row 3: In word
+        val r3Y = 324f
+        val r3Label = "In word "
+        canvas.drawText(r3Label, leftMargin, r3Y, labelPaint)
+        val r3LWidth = labelPaint.measureText(r3Label)
+        val inWordStr = NumberToWords.convertToWords(amount.toLong())
+        canvas.drawText(inWordStr, leftMargin + r3LWidth, r3Y, italicValPaint)
+        canvas.drawLine(leftMargin + r3LWidth, r3Y + 6f, rightMargin, r3Y + 6f, dashPaint)
+
+        // Row 4: For ... Branch ...
+        val r4Y = 370f
+        val r4Label = "For "
+        canvas.drawText(r4Label, leftMargin, r4Y, labelPaint)
+        val r4LWidth = labelPaint.measureText(r4Label)
+        val monthStr = monthYear.ifBlank { SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Date(dateMillis)) }
+        canvas.drawText(monthStr, leftMargin + r4LWidth, r4Y, valPaint)
+        canvas.drawLine(leftMargin + r4LWidth, r4Y + 6f, 660f, r4Y + 6f, dashPaint)
+
+        val branchX = 700f
+        val branchLabel = "Branch "
+        canvas.drawText(branchLabel, branchX, r4Y, labelPaint)
+        val branchLWidth = labelPaint.measureText(branchLabel)
+        canvas.drawText("Main Branch", branchX + branchLWidth, r4Y, valPaint)
+        canvas.drawLine(branchX + branchLWidth, r4Y + 6f, rightMargin, r4Y + 6f, dashPaint)
+
+        // Row 5: ACCT. ... PAID ... DUE ...
+        val r5Y = 416f
+        // ACCT.
+        val acctLabel = "ACCT. "
+        canvas.drawText(acctLabel, leftMargin, r5Y, labelPaint)
+        val acctLWidth = labelPaint.measureText(acctLabel)
+        val acctVal = customer.customerCode.ifBlank { "U-${customer.id}" }
+        canvas.drawText(acctVal, leftMargin + acctLWidth, r5Y, valPaint)
+        canvas.drawLine(leftMargin + acctLWidth, r5Y + 6f, 360f, r5Y + 6f, dashPaint)
+
+        // PAID
+        val paidX = 420f
+        val paidLabel = "PAID "
+        canvas.drawText(paidLabel, paidX, r5Y, labelPaint)
+        val paidLWidth = labelPaint.measureText(paidLabel)
+        val paidVal = "৳ ${"%,.2f".format(amount)}"
+        canvas.drawText(paidVal, paidX + paidLWidth, r5Y, tealValPaint)
+        canvas.drawLine(paidX + paidLWidth, r5Y + 6f, 740f, r5Y + 6f, dashPaint)
+
+        // DUE
+        val dueX = 780f
+        val dueLabel = "DUE "
+        canvas.drawText(dueLabel, dueX, r5Y, labelPaint)
+        val dueLWidth = labelPaint.measureText(dueLabel)
+        val dueVal = "৳ ${"%,.2f".format(totalDueRemaining)}"
+        canvas.drawText(dueVal, dueX + dueLWidth, r5Y, dueValPaint)
+        canvas.drawLine(dueX + dueLWidth, r5Y + 6f, rightMargin, r5Y + 6f, dashPaint)
+
+        // 5. Lower Section: Amount Box & Signatures
+        // Amount Box (Left)
+        val amtOuterRect = RectF(40f, 512f, 380f, 582f)
+        val amtOuterPaint = Paint().apply {
+            color = Color.parseColor("#E0F2FE") // Sky 100
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        val amtBorderPaint = Paint().apply {
+            color = Color.parseColor("#38BDF8") // Sky 400
+            style = Paint.Style.STROKE
+            strokeWidth = 1.8f
+            isAntiAlias = true
+        }
+        canvas.drawRoundRect(amtOuterRect, 14f, 14f, amtOuterPaint)
+        canvas.drawRoundRect(amtOuterRect, 14f, 14f, amtBorderPaint)
+
+        val amtLabelPaint = Paint().apply {
+            color = Color.parseColor("#0369A1")
             textSize = 18f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             isAntiAlias = true
         }
+        canvas.drawText("Amount =", 60f, 554f, amtLabelPaint)
 
-        // Received with thanks from
-        canvas.drawText("Received with thanks from:", 40f, curY, labelPaint)
-        val customerDisplay = customer.name.ifBlank { customer.pppoeUsername }
-        canvas.drawText(customerDisplay, 275f, curY, valuePaint)
-
-        curY += 36f
-
-        // Amount in Taka
-        canvas.drawText("Amount (টাকার পরিমাণ):", 40f, curY, labelPaint)
-        val amountPaint = Paint().apply {
-            color = Color.parseColor("#0369A1")
-            textSize = 22f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            isAntiAlias = true
-        }
-        canvas.drawText("৳ ${"%,.2f".format(amount)}", 275f, curY, amountPaint)
-
-        curY += 36f
-
-        // In word
-        canvas.drawText("In Word (কথায়):", 40f, curY, labelPaint)
-        val wordsText = NumberToWords.convertToWords(amount.toLong())
-        val wordsPaint = Paint().apply {
-            color = Color.parseColor("#334155")
-            textSize = 16f
-            typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
-            isAntiAlias = true
-        }
-        canvas.drawText(wordsText, 275f, curY, wordsPaint)
-
-        curY += 36f
-
-        // For Month & Branch
-        canvas.drawText("For Billing Month:", 40f, curY, labelPaint)
-        canvas.drawText(monthYear, 275f, curY, valuePaint)
-
-        val branchText = "Branch: Main Office"
-        canvas.drawText(branchText, width - 260f, curY, labelPaint)
-
-        curY += 30f
-
-        // 7. Grid of Details (Package, Method, Phone, Username, Remaining Due)
-        val gridBgPaint = Paint().apply {
-            color = Color.parseColor("#F8FAFC")
+        val amtInnerRect = RectF(175f, 522f, 365f, 572f)
+        val amtInnerPaint = Paint().apply {
+            color = Color.WHITE
             style = Paint.Style.FILL
+            isAntiAlias = true
         }
-        val gridBorderPaint = Paint().apply {
-            color = Color.parseColor("#E2E8F0")
+        val amtInnerBorderPaint = Paint().apply {
+            color = Color.parseColor("#BAE6FD")
             style = Paint.Style.STROKE
-            strokeWidth = 1.5f
+            strokeWidth = 1.2f
+            isAntiAlias = true
         }
-        val gridRect = RectF(40f, curY, width - 40f, curY + 200f)
-        canvas.drawRoundRect(gridRect, 10f, 10f, gridBgPaint)
-        canvas.drawRoundRect(gridRect, 10f, 10f, gridBorderPaint)
+        canvas.drawRoundRect(amtInnerRect, 10f, 10f, amtInnerPaint)
+        canvas.drawRoundRect(amtInnerRect, 10f, 10f, amtInnerBorderPaint)
 
-        var gRowY = curY + 36f
-        val gCol1 = 60f
-        val gCol2 = 470f
-
-        // Item 1: PPPoE Username
-        if (receiptSettings.showUsername) {
-            canvas.drawText("PPPoE Username:", gCol1, gRowY, labelPaint)
-            canvas.drawText(customer.pppoeUsername, gCol1 + 160f, gRowY, valuePaint)
+        val amtNumPaint = Paint().apply {
+            color = Color.parseColor("#0F172A")
+            textSize = 21f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
+        canvas.drawText("৳ ${"%,.2f".format(amount)}", amtInnerRect.centerX(), 555f, amtNumPaint)
 
-        // Item 2: Customer Code
-        canvas.drawText("Customer ID:", gCol2, gRowY, labelPaint)
-        canvas.drawText(customer.customerCode.ifBlank { "U-${customer.id}" }, gCol2 + 130f, gRowY, valuePaint)
-
-        gRowY += 38f
-
-        // Item 3: Package Name
-        if (receiptSettings.showPackage) {
-            canvas.drawText("Internet Package:", gCol1, gRowY, labelPaint)
-            val pkg = customer.packageName.ifBlank { "${customer.speedMbps} Mbps Plan" }
-            canvas.drawText(pkg, gCol1 + 160f, gRowY, valuePaint)
-        }
-
-        // Item 4: Payment Method
-        if (receiptSettings.showPaymentMethod) {
-            canvas.drawText("Payment Method:", gCol2, gRowY, labelPaint)
-            canvas.drawText(method, gCol2 + 150f, gRowY, valuePaint)
-        }
-
-        gRowY += 38f
-
-        // Item 5: Phone Number
-        if (receiptSettings.showPhone && customer.phone.isNotBlank()) {
-            canvas.drawText("Contact Phone:", gCol1, gRowY, labelPaint)
-            canvas.drawText(customer.phone, gCol1 + 160f, gRowY, valuePaint)
-        }
-
-        // Item 6: Remaining Due
-        if (receiptSettings.showRemainingDue) {
-            canvas.drawText("Remaining Due:", gCol2, gRowY, labelPaint)
-            val dueColor = if (totalDueRemaining > 0) Color.parseColor("#DC2626") else Color.parseColor("#16A34A")
-            val duePaint = Paint().apply {
-                color = dueColor
-                textSize = 18f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                isAntiAlias = true
-            }
-            canvas.drawText("৳ ${"%,.2f".format(totalDueRemaining)}", gCol2 + 150f, gRowY, duePaint)
-        }
-
-        gRowY += 38f
-
-        // Item 7: Address (if enabled and present)
-        if (receiptSettings.showAddress && customer.address.isNotBlank()) {
-            canvas.drawText("Customer Address: ${customer.address}", gCol1, gRowY, labelPaint)
-        }
-
-        curY += 225f
-
-        // 8. Thank you note & Special Notes
-        if (receiptSettings.footerNote.isNotBlank()) {
-            val thankPaint = Paint().apply {
-                color = Color.parseColor("#047857") // Emerald 700
-                textSize = 15f
-                typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                textAlign = Paint.Align.CENTER
-                isAntiAlias = true
-            }
-            canvas.drawText(receiptSettings.footerNote, width / 2f, curY, thankPaint)
-            curY += 26f
-        }
-
-        if (receiptSettings.specialNotes.isNotBlank()) {
-            val termsPaint = Paint().apply {
-                color = Color.parseColor("#64748B")
-                textSize = 13.5f
-                textAlign = Paint.Align.CENTER
-                isAntiAlias = true
-            }
-            canvas.drawText(receiptSettings.specialNotes, width / 2f, curY, termsPaint)
-            curY += 36f
-        }
-
-        // 9. Signature Row
-        val sigY = height - 120f
-        val sigLinePaint = Paint().apply {
-            color = Color.parseColor("#94A3B8")
-            strokeWidth = 1.8f
-        }
-        // Left: Received by
-        canvas.drawLine(70f, sigY, 320f, sigY, sigLinePaint)
+        // Signatures (Right)
+        val sigLineY = 555f
         val sigTextPaint = Paint().apply {
             color = Color.parseColor("#475569")
             textSize = 14f
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
-        canvas.drawText("Received by", 195f, sigY + 24f, sigTextPaint)
-
-        // Right: Authorized Signature
-        val authNamePaint = Paint().apply {
-            color = Color.parseColor("#0F172A")
-            textSize = 15f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
             textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
-        val sigName = receiptSettings.signatureName.ifBlank { "Authority" }
-        canvas.drawText(sigName, width - 205f, sigY - 8f, authNamePaint)
-
-        canvas.drawLine(width - 340f, sigY, width - 70f, sigY, sigLinePaint)
-        canvas.drawText("Authorized Signature", width - 205f, sigY + 24f, sigTextPaint)
-
-        // 10. Bottom Corporate Ribbon / Banner
-        val bannerHeight = 44f
-        val bannerPaint = Paint().apply {
-            color = Color.parseColor("#0F172A") // Navy Slate
-            style = Paint.Style.FILL
+        val sigNamePaint = Paint().apply {
+            color = Color.parseColor("#0F172A")
+            textSize = 16f
+            typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
         }
-        canvas.drawRect(20f, height - 20f - bannerHeight, width - 20f, height - 20f, bannerPaint)
+
+        // Slot 1: Received by
+        canvas.drawLine(620f, sigLineY, 820f, sigLineY, dashPaint)
+        canvas.drawText("Received by", 720f, sigLineY + 22f, sigTextPaint)
+
+        // Slot 2: Authorized Signature
+        val authorityName = receiptSettings.signatureName.ifBlank { "Authority" }
+        canvas.drawText(authorityName, 970f, sigLineY - 8f, sigNamePaint)
+        canvas.drawLine(860f, sigLineY, 1080f, sigLineY, dashPaint)
+        canvas.drawText("Authorized Signature", 970f, sigLineY + 22f, sigTextPaint)
+
+        // 6. Bottom Corporate Ribbon / Banner
+        val bannerHeight = 46f
+        val bannerPaint = Paint().apply {
+            color = Color.parseColor("#1E1B4B") // Deep Indigo / Navy
+            style = Paint.Style.FILL
+            isAntiAlias = true
+        }
+        canvas.drawRect(0f, height - bannerHeight, width.toFloat(), height.toFloat(), bannerPaint)
 
         val mottoPaint = Paint().apply {
             color = Color.WHITE
             textSize = 15f
             typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-            textAlign = Paint.Align.CENTER
             isAntiAlias = true
         }
-        val motto = receiptSettings.corporateMotto.ifBlank { "Stay Connected, Stay Ahead" }
-        canvas.drawText(motto, width / 2f, height - 38f, mottoPaint)
+        canvas.drawText("⚡ $motto", 40f, height - 17f, mottoPaint)
+
+        val recNoStr = "Receipt #: PAY-${dateMillis % 1000000} • $monthStr"
+        val recNoPaint = Paint().apply {
+            color = Color.WHITE
+            textSize = 13.5f
+            textAlign = Paint.Align.RIGHT
+            isAntiAlias = true
+        }
+        canvas.drawText(recNoStr, width - 40f, height - 17f, recNoPaint)
 
         return bitmap
     }
@@ -502,6 +508,31 @@ object ReceiptBitmapGenerator {
                     Toast.makeText(context, "WhatsApp এ শেয়ার করা সম্ভব হয়নি: ${ex2.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+        }
+    }
+
+    fun shareReceipt(
+        context: Context,
+        imageUri: Uri,
+        customerName: String,
+        amount: Double
+    ) {
+        val caption = "প্রিয় $customerName, আপনার ৳${amount.toInt()} টাকা বিল পরিশোধের মানি রসিদ পাঠানো হলো। ধন্যবাদ।"
+        val intent = Intent(Intent.ACTION_SEND).apply {
+            type = "image/png"
+            putExtra(Intent.EXTRA_STREAM, imageUri)
+            clipData = ClipData.newRawUri("Money Receipt", imageUri)
+            putExtra(Intent.EXTRA_TEXT, caption)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val chooserIntent = Intent.createChooser(intent, "মানি রসিদ শেয়ার করুন").apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        try {
+            context.startActivity(chooserIntent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "শেয়ার করা সম্ভব হয়নি: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 

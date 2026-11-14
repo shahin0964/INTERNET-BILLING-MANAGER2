@@ -100,9 +100,9 @@ fun PaymentReceiptPopup(
 
                     // 2. Receipt Preview Box
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = Color.White,
-                        border = BorderStroke(1.5.dp, Color(0xFF0284C7)),
+                        border = BorderStroke(1.2.dp, Color(0xFF0284C7)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(
@@ -110,51 +110,80 @@ fun PaymentReceiptPopup(
                                 .fillMaxWidth()
                                 .padding(12.dp)
                         ) {
+                            // Top Header
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Column {
-                                    Text(
-                                        text = ispSettings?.companyName?.ifBlank { "INTERNET SERVICE" } ?: "INTERNET SERVICE",
-                                        color = Color(0xFF0F172A),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp
-                                    )
-                                    Text(
-                                        text = "Hotline: ${ispSettings?.phone?.ifBlank { "01XXXXXXXXX" } ?: "01XXXXXXXXX"}",
-                                        color = Color(0xFF475569),
-                                        fontSize = 9.sp
-                                    )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF0284C7)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("ISP", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 9.sp)
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Column {
+                                        Text(
+                                            text = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies",
+                                            color = Color(0xFF0F172A),
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.sp
+                                        )
+                                        Text(
+                                            text = "FAST • STABLE • CONNECTED",
+                                            color = Color(0xFF0284C7),
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 8.sp
+                                        )
+                                    }
                                 }
 
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(4.dp))
-                                        .background(Color(0xFFF0F9FF))
-                                        .border(BorderStroke(0.8.dp, Color(0xFF0284C7)), RoundedCornerShape(4.dp))
-                                        .padding(horizontal = 6.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = "MONEY RECEIPT",
-                                        color = Color(0xFF0369A1),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 9.sp
-                                    )
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Row {
+                                        Text("MONEY ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                        Text("RECEIPT", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                                    }
+                                    Text("Thank you for being with us!", color = Color(0xFF64748B), fontSize = 7.5.sp)
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(6.dp))
-                            Divider(color = Color(0xFFE2E8F0), thickness = 0.8.dp)
-                            Spacer(modifier = Modifier.height(6.dp))
 
+                            // Contact Capsule Bar
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color(0xFFF1F5F9))
+                                    .border(BorderStroke(0.8.dp, Color(0xFFE2E8F0)), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 3.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text("☎ Hotline: ${ispSettings?.phone?.ifBlank { "01XXXXXXXXX" } ?: "01XXXXXXXXX"}", color = Color(0xFF334155), fontSize = 8.sp, fontWeight = FontWeight.Medium)
+                                    if (!ispSettings?.address.isNullOrBlank()) {
+                                        Text("📍 ${ispSettings?.address}", color = Color(0xFF334155), fontSize = 8.sp, fontWeight = FontWeight.Medium)
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            // Voucher Cheque details
                             Text(
-                                text = "Received with thanks: ${customer.name.ifBlank { customer.pppoeUsername }}",
+                                text = "Received with thanks from: ${customer.name.ifBlank { customer.pppoeUsername }}",
                                 color = Color(0xFF0F172A),
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 11.sp
                             )
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "Amount: ৳ ${"%,.2f".format(amount)} (${method})",
                                 color = Color(0xFF0284C7),
@@ -166,26 +195,32 @@ fun PaymentReceiptPopup(
                                     text = "Discount / ছাড়: ৳ ${"%,.2f".format(discount)}",
                                     color = Color(0xFF0D9488),
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 10.5.sp
+                                    fontSize = 10.sp
                                 )
                             }
-                            if (customer.phone.isNotBlank()) {
-                                Text(
-                                    text = "Customer Phone: ${customer.phone}",
-                                    color = Color(0xFF475569),
-                                    fontSize = 9.5.sp
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "Remaining Due: ৳ ${"%,.2f".format(customer.dueAmount)}",
-                                color = if (customer.dueAmount > 0) Color(0xFFDC2626) else Color(0xFF16A34A),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp
+                                text = "In word: ${internet.billing.manager.util.NumberToWords.convertToWords(amount.toLong())}",
+                                color = Color(0xFF475569),
+                                fontSize = 9.sp
                             )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // ACCT, PAID, DUE row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text("ACCT: ${customer.customerCode.ifBlank { "U-${customer.id}" }}", color = Color(0xFF334155), fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                                Text("PAID: ৳ ${"%,.2f".format(amount)}", color = Color(0xFF0D9488), fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                                val dueColor = if (customer.dueAmount > 0) Color(0xFFDC2626) else Color(0xFF0D9488)
+                                Text("DUE: ৳ ${"%,.2f".format(customer.dueAmount)}", color = dueColor, fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // 3. Action Buttons: WhatsApp Button (Prominent Green)
                     Button(
@@ -199,7 +234,8 @@ fun PaymentReceiptPopup(
                                     amount = amount,
                                     method = method,
                                     monthYear = currentMonth,
-                                    totalDueRemaining = customer.dueAmount
+                                    totalDueRemaining = customer.dueAmount,
+                                    discount = discount
                                 )
                                 val imageUri = ReceiptBitmapGenerator.saveBitmapToCache(context, bitmap)
                                 ReceiptBitmapGenerator.sendReceiptViaWhatsApp(
@@ -224,7 +260,7 @@ fun PaymentReceiptPopup(
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366)), // WhatsApp Green
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(46.dp)
+                            .height(44.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
@@ -237,25 +273,76 @@ fun PaymentReceiptPopup(
                             text = if (isBangla) "WhatsApp এ মানি রসিদ পাঠান" else "Send Receipt on WhatsApp",
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 13.5.sp
+                            fontSize = 13.sp
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    // 4. Close Button
+                    // 4. Action Button: Share Receipt (Any App / Share Sheet)
+                    Button(
+                        onClick = {
+                            try {
+                                val bitmap = ReceiptBitmapGenerator.generateReceiptBitmap(
+                                    context = context,
+                                    ispSettings = ispSettings,
+                                    receiptSettings = receiptSettings,
+                                    customer = customer,
+                                    amount = amount,
+                                    method = method,
+                                    monthYear = currentMonth,
+                                    totalDueRemaining = customer.dueAmount,
+                                    discount = discount
+                                )
+                                val imageUri = ReceiptBitmapGenerator.saveBitmapToCache(context, bitmap)
+                                ReceiptBitmapGenerator.shareReceipt(
+                                    context = context,
+                                    imageUri = imageUri,
+                                    customerName = customer.name.ifBlank { customer.pppoeUsername },
+                                    amount = amount
+                                )
+                                onDismiss()
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)), // Sky/Cyan Blue
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isBangla) "যেকোনো মাধ্যমে শেয়ার করুন" else "Share Receipt",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 5. Close Button
                     OutlinedButton(
                         onClick = onDismiss,
                         shape = RoundedCornerShape(10.dp),
                         border = BorderStroke(1.dp, CardBorder),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp)
+                            .height(38.dp)
                     ) {
                         Text(
                             text = if (isBangla) "এখন নয় / বন্ধ করুন" else "Dismiss",
                             color = TextSecondary,
-                            fontSize = 12.5.sp
+                            fontSize = 12.sp
                         )
                     }
                 }
