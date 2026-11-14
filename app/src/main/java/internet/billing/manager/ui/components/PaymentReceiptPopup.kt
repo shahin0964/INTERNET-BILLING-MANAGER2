@@ -39,12 +39,13 @@ fun PaymentReceiptPopup(
     method: String,
     note: String,
     ispSettings: IspSettings?,
+    dateMillis: Long = System.currentTimeMillis(),
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
     val isBangla = LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA
     val receiptSettings = ReceiptCustomizationManager.getSettings(context)
-    val currentMonth = SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date())
+    val currentMonth = remember(dateMillis) { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(dateMillis)) }
 
     Dialog(onDismissRequest = onDismiss) {
         InternetBillingTheme {
@@ -83,7 +84,7 @@ fun PaymentReceiptPopup(
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Text(
-                        text = if (isBangla) "পেমেন্ট সফলভাবে সংরক্ষিত হয়েছে!" else "Payment Recorded Successfully!",
+                        text = if (isBangla) "পেমেন্ট মানি রসিদ" else "Payment Money Receipt",
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
@@ -235,7 +236,8 @@ fun PaymentReceiptPopup(
                                     method = method,
                                     monthYear = currentMonth,
                                     totalDueRemaining = customer.dueAmount,
-                                    discount = discount
+                                    discount = discount,
+                                    dateMillis = dateMillis
                                 )
                                 val imageUri = ReceiptBitmapGenerator.saveBitmapToCache(context, bitmap)
                                 ReceiptBitmapGenerator.sendReceiptViaWhatsApp(
@@ -292,7 +294,8 @@ fun PaymentReceiptPopup(
                                     method = method,
                                     monthYear = currentMonth,
                                     totalDueRemaining = customer.dueAmount,
-                                    discount = discount
+                                    discount = discount,
+                                    dateMillis = dateMillis
                                 )
                                 val imageUri = ReceiptBitmapGenerator.saveBitmapToCache(context, bitmap)
                                 ReceiptBitmapGenerator.shareReceipt(

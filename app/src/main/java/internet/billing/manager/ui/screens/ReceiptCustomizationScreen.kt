@@ -681,7 +681,7 @@ fun ReceiptCustomizationScreen(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Column {
                                         Text(
-                                            text = ispSettings?.companyName?.ifBlank { "U-turn Technologies" } ?: "U-turn Technologies",
+                                            text = ispSettings?.companyName?.ifBlank { if (isBangla) "কোম্পানির নাম" else "Company Name" } ?: if (isBangla) "কোম্পানির নাম" else "Company Name",
                                             color = Color(0xFF0F172A),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold
@@ -709,7 +709,10 @@ fun ReceiptCustomizationScreen(
 
                                 // Right: Mobile Banking Box
                                 if (settings.showMobileBanking) {
-                                    val num = settings.bkashNumber.ifBlank { settings.nagadNumber.ifBlank { ispSettings?.phone.orEmpty().ifBlank { "01708732389" } } }
+                                    val mbNum = settings.bkashNumber.ifBlank { settings.nagadNumber.ifBlank { ispSettings?.phone.orEmpty().ifBlank { "01XXXXXXXXX" } } }
+                                    val mbTitle = if (settings.bkashNumber.isNotBlank()) "bKash Mobile Banking"
+                                        else if (settings.nagadNumber.isNotBlank()) "Nagad Mobile Banking"
+                                        else "Mobile Banking"
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
@@ -720,13 +723,13 @@ fun ReceiptCustomizationScreen(
                                     ) {
                                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                             Text(
-                                                text = "bKash Mobile Banking",
+                                                text = mbTitle,
                                                 color = Color(0xFFE11D48),
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 7.5.sp
                                             )
                                             Text(
-                                                text = num,
+                                                text = mbNum,
                                                 color = Color(0xFF881337),
                                                 fontWeight = FontWeight.Bold,
                                                 fontSize = 9.sp
@@ -738,7 +741,21 @@ fun ReceiptCustomizationScreen(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // 2. Contact Capsule Bar
+                            // 2. Contact Capsule Bar (Only show non-empty settings)
+                            val contactItems = remember(settings.showPhone, ispSettings) {
+                                val list = mutableListOf<String>()
+                                if (settings.showPhone) {
+                                    list.add("☎ Hotline: ${ispSettings?.phone?.ifBlank { "01XXXXXXXXX" } ?: "01XXXXXXXXX"}")
+                                }
+                                if (!ispSettings?.email.isNullOrBlank()) {
+                                    list.add("✉ Email: ${ispSettings!!.email}")
+                                }
+                                if (!ispSettings?.address.isNullOrBlank()) {
+                                    list.add("📍 Address: ${ispSettings!!.address}")
+                                }
+                                list
+                            }
+
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -747,38 +764,61 @@ fun ReceiptCustomizationScreen(
                                     .border(BorderStroke(0.8.dp, Color(0xFFE2E8F0)), RoundedCornerShape(6.dp))
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Text("☎ Hotline: ${ispSettings?.phone?.ifBlank { "01708732389" } ?: "01708732389"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
-                                    Text("✉ Email: ${ispSettings?.email?.ifBlank { "md.shahin0962@gmail.com" } ?: "md.shahin0962@gmail.com"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
-                                    Text("📍 Address: ${ispSettings?.address?.ifBlank { "Main Office" } ?: "Main Office"}", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
+                                if (contactItems.isEmpty()) {
+                                    Text("🌐 Optical Fiber Internet Service Provider", color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
+                                } else {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        contactItems.forEach { itemText ->
+                                            Text(itemText, color = Color(0xFF334155), fontSize = 7.5.sp, fontWeight = FontWeight.Medium)
+                                        }
+                                    }
                                 }
                             }
 
                             Spacer(modifier = Modifier.height(10.dp))
 
-                            // 3. Voucher Cheque Fields (Dashed Underlines)
+                            // 3. Voucher Cheque Fields (Dashed Underlines - Dynamic based on toggles)
+                            val currentLiveMonth = remember { SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date()) }
+                            val currentLiveMonthShort = remember { SimpleDateFormat("MMM yyyy", Locale.getDefault()).format(Date()) }
+
+                            val dynamicCustomerSummary = remember(settings.showUsername, settings.showPackage, settings.showAddress, settings.showPhone, isBangla) {
+                                buildString {
+                                    append(if (isBangla) "[গ্রাহকের নাম]" else "[Customer Name]")
+                                    if (settings.showUsername) append(" (pppoe_user)")
+                                    val extra = mutableListOf<String>()
+                                    if (settings.showPackage) extra.add("20 Mbps Plan")
+                                    if (settings.showAddress) extra.add(if (isBangla) "ঠিকানা" else "Address")
+                                    if (settings.showPhone) extra.add("01XXXXXXXXX")
+                                    if (extra.isNotEmpty()) {
+                                        append(" / ")
+                                        append(extra.joinToString(" / "))
+                                    }
+                                }
+                            }
+
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 // Row 1: Received with thanks from
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("Received with thanks from: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
-                                    Text("ar_rakib343/5/a-4m-fiber", color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 9.sp)
+                                    Text(dynamicCustomerSummary, color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 8.5.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
                                 Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
 
                                 // Row 2: Amount
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("Amount: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
-                                    Text("৳ 500.00", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.5.sp)
+                                    val methodSuffix = if (settings.showPaymentMethod) " (নগদ / Cash)" else ""
+                                    Text("৳ ১,০০০.০০$methodSuffix", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.5.sp)
                                 }
                                 Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
 
                                 // Row 3: In word
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text("In word: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
-                                    Text("Five Hundred Taka Only", color = Color(0xFF475569), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 8.5.sp)
+                                    Text("One Thousand Taka Only", color = Color(0xFF475569), fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, fontSize = 8.5.sp)
                                 }
                                 Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
 
@@ -790,16 +830,16 @@ fun ReceiptCustomizationScreen(
                                 ) {
                                     Row {
                                         Text("For: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
-                                        Text("Sep 2026", color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
+                                        Text(currentLiveMonth, color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
                                     }
                                     Row {
                                         Text("Branch: ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 9.sp)
-                                        Text("Main Branch", color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
+                                        Text(ispSettings?.address?.ifBlank { "Main Branch" } ?: "Main Branch", color = Color(0xFF0F172A), fontWeight = FontWeight.Medium, fontSize = 9.sp)
                                     }
                                 }
                                 Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
 
-                                // Row 5: ACCT, PAID, DUE
+                                // Row 5: ACCT, PAID, DUE / METHOD
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -807,15 +847,22 @@ fun ReceiptCustomizationScreen(
                                 ) {
                                     Row {
                                         Text("ACCT. ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
-                                        Text("U034", color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 8.5.sp)
+                                        Text("U-XXXX", color = Color(0xFF0F172A), fontWeight = FontWeight.SemiBold, fontSize = 8.5.sp)
                                     }
                                     Row {
                                         Text("PAID ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
-                                        Text("৳ 500.00", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        Text("৳ ১,০০০.০০", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
                                     }
-                                    Row {
-                                        Text("DUE ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
-                                        Text("৳ 0.00", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                    if (settings.showRemainingDue) {
+                                        Row {
+                                            Text("DUE ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                            Text("৳ ০.০০", color = Color(0xFF0D9488), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        }
+                                    } else if (settings.showPaymentMethod) {
+                                        Row {
+                                            Text("METHOD ", color = Color(0xFF0F172A), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                            Text("Cash", color = Color(0xFF0284C7), fontWeight = FontWeight.Bold, fontSize = 8.5.sp)
+                                        }
                                     }
                                 }
                                 Divider(color = Color(0xFF94A3B8), thickness = 0.8.dp)
@@ -829,7 +876,7 @@ fun ReceiptCustomizationScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.Bottom
                             ) {
-                                // Amount = [ ৳ 500.00 ] box
+                                // Amount = [ ৳ 1,000.00 ] box
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
@@ -846,7 +893,7 @@ fun ReceiptCustomizationScreen(
                                                 .border(BorderStroke(0.8.dp, Color(0xFFBAE6FD)), RoundedCornerShape(4.dp))
                                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                                         ) {
-                                            Text("৳ 500.00", color = Color(0xFF0F172A), fontWeight = FontWeight.Black, fontSize = 11.sp)
+                                            Text("৳ ১,০০০.০০", color = Color(0xFF0F172A), fontWeight = FontWeight.Black, fontSize = 11.sp)
                                         }
                                     }
                                 }
@@ -895,7 +942,7 @@ fun ReceiptCustomizationScreen(
                                         fontSize = 8.sp
                                     )
                                     Text(
-                                        text = "Receipt #: PAY-847915 • Sep 2026",
+                                        text = "Receipt #: PAY-XXXXXX • $currentLiveMonthShort",
                                         color = Color.White.copy(alpha = 0.9f),
                                         fontSize = 7.5.sp
                                     )

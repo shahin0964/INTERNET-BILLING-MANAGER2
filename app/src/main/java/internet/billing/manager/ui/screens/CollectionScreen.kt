@@ -18,12 +18,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import internet.billing.manager.data.model.Customer
 import internet.billing.manager.data.model.Expense
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.GlowStatCard
 import internet.billing.manager.ui.localization.appStrings
 import internet.billing.manager.ui.theme.*
 import internet.billing.manager.ui.viewmodel.BillingViewModel
+import internet.billing.manager.ui.viewmodel.PaymentReceiptData
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -42,6 +44,7 @@ fun CollectionScreen(
     val ispSettings by viewModel.ispSettings.collectAsState()
     val dynamicBandwidthBill by viewModel.monthlyBandwidthBill.collectAsState()
     val recentPayments by viewModel.recentPayments.collectAsState()
+    val allCustomers by viewModel.allCustomers.collectAsState()
 
     val totalDiscountThisMonth by viewModel.totalDiscountThisMonth.collectAsState()
     val bandwidthBill = if (dynamicBandwidthBill > 0.0) dynamicBandwidthBill else (ispSettings?.bandwidthBill ?: 0.0)
@@ -495,6 +498,41 @@ fun CollectionScreen(
                                     )
                                 }
                             }
+
+                            // Money Receipt Icon Button
+                            IconButton(
+                                onClick = {
+                                    val matchedCustomer = allCustomers.find { it.id == tx.customerId }
+                                        ?: allCustomers.find { it.customerCode.equals(tx.customerCode, ignoreCase = true) || it.pppoeUsername.equals(tx.customerCode, ignoreCase = true) }
+                                        ?: Customer(
+                                            id = tx.customerId,
+                                            name = tx.customerName,
+                                            pppoeUsername = tx.customerCode,
+                                            customerCode = tx.customerCode,
+                                            phone = "",
+                                            dueAmount = 0.0,
+                                            monthlyBill = tx.amount
+                                        )
+                                    viewModel.lastPaymentReceiptData = PaymentReceiptData(
+                                        customer = matchedCustomer,
+                                        amount = tx.amount,
+                                        discount = tx.discount,
+                                        method = tx.paymentMethod,
+                                        note = tx.note,
+                                        timestamp = tx.dateMillis
+                                    )
+                                    viewModel.showPaymentReceiptPopup = true
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ReceiptLong,
+                                    contentDescription = "Money Receipt",
+                                    tint = AccentCyan,
+                                    modifier = Modifier.size(17.dp)
+                                )
+                            }
+
                             IconButton(
                                 onClick = { viewModel.paymentToDelete = tx },
                                 modifier = Modifier.size(28.dp)

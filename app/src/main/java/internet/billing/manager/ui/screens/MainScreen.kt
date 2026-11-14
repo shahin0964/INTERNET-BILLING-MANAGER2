@@ -490,6 +490,7 @@ fun MainScreen(
             method = receiptData.method,
             note = receiptData.note,
             ispSettings = ispSettings,
+            dateMillis = receiptData.timestamp,
             onDismiss = {
                 viewModel.showPaymentReceiptPopup = false
                 viewModel.lastPaymentReceiptData = null
