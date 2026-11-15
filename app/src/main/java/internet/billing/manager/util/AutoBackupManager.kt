@@ -2,11 +2,14 @@ package internet.billing.manager.util
 
 import android.app.AlarmManager
 import android.app.PendingIntent
+import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.MediaStore
 import androidx.core.content.FileProvider
 import internet.billing.manager.InternetBillingApp
 import internet.billing.manager.MainActivity
@@ -86,8 +89,10 @@ object AutoBackupManager {
     }
 
     /**
-     * Performs a full atomic backup of the entire app data,
-     * overwriting the single destination file (IBM_AutoBackup.db).
+     * Performs a full atomic backup of the entire app data across 3 tiers:
+     * Tier 1: Public Download/IBM_Backup/IBM_AutoBackup.db (via MediaStore on Android 10-17 + direct File on Android 8-9/granted)
+     * Tier 2: App-specific external storage (Android/data/.../files/backup/IBM_AutoBackup.db)
+     * Tier 3: Internal app storage (filesDir/backup/IBM_AutoBackup.db)
      */
     @Synchronized
     fun performBackup(context: Context): Boolean {
@@ -112,6 +117,7 @@ object AutoBackupManager {
                     put("language", getPrefsAsJson(context, "ibm_language_prefs"))
                     put("network_tools", getPrefsAsJson(context, "network_tools_prefs"))
                     put("auto_billing", getPrefsAsJson(context, "auto_billing_preferences"))
+                    put("receipt_customization", getPrefsAsJson(context, "ibm_receipt_customization_prefs"))
                 }
                 sdb.execSQL(
                     "INSERT OR REPLACE INTO app_preferences_backup (key_name, value_json) VALUES ('all_preferences', ?)",
@@ -145,32 +151,50 @@ object AutoBackupManager {
             val sourceFile = context.getDatabasePath("internet_billing_manager.db")
             if (!sourceFile.exists()) return false
 
-            // 4. Primary Destination: /sdcard/Download/IBM_Backup/IBM_AutoBackup.db
-            var savedFile: File? = null
+            var anySaved = false
+            var bestFileSize = 0L
+
+            // Tier 1: Public Download folder (MediaStore on Android 10-17 + Direct File where permitted)
             try {
-                val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-                val backupDir = File(downloadDir, "IBM_Backup")
-                if (!backupDir.exists()) backupDir.mkdirs()
-                val targetFile = File(backupDir, BACKUP_FILENAME)
-                copyFileAtomically(sourceFile, targetFile)
-                savedFile = targetFile
+                val publicSaved = saveToPublicDownloads(context, sourceFile)
+                if (publicSaved != null && publicSaved.exists() && publicSaved.length() > 0L) {
+                    anySaved = true
+                    bestFileSize = publicSaved.length()
+                }
             } catch (_: Exception) {}
 
-            // 5. Internal Fallback: context.filesDir/backup/IBM_AutoBackup.db
+            // Tier 2: App-specific External Storage (Always writable without permissions across Android 8-17)
+            try {
+                val extDir = context.getExternalFilesDir("backup")
+                if (extDir != null) {
+                    if (!extDir.exists()) extDir.mkdirs()
+                    val extTarget = File(extDir, BACKUP_FILENAME)
+                    copyFileAtomically(sourceFile, extTarget)
+                    if (extTarget.exists() && extTarget.length() > 0L) {
+                        anySaved = true
+                        if (bestFileSize == 0L) bestFileSize = extTarget.length()
+                    }
+                }
+            } catch (_: Exception) {}
+
+            // Tier 3: Internal Fallback: context.filesDir/backup/IBM_AutoBackup.db
             try {
                 val internalDir = File(context.filesDir, "backup")
                 if (!internalDir.exists()) internalDir.mkdirs()
                 val internalTarget = File(internalDir, BACKUP_FILENAME)
                 copyFileAtomically(sourceFile, internalTarget)
-                if (savedFile == null) savedFile = internalTarget
+                if (internalTarget.exists() && internalTarget.length() > 0L) {
+                    anySaved = true
+                    if (bestFileSize == 0L) bestFileSize = internalTarget.length()
+                }
             } catch (_: Exception) {}
 
-            if (savedFile != null && savedFile.exists() && savedFile.length() > 0) {
+            if (anySaved) {
                 val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
                 prefs.edit()
                     .putLong(KEY_LAST_BACKUP_TIME, System.currentTimeMillis())
-                    .putLong(KEY_LAST_BACKUP_SIZE, savedFile.length())
-                    .putString(KEY_LAST_BACKUP_PATH, savedFile.absolutePath)
+                    .putLong(KEY_LAST_BACKUP_SIZE, if (bestFileSize > 0L) bestFileSize else sourceFile.length())
+                    .putString(KEY_LAST_BACKUP_PATH, "Download/IBM_Backup/$BACKUP_FILENAME")
                     .putInt(KEY_LAST_CUSTOMERS_COUNT, custCount)
                     .putInt(KEY_LAST_BILLS_COUNT, billCount)
                     .putInt(KEY_LAST_PAYMENTS_COUNT, payCount)
@@ -185,19 +209,13 @@ object AutoBackupManager {
     }
 
     /**
-     * Restores full app database from the single IBM_AutoBackup.db file.
+     * Restores full app database from the best available local backup file across all storage tiers.
      */
     @Synchronized
     fun restoreBackup(context: Context): Boolean {
         return try {
-            val primaryFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "IBM_Backup/$BACKUP_FILENAME"
-            )
-            val fallbackFile = File(context.filesDir, "backup/$BACKUP_FILENAME")
-            val backupFile = if (primaryFile.exists() && primaryFile.length() > 0) primaryFile else fallbackFile
-
-            if (!backupFile.exists() || backupFile.length() == 0L) return false
+            val backupFile = getBestAvailableBackupFile(context)
+            if (backupFile == null || !backupFile.exists() || backupFile.length() == 0L) return false
 
             val currentDb = context.getDatabasePath("internet_billing_manager.db")
             val walDb = context.getDatabasePath("internet_billing_manager.db-wal")
@@ -225,6 +243,9 @@ object AutoBackupManager {
                 cursor.close()
             } catch (_: Exception) {}
 
+            // Sync all tiers with the restored data
+            performBackup(context)
+
             true
         } catch (_: Exception) {
             false
@@ -232,16 +253,11 @@ object AutoBackupManager {
     }
 
     fun getBackupInfo(context: Context): BackupInfo {
-        val primaryFile = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "IBM_Backup/$BACKUP_FILENAME"
-        )
-        val fallbackFile = File(context.filesDir, "backup/$BACKUP_FILENAME")
-        val backupFile = if (primaryFile.exists() && primaryFile.length() > 0) primaryFile else fallbackFile
-
+        val backupFile = getBestAvailableBackupFile(context)
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val timestamp = if (backupFile.exists()) backupFile.lastModified() else prefs.getLong(KEY_LAST_BACKUP_TIME, 0L)
-        val size = if (backupFile.exists()) backupFile.length() else prefs.getLong(KEY_LAST_BACKUP_SIZE, 0L)
+
+        val timestamp = if (backupFile != null && backupFile.exists()) backupFile.lastModified() else prefs.getLong(KEY_LAST_BACKUP_TIME, 0L)
+        val size = if (backupFile != null && backupFile.exists()) backupFile.length() else prefs.getLong(KEY_LAST_BACKUP_SIZE, 0L)
 
         val formattedDate = if (timestamp > 0L) {
             val fmt = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault())
@@ -251,10 +267,10 @@ object AutoBackupManager {
         }
 
         val formattedSize = formatBytes(size)
-        val path = if (backupFile.exists()) backupFile.absolutePath else "Not generated yet"
+        val path = if (size > 0L) "Download/IBM_Backup/$BACKUP_FILENAME" else "Not generated yet"
 
         return BackupInfo(
-            exists = backupFile.exists() && backupFile.length() > 0L,
+            exists = (backupFile != null && backupFile.exists() && backupFile.length() > 0L) || size > 0L,
             timestampMillis = timestamp,
             formattedDate = formattedDate,
             sizeBytes = size,
@@ -268,19 +284,19 @@ object AutoBackupManager {
 
     fun shareBackup(context: Context): Boolean {
         return try {
-            val primaryFile = File(
-                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                "IBM_Backup/$BACKUP_FILENAME"
-            )
-            val fallbackFile = File(context.filesDir, "backup/$BACKUP_FILENAME")
-            val backupFile = if (primaryFile.exists() && primaryFile.length() > 0) primaryFile else fallbackFile
+            val backupFile = getBestAvailableBackupFile(context) ?: return false
+            if (!backupFile.exists() || backupFile.length() == 0L) return false
 
-            if (!backupFile.exists()) return false
+            // Ensure file is in cacheDir under a configured FileProvider path
+            val shareDir = File(context.cacheDir, "shared_backup")
+            if (!shareDir.exists()) shareDir.mkdirs()
+            val shareFile = File(shareDir, BACKUP_FILENAME)
+            copyFileAtomically(backupFile, shareFile)
 
             val uri: Uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
-                backupFile
+                shareFile
             )
 
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
@@ -331,12 +347,192 @@ object AutoBackupManager {
     @Synchronized
     fun prepareFreshBackupFile(context: Context): File? {
         performBackup(context)
-        val primaryFile = File(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-            "IBM_Backup/$BACKUP_FILENAME"
-        )
-        val fallbackFile = File(context.filesDir, "backup/$BACKUP_FILENAME")
-        return if (primaryFile.exists() && primaryFile.length() > 0) primaryFile else if (fallbackFile.exists()) fallbackFile else null
+        return getBestAvailableBackupFile(context)
+    }
+
+    /**
+     * Resolves the best available, readable backup file across all storage tiers.
+     */
+    fun getBestAvailableBackupFile(context: Context): File? {
+        // 1. Check direct Public Download folder
+        try {
+            val primaryFile = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                "IBM_Backup/$BACKUP_FILENAME"
+            )
+            if (primaryFile.exists() && primaryFile.canRead() && primaryFile.length() > 0L) {
+                return primaryFile
+            }
+        } catch (_: Exception) {}
+
+        // 2. Check App-Specific External Storage (guaranteed accessible across Android 8-17)
+        try {
+            val extDir = context.getExternalFilesDir("backup")
+            if (extDir != null) {
+                val extFile = File(extDir, BACKUP_FILENAME)
+                if (extFile.exists() && extFile.canRead() && extFile.length() > 0L) {
+                    return extFile
+                }
+            }
+        } catch (_: Exception) {}
+
+        // 3. Check MediaStore.Downloads (for Android 10-17 when direct File path is restricted)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val cacheCopy = File(context.cacheDir, "mediastore_backup_cache.db")
+                if (readFromMediaStoreDownloads(context, cacheCopy)) {
+                    return cacheCopy
+                }
+            } catch (_: Exception) {}
+        }
+
+        // 4. Check Internal App Storage
+        try {
+            val fallbackFile = File(context.filesDir, "backup/$BACKUP_FILENAME")
+            if (fallbackFile.exists() && fallbackFile.canRead() && fallbackFile.length() > 0L) {
+                return fallbackFile
+            }
+        } catch (_: Exception) {}
+
+        return null
+    }
+
+    /**
+     * Saves a copy of the database to public Downloads/IBM_Backup/IBM_AutoBackup.db
+     * using MediaStore on Android 10+ (API 29-35+) or direct File on older versions.
+     */
+    private fun saveToPublicDownloads(context: Context, sourceFile: File): File? {
+        val downloadDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val backupDir = File(downloadDir, "IBM_Backup")
+        var fileSucceeded = false
+        val targetFile = File(backupDir, BACKUP_FILENAME)
+
+        // Attempt direct File write if accessible (Android 8-9 or if MANAGE_EXTERNAL_STORAGE is granted)
+        try {
+            if (!backupDir.exists()) {
+                backupDir.mkdirs()
+            }
+            if (backupDir.exists()) {
+                copyFileAtomically(sourceFile, targetFile)
+                if (targetFile.exists() && targetFile.length() > 0L) {
+                    fileSucceeded = true
+                }
+            }
+        } catch (_: Exception) {}
+
+        // On Android 10+ (API 29 to 35+), ensure MediaStore.Downloads has an updated copy
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                writeToMediaStoreDownloads(context, sourceFile)
+            } catch (_: Exception) {}
+        }
+
+        return if (fileSucceeded) targetFile else null
+    }
+
+    /**
+     * Writes database bytes to MediaStore.Downloads on Android 10+ without requiring any permissions.
+     */
+    private fun writeToMediaStoreDownloads(context: Context, sourceFile: File): Uri? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return null
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val relativePath = "${Environment.DIRECTORY_DOWNLOADS}/IBM_Backup"
+
+        // Search for existing file in MediaStore
+        val projection = arrayOf(MediaStore.MediaColumns._ID)
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND (${MediaStore.MediaColumns.RELATIVE_PATH} = ? OR ${MediaStore.MediaColumns.RELATIVE_PATH} = ?)"
+        val selectionArgs = arrayOf(BACKUP_FILENAME, "$relativePath/", relativePath)
+
+        var existingUri: Uri? = null
+        try {
+            resolver.query(collection, projection, selection, selectionArgs, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                    existingUri = ContentUris.withAppendedId(collection, id)
+                }
+            }
+        } catch (_: Exception) {}
+
+        if (existingUri != null) {
+            try {
+                resolver.openOutputStream(existingUri!!, "rwt")?.use { outStream ->
+                    FileInputStream(sourceFile).use { inStream ->
+                        inStream.copyTo(outStream)
+                    }
+                    outStream.flush()
+                    return existingUri
+                }
+            } catch (_: Exception) {
+                // If existing entry cannot be written in place, delete and re-insert
+                try {
+                    resolver.delete(existingUri!!, null, null)
+                } catch (_: Exception) {}
+            }
+        }
+
+        // Insert new entry into MediaStore
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, BACKUP_FILENAME)
+            put(MediaStore.MediaColumns.MIME_TYPE, "application/octet-stream")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+            put(MediaStore.MediaColumns.IS_PENDING, 1)
+        }
+
+        val newUri = resolver.insert(collection, values) ?: return null
+        return try {
+            resolver.openOutputStream(newUri)?.use { outStream ->
+                FileInputStream(sourceFile).use { inStream ->
+                    inStream.copyTo(outStream)
+                }
+                outStream.flush()
+            }
+            values.clear()
+            values.put(MediaStore.MediaColumns.IS_PENDING, 0)
+            resolver.update(newUri, values, null, null)
+            newUri
+        } catch (e: Exception) {
+            try { resolver.delete(newUri, null, null) } catch (_: Exception) {}
+            null
+        }
+    }
+
+    /**
+     * Reads database bytes from MediaStore.Downloads into destinationFile.
+     */
+    fun readFromMediaStoreDownloads(context: Context, destinationFile: File): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+        val resolver = context.contentResolver
+        val collection = MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+        val relativePath = "${Environment.DIRECTORY_DOWNLOADS}/IBM_Backup"
+
+        val projection = arrayOf(MediaStore.MediaColumns._ID)
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} = ? AND (${MediaStore.MediaColumns.RELATIVE_PATH} = ? OR ${MediaStore.MediaColumns.RELATIVE_PATH} = ?)"
+        val selectionArgs = arrayOf(BACKUP_FILENAME, "$relativePath/", relativePath)
+
+        var uri: Uri? = null
+        try {
+            resolver.query(collection, projection, selection, selectionArgs, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID))
+                    uri = ContentUris.withAppendedId(collection, id)
+                }
+            }
+        } catch (_: Exception) {}
+
+        if (uri == null) return false
+
+        return try {
+            resolver.openInputStream(uri!!)?.use { inStream ->
+                FileOutputStream(destinationFile).use { outStream ->
+                    inStream.copyTo(outStream)
+                }
+                outStream.flush()
+            }
+            destinationFile.exists() && destinationFile.length() > 0L
+        } catch (_: Exception) {
+            false
+        }
     }
 
     /**
@@ -561,7 +757,9 @@ object AutoBackupManager {
     fun scheduleDailyBackupAlarm(context: Context) {
         try {
             val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-            val intent = Intent(context, AutoBackupReceiver::class.java)
+            val intent = Intent(context, AutoBackupReceiver::class.java).apply {
+                action = AutoBackupReceiver.ACTION_LOCAL_BACKUP_DAILY
+            }
             val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             } else {
@@ -611,7 +809,9 @@ object AutoBackupManager {
     }
 
     private fun copyFileAtomically(source: File, destination: File) {
-        val tmpFile = File(destination.parentFile, "${destination.name}.tmp")
+        val parentDir = destination.parentFile ?: return
+        if (!parentDir.exists()) parentDir.mkdirs()
+        val tmpFile = File(parentDir, "${destination.name}.tmp")
         FileInputStream(source).use { input ->
             FileOutputStream(tmpFile).use { output ->
                 input.copyTo(output)
@@ -646,7 +846,8 @@ object AutoBackupManager {
                 "app_theme" to "ibm_theme_prefs",
                 "language" to "ibm_language_prefs",
                 "network_tools" to "network_tools_prefs",
-                "auto_billing" to "auto_billing_preferences"
+                "auto_billing" to "auto_billing_preferences",
+                "receipt_customization" to "ibm_receipt_customization_prefs"
             ).forEach { (jsonKey, prefName) ->
                 if (root.has(jsonKey)) {
                     val subObj = root.getJSONObject(jsonKey)

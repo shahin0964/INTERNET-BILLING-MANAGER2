@@ -1,6 +1,10 @@
 package internet.billing.manager.ui.components
 
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -63,12 +67,40 @@ fun BackupRestoreDialog(
     var showLocalRestoreConfirm by remember { mutableStateOf(false) }
     var showDriveRestoreConfirm by remember { mutableStateOf(false) }
     var driveValidationResult by remember { mutableStateOf<AutoBackupManager.BackupValidationResult?>(null) }
+    var showPickedFileRestoreConfirm by remember { mutableStateOf(false) }
+    var pickedFileValidationResult by remember { mutableStateOf<AutoBackupManager.BackupValidationResult?>(null) }
 
     fun refreshAll() {
         backupInfo = AutoBackupManager.getBackupInfo(context)
         accountInfo = GoogleDriveSyncManager.getAccountInfo(context)
         driveStatus = GoogleDriveSyncManager.getDriveBackupStatus(context)
         isAutoBackup1130Pm = GoogleDriveSyncManager.isAutoBackupEnabled(context)
+    }
+
+    // System File Picker for restoring ANY .db backup file (SAF / MediaStore compliant)
+    val pickBackupFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            isRestoring = true
+            coroutineScope.launch {
+                val validation = withContext(Dispatchers.IO) {
+                    AutoBackupManager.validateBackupUri(context, uri)
+                }
+                isRestoring = false
+                if (validation.isValid) {
+                    pickedFileValidationResult = validation
+                    showPickedFileRestoreConfirm = true
+                } else {
+                    Toast.makeText(
+                        context,
+                        if (isBangla) "ভুল বা ক্ষতিগ্রস্ত ব্যাকআপ ফাইল: ${validation.errorMessage ?: "যাচাই ব্যর্থ"}"
+                        else "Invalid or damaged backup file: ${validation.errorMessage ?: "Validation failed"}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
     }
 
     // Google Sign-In Launcher
@@ -474,7 +506,41 @@ fun BackupRestoreDialog(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Button 3: Share
+                        // Button 3: Pick File to Restore
+                        OutlinedButton(
+                            onClick = {
+                                try {
+                                    pickBackupFileLauncher.launch(arrayOf("*/*"))
+                                } catch (_: Exception) {
+                                    Toast.makeText(context, "Cannot open file picker", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = AccentOrange),
+                            border = BorderStroke(1.dp, AccentOrange.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(10.dp),
+                            enabled = !isBusy,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FolderOpen,
+                                contentDescription = null,
+                                tint = AccentOrange,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isBangla) "ফাইল পছন্দ করে রিস্টোর (Pick Backup File)" else "Choose Backup File from Device",
+                                color = AccentOrange,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.5.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Button 4: Share
                         OutlinedButton(
                             onClick = {
                                 val ok = AutoBackupManager.shareBackup(context)
@@ -507,6 +573,77 @@ fun BackupRestoreDialog(
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 12.5.sp
                             )
+                        }
+
+                        // Android 11+ Storage Status & Optional All Files Access Banner
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                            val isFullAccessGranted = Environment.isExternalStorageManager()
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isFullAccessGranted) AccentGreen.copy(alpha = 0.08f) else BgCardLight)
+                                    .border(1.dp, if (isFullAccessGranted) AccentGreen.copy(alpha = 0.25f) else CardBorder, RoundedCornerShape(10.dp))
+                                    .padding(10.dp)
+                            ) {
+                                Column {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = if (isFullAccessGranted) Icons.Default.CheckCircle else Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = if (isFullAccessGranted) AccentGreen else AccentCyan,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = if (isFullAccessGranted) {
+                                                if (isBangla) "Android 11+ ফুল ফাইল অ্যাক্সেস সক্রিয় ✓" else "Android 11+ All Files Access Granted ✓"
+                                            } else {
+                                                if (isBangla) "Android 11-17 মিডিয়াস্টোর ও অ্যাপ ব্যাকআপ সক্রিয়" else "Android 11-17 Scoped Storage & MediaStore Active"
+                                            },
+                                            color = if (isFullAccessGranted) AccentGreen else AccentCyan,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    if (!isFullAccessGranted) {
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = if (isBangla)
+                                                "ব্যাকআপ স্বয়ংক্রিয়ভাবে Downloads/IBM_Backup/ ও অ্যাপ স্টোরেজে সংরক্ষিত হচ্ছে। ফাইল ম্যানেজারে সরাসরি ব্যাকআপ ফোল্ডার দেখতে চাইলে নিচে ট্যাপ করে অনুমতি দিতে পারেন।"
+                                            else
+                                                "Backups are automatically saved to Downloads/IBM_Backup/ & app storage. Tap below to optionally grant full file access in Android Settings.",
+                                            color = TextMuted,
+                                            fontSize = 10.sp,
+                                            lineHeight = 14.sp
+                                        )
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = if (isBangla) "⚙️ সব ফাইল অ্যাক্সেস অনুমতি দিন (ঐচ্ছিক)" else "⚙️ Grant All Files Access (Optional)",
+                                            color = AccentCyan,
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier
+                                                .clickable {
+                                                    try {
+                                                        val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+                                                            data = Uri.parse("package:${context.packageName}")
+                                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        }
+                                                        context.startActivity(intent)
+                                                    } catch (_: Exception) {
+                                                        val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION).apply {
+                                                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                                        }
+                                                        context.startActivity(intent)
+                                                    }
+                                                }
+                                                .padding(vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
 
                     } else {
@@ -1064,6 +1201,146 @@ fun BackupRestoreDialog(
             },
             dismissButton = {
                 TextButton(onClick = { showLocalRestoreConfirm = false }) {
+                    Text(
+                        text = if (isBangla) "বাতিল" else "Cancel",
+                        color = TextMuted
+                    )
+                }
+            },
+            containerColor = BgCard,
+            shape = RoundedCornerShape(14.dp)
+        )
+    }
+
+    // Confirmation Alert for Picked File Restore (Android 8-17 SAF)
+    if (showPickedFileRestoreConfirm && pickedFileValidationResult != null) {
+        val result = pickedFileValidationResult!!
+        AlertDialog(
+            onDismissRequest = {
+                result.tempFile?.delete()
+                showPickedFileRestoreConfirm = false
+                pickedFileValidationResult = null
+            },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.FolderOpen,
+                        contentDescription = null,
+                        tint = AccentOrange,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isBangla) "নির্বাচিত ব্যাকআপ রিস্টোর" else "Restore Selected Backup",
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary,
+                        fontSize = 16.sp
+                    )
+                }
+            },
+            text = {
+                Column {
+                    Text(
+                        text = if (isBangla) "নির্বাচিত ব্যাকআপ ফাইলটি সফলভাবে যাচাই করা হয়েছে। এই ফাইলে নিম্নলিখিত রেকর্ড পাওয়া গেছে:"
+                        else "Selected backup file verified successfully. Found following records in the file:",
+                        color = TextSecondary,
+                        fontSize = 12.5.sp,
+                        lineHeight = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(BgCardLight)
+                            .border(1.dp, CardBorder, RoundedCornerShape(8.dp))
+                            .padding(10.dp)
+                    ) {
+                        Column {
+                            InfoRow(
+                                label = if (isBangla) "কাস্টমার সংখ্যা" else "Customers",
+                                value = "${result.customerCount} জন",
+                                valueColor = AccentCyan
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            InfoRow(
+                                label = if (isBangla) "বিল এন্ট্রি সংখ্যা" else "Bills",
+                                value = "${result.billCount} টি",
+                                valueColor = AccentOrange
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            InfoRow(
+                                label = if (isBangla) "পেমেন্ট লেনদেন" else "Payments",
+                                value = "${result.paymentCount} টি",
+                                valueColor = AccentGreen
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = if (isBangla) "সতর্কতা: রিস্টোর করলে বর্তমান অ্যাপের ডাটা এই ব্যাকআপ ডাটা দিয়ে প্রতিস্থাপিত হবে এবং ফোনের ২৪/৭ লোকাল ব্যাকআপও স্বয়ংক্রিয়ভাবে আপডেট হয়ে যাবে।"
+                        else "Warning: Restoring will overwrite current app data with this backup snapshot, and the phone's 24/7 auto-backup will also immediately sync.",
+                        color = AccentOrange,
+                        fontSize = 11.5.sp,
+                        lineHeight = 15.sp
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val temp = result.tempFile
+                        showPickedFileRestoreConfirm = false
+                        pickedFileValidationResult = null
+                        if (temp != null && temp.exists()) {
+                            isRestoring = true
+                            coroutineScope.launch {
+                                val success = withContext(Dispatchers.IO) {
+                                    AutoBackupManager.restoreFromValidatedFile(context, temp)
+                                }
+                                isRestoring = false
+                                if (success) {
+                                    Toast.makeText(
+                                        context,
+                                        if (isBangla) "ফাইল থেকে ব্যাকআপ সফলভাবে রিস্টোর হয়েছে! অ্যাপ রিলোড হচ্ছে..."
+                                        else "Backup restored successfully from file! Reloading...",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    onDismiss()
+                                    val intent = Intent(context, MainActivity::class.java).apply {
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                                    }
+                                    context.startActivity(intent)
+                                } else {
+                                    Toast.makeText(
+                                        context,
+                                        if (isBangla) "রিস্টোর ব্যর্থ হয়েছে! ডাটাবেজ ফরম্যাট সঠিক নয়।"
+                                        else "Restore failed! Invalid database file.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentOrange)
+                ) {
+                    Text(
+                        text = if (isBangla) "হ্যাঁ, রিস্টোর করুন" else "Yes, Restore Now",
+                        color = BgDark,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    result.tempFile?.delete()
+                    showPickedFileRestoreConfirm = false
+                    pickedFileValidationResult = null
+                }) {
                     Text(
                         text = if (isBangla) "বাতিল" else "Cancel",
                         color = TextMuted

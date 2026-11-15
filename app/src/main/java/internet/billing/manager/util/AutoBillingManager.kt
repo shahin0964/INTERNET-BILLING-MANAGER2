@@ -117,10 +117,31 @@ object AutoBillingManager {
 
 class AutoBillingReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent?) {
+        val pendingResult = goAsync()
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
+        val wakeLock = powerManager?.newWakeLock(
+            android.os.PowerManager.PARTIAL_WAKE_LOCK,
+            "IBM:AutoBillingReceiverWakeLock"
+        )?.apply {
+            setReferenceCounted(false)
+            acquire(5 * 60 * 1000L) // 5 minutes max
+        }
+
         val currentMonthKey = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Date())
         CoroutineScope(Dispatchers.IO).launch {
-            AutoBillingManager.runBillingForMonth(context, currentMonthKey)
-            AutoBillingManager.scheduleNextMonthAlarm(context)
+            try {
+                AutoBillingManager.runBillingForMonth(context, currentMonthKey)
+                AutoBillingManager.scheduleNextMonthAlarm(context)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                try {
+                    if (wakeLock != null && wakeLock.isHeld) {
+                        wakeLock.release()
+                    }
+                } catch (_: Exception) {}
+                pendingResult.finish()
+            }
         }
     }
 }
