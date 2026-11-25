@@ -526,8 +526,8 @@ object AutoBackupManager {
             resolver.openInputStream(uri!!)?.use { inStream ->
                 FileOutputStream(destinationFile).use { outStream ->
                     inStream.copyTo(outStream)
+                    outStream.flush()
                 }
-                outStream.flush()
             }
             destinationFile.exists() && destinationFile.length() > 0L
         } catch (_: Exception) {
