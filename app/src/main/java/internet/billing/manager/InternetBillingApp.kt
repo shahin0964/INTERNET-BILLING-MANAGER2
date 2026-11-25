@@ -23,6 +23,7 @@ class InternetBillingApp : Application() {
         internet.billing.manager.util.AutoBillingManager.checkAndRunAutoBilling(this)
         internet.billing.manager.util.AutoBackupManager.initialize(this)
         internet.billing.manager.util.GoogleDriveSyncManager.initialize(this)
+        internet.billing.manager.util.ServerSyncManager.initialize(this)
     }
 
     val database: AppDatabase
@@ -30,11 +31,12 @@ class InternetBillingApp : Application() {
 
     val repository: BillingRepository
         get() = BillingRepository(
-            database.customerDao(),
-            database.packageDao(),
-            database.paymentDao(),
-            database.billDao(),
-            database.expenseDao(),
-            database.settingsDao()
+            database = database,
+            customerDao = database.customerDao(),
+            packageDao = database.packageDao(),
+            paymentDao = database.paymentDao(),
+            billDao = database.billDao(),
+            expenseDao = database.expenseDao(),
+            settingsDao = database.settingsDao()
         )
 }

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INTERNET BILLING MANAGER 2 (IBM 2) - Web Portal</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body, button, input, select, textarea {
+            font-family: 'Inter', 'Hind Siliguri', sans-serif;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand-section">
+            <div class="brand-logo">IBM</div>
+            <div>
+                <div class="brand-title" id="sidebarCompanyName">Internet Billing</div>
+                <div class="brand-sub">MANAGER 2.0</div>
+            </div>
+        </div>
+
+        <nav class="nav-menu">
+            <a class="nav-item active" data-tab="dashboard">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span>ড্যাশবোর্ড (Overview)</span>
+            </a>
+            <a class="nav-item" data-tab="customers">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                <span>গ্রাহক তালিকা (Customers)</span>
+            </a>
+            <a class="nav-item" data-tab="billing">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <span>মাসিক বিলিং (Billing)</span>
+            </a>
+            <a class="nav-item" data-tab="collections">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+                <span>বিল আদায় (Collections)</span>
+            </a>
+            <a class="nav-item" data-tab="expenses">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                <span>খরচ খাতা (Expenses)</span>
+            </a>
+            <a class="nav-item" data-tab="packages">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <span>প্যাকেজ প্ল্যান (Packages)</span>
+            </a>
+            <a class="nav-item" data-tab="mikrotik">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                <span>মাইক্রোটিক (MikroTik)</span>
+            </a>
+            <a class="nav-item" data-tab="settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <span>সেটিংস (Settings)</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <span>IBM Cloud v2.0</span>
+            <span style="color: var(--accent-green);">● অনলাইন</span>
+        </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper">
+        <!-- TOPBAR -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1 class="topbar-title" id="pageTitle">ড্যাশবোর্ড ওভারভিউ (Dashboard)</h1>
+                <div class="network-badge" id="networkStatusBadge">নেটওয়ার্ক সচল</div>
+            </div>
+            <div class="topbar-right">
+                <div class="date-pill" id="currentDatePill">Wed, 25 Nov 2026</div>
+                <div id="topbarCompanyName" style="font-weight: 600; font-size: 13px; color: var(--accent-cyan);">Internet Service Provider</div>
+            </div>
+        </header>
+
+        <!-- CONTENT BODY -->
+        <main class="content-body">
+
+            <!-- TAB 1: DASHBOARD -->
+            <section class="tab-view" id="view-dashboard">
+                <!-- Quick Actions Banner -->
+                <div class="glass-card" style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <h2 style="font-size: 19px; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">শুভ দিন! 👋</h2>
+                        <p style="font-size: 13px; color: var(--text-secondary);">আইএসপি নেটওয়ার্ক ও গ্রাহক বিলিংয়ের সর্বশেষ লাইভ স্ট্যাটাস দেখুন</p>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn btn-cyan" onclick="openAddCustomerModal()">➕ নতুন গ্রাহক</button>
+                        <button class="btn btn-green" onclick="switchTab('customers')">💳 বিল আদায়</button>
+                        <button class="btn btn-purple" onclick="triggerGenerateMonthlyBills()">🧾 মাসিক বিল জেনারেট</button>
+                    </div>
+                </div>
+
+                <!-- KPI Stats Grid -->
+                <div class="stats-grid">
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-cyan);">
+                        <div class="stat-header">
+                            <span>সক্রিয় গ্রাহক (Active)</span>
+                            <div class="stat-icon" style="background: rgba(0,229,255,0.15); color: var(--accent-cyan);">👥</div>
+                        </div>
+                        <div class="stat-value" id="statActiveCustomers">0</div>
+                        <div class="stat-desc" id="statTotalCustomers">মোট: 0 জন</div>
+                    </div>
+
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-purple);">
+                        <div class="stat-header">
+                            <span>চলতি মাসের মোট বিল</span>
+                            <div class="stat-icon" style="background: rgba(124,77,255,0.15); color: var(--accent-purple);">🧾</div>
+                        </div>
+                        <div class="stat-value" id="statMonthlyBill">৳0</div>
+                        <div class="stat-desc">রানিং মাসের প্রদেয় বিল</div>
+                    </div>
+
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-green);">
+                        <div class="stat-header">
+                            <span>চলতি মাসের মোট আদায়</span>
+                            <div class="stat-icon" style="background: rgba(0,230,118,0.15); color: var(--accent-green);">💰</div>
+                        </div>
+                        <div class="stat-value" id="statMonthlyCollection" style="color: var(--accent-green);">৳0</div>
+                        <div class="stat-desc">ক্যাশ ও ডিজিটাল পেমেন্ট</div>
+                    </div>
+
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-blue);">
+                        <div class="stat-header">
+                            <span>আজকের আদায় (Today)</span>
+                            <div class="stat-icon" style="background: rgba(41,121,255,0.15); color: var(--accent-blue);">📅</div>
+                        </div>
+                        <div class="stat-value" id="statTodayCollection" style="color: var(--accent-cyan);">৳0</div>
+                        <div class="stat-desc">আজকে সংগৃহীত টাকা</div>
+                    </div>
+
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-red);">
+                        <div class="stat-header">
+                            <span>মোট বকেয়া (Total Due)</span>
+                            <div class="stat-icon" style="background: rgba(255,82,82,0.15); color: var(--accent-red);">⚠️</div>
+                        </div>
+                        <div class="stat-value" id="statTotalDue" style="color: var(--accent-red);">৳0</div>
+                        <div class="stat-desc">সকল গ্রাহকের মোট পাওনা</div>
+                    </div>
+
+                    <div class="glass-card stat-card" style="border-left: 4px solid var(--accent-orange);">
+                        <div class="stat-header">
+                            <span>মাসিক নিট লাভ (Profit)</span>
+                            <div class="stat-icon" style="background: rgba(255,145,0,0.15); color: var(--accent-orange);">📈</div>
+                        </div>
+                        <div class="stat-value" id="statMonthlyProfit">৳0</div>
+                        <div class="stat-desc">আদায় - (ব্যান্ডউইথ + খরচ)</div>
+                    </div>
+                </div>
+
+                <!-- Recent Collections Table -->
+                <div class="glass-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-size: 16px; font-weight: 700;">সর্বশেষ বিল আদায় হিস্টোরি (Recent Collections)</h3>
+                        <button class="btn btn-outline" style="font-size: 12px; padding: 6px 12px;" onclick="switchTab('collections')">সব দেখুন →</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>গ্রাহক (Customer)</th>
+                                    <th>আদায়ের পরিমাণ</th>
+                                    <th>পেমেন্ট মেথড</th>
+                                    <th>তারিখ</th>
+                                    <th>রসিদ (Receipt)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentPaymentsTableBody">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 24px;">লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: CUSTOMERS -->
+            <section class="tab-view" id="view-customers" style="display: none;">
+                <div class="glass-card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                        <div style="display: flex; gap: 10px; flex: 1; min-width: 280px;">
+                            <input type="text" id="customerSearchInput" class="form-control" placeholder="🔍 নাম, কোড, মোবাইল বা PPPoE দিয়ে খুঁজুন...">
+                            <select id="customerStatusFilter" class="form-control" style="width: 140px;">
+                                <option value="All">সকল স্ট্যাটাস</option>
+                                <option value="Active">Active (সক্রিয়)</option>
+                                <option value="Suspended">Suspended (স্থগিত)</option>
+                                <option value="Inactive">Inactive (নিষ্ক্রিয়)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-cyan" onclick="openAddCustomerModal()">➕ নতুন গ্রাহক যোগ করুন</button>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>কোড</th>
+                                    <th>নাম ও PPPoE</th>
+                                    <th>মোবাইল ও ঠিকানা</th>
+                                    <th>প্যাকেজ ও মাসিক বিল</th>
+                                    <th>বকেয়া (Due)</th>
+                                    <th>স্ট্যাটাস</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customersTableBody">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: BILLING -->
+            <section class="tab-view" id="view-billing" style="display: none;">
+                <!-- Month Navigator & Stats -->
+                <div class="glass-card" style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <button class="btn btn-outline" onclick="changeBillingMonth(-1)">◀ পূর্ববর্তী</button>
+                            <h2 style="font-size: 18px; font-weight: 800; color: var(--accent-cyan); min-width: 170px; text-align: center;" id="billingMonthDisplay">নভেম্বর ২০২৬</h2>
+                            <button class="btn btn-outline" onclick="changeBillingMonth(1)">পরবর্তী ▶</button>
+                        </div>
+                        <button class="btn btn-purple" onclick="triggerGenerateMonthlyBills()">⚡ চলতি মাসের বিল জেনারেট করুন</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+                    <div class="glass-card">
+                        <div class="stat-header"><span>এই মাসের মোট বিল</span></div>
+                        <div class="stat-value" id="billingTotalBill" style="color: var(--accent-purple);">৳0</div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="stat-header"><span>এই মাসের মোট আদায়</span></div>
+                        <div class="stat-value" id="billingTotalPaid" style="color: var(--accent-green);">৳0</div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="stat-header"><span>এই মাসের মোট বকেয়া</span></div>
+                        <div class="stat-value" id="billingTotalDue" style="color: var(--accent-red);">৳0</div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>কোড</th>
+                                    <th>গ্রাহক নাম</th>
+                                    <th>মাস</th>
+                                    <th>বিল অংক</th>
+                                    <th>পরিশোধিত</th>
+                                    <th>বকেয়া</th>
+                                    <th>অবস্থা</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billingTableBody">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: COLLECTIONS -->
+            <section class="tab-view" id="view-collections" style="display: none;">
+                <div class="glass-card">
+                    <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">বিল আদায় লগ ও ট্রানজ্যাকশন (Collection Records)</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>কোড</th>
+                                    <th>গ্রাহকের নাম</th>
+                                    <th>জমা কৃত টাকা</th>
+                                    <th>মেথড</th>
+                                    <th>তারিখ ও সময়</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTableBody">
+                                <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 30px;">লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: EXPENSES -->
+            <section class="tab-view" id="view-expenses" style="display: none;">
+                <div class="glass-card" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-size: 13px; color: var(--text-secondary);">এই মাসের মোট খরচ (Total Outflow)</div>
+                        <div style="font-size: 26px; font-weight: 800; color: var(--accent-red);" id="expensesTotalOutflow">৳0</div>
+                    </div>
+                    <button class="btn btn-cyan" onclick="openModal('expenseModal')">➕ নতুন খরচ যোগ করুন</button>
+                </div>
+
+                <div class="glass-card">
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>খরচের বিবরণ (Title)</th>
+                                    <th>ক্যাটাগরি</th>
+                                    <th>পরিমাণ (Amount)</th>
+                                    <th>তারিখ</th>
+                                    <th>অ্যাকশন</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expensesTableBody">
+                                <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">লোড হচ্ছে...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: PACKAGES -->
+            <section class="tab-view" id="view-packages" style="display: none;">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+                    <button class="btn btn-cyan" onclick="openModal('packageModal')">➕ নতুন প্যাকেজ তৈরি করুন</button>
+                </div>
+                <div class="stats-grid" id="packagesGrid">
+                    <!-- Loaded dynamically -->
+                </div>
+            </section>
+
+            <!-- TAB 7: MIKROTIK -->
+            <section class="tab-view" id="view-mikrotik" style="display: none;">
+                <div class="glass-card" style="max-width: 650px; margin: 0 auto;">
+                    <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; color: var(--accent-cyan);">🌐 মাইক্রোটিক রাউটার কনফিগারেশন ও টেস্ট</h3>
+                    <div class="form-group">
+                        <label class="form-label">Router IP Address</label>
+                        <input type="text" id="mkHost" class="form-control" value="192.168.88.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">API Port (Default 8728)</label>
+                        <input type="number" id="mkPort" class="form-control" value="8728">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Admin Username</label>
+                        <input type="text" id="mkUser" class="form-control" value="admin">
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 20px;">
+                        <button class="btn btn-cyan" onclick="testMikrotikConnection()">📡 টেস্ট কানেকশন ও পিং</button>
+                    </div>
+                    <div id="mkPingStatus" style="margin-top: 16px; font-size: 13.5px;"></div>
+                </div>
+            </section>
+
+            <!-- TAB 8: SETTINGS -->
+            <section class="tab-view" id="view-settings" style="display: none;">
+                <div class="glass-card" style="max-width: 650px; margin: 0 auto;">
+                    <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 18px;">🏢 আপনার আইএসপি বিজনেস প্রোফাইল</h3>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label">কোম্পানি / ব্যবসার নাম (ISP Name)</label>
+                            <input type="text" id="setCompanyName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">স্লোগান / ট্যাগলাইন (Tagline)</label>
+                            <input type="text" id="setTagline" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">অফিস মোবাইল / হেল্পলাইন</label>
+                            <input type="text" id="setPhone" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">অফিসের ঠিকানা</label>
+                            <textarea id="setAddress" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-green" style="margin-top: 10px;">💾 সেটিংস সংরক্ষণ করুন</button>
+                    </form>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- ======================================================================
+         MODALS
+         ====================================================================== -->
+
+    <!-- 1. Customer Modal (Add / Edit) -->
+    <div class="modal-overlay" id="customerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="customerModalTitle">নতুন গ্রাহক যোগ করুন</h3>
+                <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+            </div>
+            <form id="customerForm">
+                <input type="hidden" id="custId">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">গ্রাহক কোড</label>
+                        <input type="text" id="custCode" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">গ্রাহকের পূর্ণ নাম</label>
+                        <input type="text" id="custName" class="form-control" required>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">PPPoE ইউজারনেম</label>
+                        <input type="text" id="custPppoe" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">মোবাইল নম্বর</label>
+                        <input type="text" id="custPhone" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ইন্টারনেট প্যাকেজ প্ল্যান</label>
+                    <select id="custPackageSelect" class="form-control"></select>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">মাসিক বিল (৳)</label>
+                        <input type="number" id="custBill" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">পূর্বের বকেয়া (৳)</label>
+                        <input type="number" id="custDue" class="form-control" value="0">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">বিল পরিশোধের শেষ তারিখ (দিন)</label>
+                        <input type="number" id="custDueDay" class="form-control" value="10" min="1" max="31">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">সংযোগ অবস্থা (Status)</label>
+                        <select id="custStatus" class="form-control">
+                            <option value="Active">Active (সক্রিয়)</option>
+                            <option value="Suspended">Suspended (স্থগিত)</option>
+                            <option value="Inactive">Inactive (নিষ্ক্রিয়)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ঠিকানা</label>
+                    <input type="text" id="custAddress" class="form-control">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('customerModal')">বাতিল</button>
+                    <button type="submit" class="btn btn-cyan">সংরক্ষণ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Collect Payment Modal -->
+    <div class="modal-overlay" id="collectPaymentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">💳 বিল কালেকশন ও রসিদ এন্ট্রি</h3>
+                <button class="close-btn" onclick="closeModal('collectPaymentModal')">&times;</button>
+            </div>
+            <form id="collectPaymentForm">
+                <div style="background: rgba(0,229,255,0.08); border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+                    <div style="font-weight: 700; font-size: 15px; color: var(--accent-cyan);" id="payCustName">গ্রাহকের নাম</div>
+                    <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;" id="payCustDetails">বিস্তারিত</div>
+                    <div style="font-size: 13px; font-weight: 700; color: var(--accent-orange); margin-top: 4px;" id="payCustDue">বকেয়া: ৳0</div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px;">
+                    <div class="form-group">
+                        <label class="form-label">আদায়ের পরিমাণ (৳)</label>
+                        <input type="number" id="payAmount" class="form-control" style="font-size: 16px; font-weight: 700; color: var(--accent-green);" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ছাড় / Discount (৳)</label>
+                        <input type="number" id="payDiscount" class="form-control" value="0">
+                    </div>
+                </div>
+
+                <div style="font-size: 12.5px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 14px;" id="payRemainDue">
+                    অবশিষ্ট বকেয়া: ৳0
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">পেমেন্ট মেথড</label>
+                    <select id="payMethod" class="form-control">
+                        <option value="Cash">Cash (নগদ)</option>
+                        <option value="bKash">bKash (বিকাশ)</option>
+                        <option value="Nagad">Nagad (নগদ)</option>
+                        <option value="Bank">Bank Transfer</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">মন্তব্য / নোট (ঐচ্ছিক)</label>
+                    <input type="text" id="payNote" class="form-control" placeholder="যেমন: দোকান থেকে আদায়">
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+                    <button type="button" class="btn btn-outline" onclick="closeModal('collectPaymentModal')">বাতিল</button>
+                    <button type="submit" class="btn btn-green">কনফার্ম ও রসিদ তৈরি করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Printable Money Receipt Modal (Landscape Voucher) -->
+    <div class="modal-overlay" id="receiptModal">
+        <div class="modal-content" style="max-width: 840px; background: transparent; border: none; padding: 0;">
+            <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px;" class="no-print">
+                <button class="btn btn-green" onclick="printReceipt()">🖨️ প্রিন্ট রসিদ (Print Voucher)</button>
+                <button class="btn btn-outline" style="background: rgba(19,29,49,0.9);" onclick="closeModal('receiptModal')">✕ বন্ধ করুন</button>
+            </div>
+
+            <!-- Crisp Clean White Paper Voucher -->
+            <div class="receipt-paper" id="printableReceiptArea">
+                <div class="receipt-header">
+                    <div class="receipt-logo-block">
+                        <div class="receipt-circle-logo">ISP</div>
+                        <div>
+                            <div style="font-size: 20px; font-weight: 800; color: #0F172A;" id="recCompanyName">Internet Service Provider</div>
+                            <div style="font-size: 11px; font-weight: 700; color: #0284C7;" id="recTagline">FAST • STABLE • CONNECTED</div>
+                            <div style="font-size: 11px; color: #64748B; margin-top: 2px;" id="recHotline">হেল্পলাইন: 01700000000</div>
+                        </div>
+                    </div>
+
+                    <div class="receipt-title-box">
+                        <h2>MONEY</h2>
+                        <span>RECEIPT</span>
+                        <div style="font-size: 10px; color: #64748B; margin-top: 2px;">Thank you for being with us!</div>
+                    </div>
+
+                    <div style="text-align: right; font-size: 12px; color: #475569;">
+                        <div>ভাউচার নম্বর: <strong style="color: #0284C7;" id="recVoucherNo">#IBM-000000</strong></div>
+                        <div>তারিখ: <strong id="recDate">25 Nov 2026</strong></div>
+                    </div>
+                </div>
+
+                <div class="receipt-grid">
+                    <div class="receipt-field"><strong>গ্রাহকের নাম:</strong> <span id="recCustName">-</span></div>
+                    <div class="receipt-field"><strong>গ্রাহক কোড:</strong> <span id="recCustCode">-</span></div>
+                    <div class="receipt-field"><strong>PPPoE ইউজার:</strong> <span id="recPppoe">-</span></div>
+                    <div class="receipt-field"><strong>মোবাইল নম্বর:</strong> <span id="recCustPhone">-</span></div>
+                    <div class="receipt-field"><strong>প্যাকেজ প্ল্যান:</strong> <span id="recPlan">-</span></div>
+                    <div class="receipt-field"><strong>পেমেন্ট মেথড:</strong> <span id="recMethod">Cash</span></div>
+                </div>
+
+                <div class="receipt-amount-banner">
+                    <div>
+                        <div style="font-size: 11px; color: #15803D; font-weight: 700;">পরিশোধিত টাকার অংক:</div>
+                        <div style="font-size: 22px; font-weight: 800; color: #15803D;" id="recAmountNum">৳0</div>
+                        <div style="font-size: 11.5px; color: #334155; font-style: italic; margin-top: 2px;" id="recAmountWords">Zero Taka Only</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; color: #B91C1C; font-weight: 700;">অবশিষ্ট বকেয়া (Due):</div>
+                        <div style="font-size: 18px; font-weight: 800; color: #B91C1C;" id="recDueRemaining">৳0</div>
+                    </div>
+                </div>
+
+                <div class="receipt-signatures">
+                    <div class="sign-line">গ্রাহকের স্বাক্ষর</div>
+                    <div class="sign-line">আদায়কারীর স্বাক্ষর ও সিল</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/app.js"></script>
+</body>
+</html>

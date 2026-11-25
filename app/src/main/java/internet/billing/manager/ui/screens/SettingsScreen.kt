@@ -36,6 +36,7 @@ import androidx.compose.ui.window.Dialog
 import internet.billing.manager.data.model.InternetPackage
 import internet.billing.manager.ui.components.AppUpdateDialog
 import internet.billing.manager.ui.components.BackupRestoreDialog
+import internet.billing.manager.ui.components.ServerSyncDialog
 import internet.billing.manager.ui.components.GlassCard
 import internet.billing.manager.ui.components.LanguageSelectionDialog
 import internet.billing.manager.ui.components.ThemeSelectionDialog
@@ -63,6 +64,7 @@ fun SettingsScreen(
     var showAboutDialog by remember { mutableStateOf(false) }
     var showUpdateDialog by remember { mutableStateOf(false) }
     var showBackupDialog by remember { mutableStateOf(false) }
+    var showServerSyncDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = modifier
@@ -179,6 +181,18 @@ fun SettingsScreen(
                         iconTint = AccentGreen,
                         onClick = {
                             showBackupDialog = true
+                        }
+                    )
+                    Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
+
+                    // Item 6.1: Cloud Server & Web Sync
+                    SettingsRowItem(
+                        icon = Icons.Default.Sync,
+                        title = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA) "ক্লাউড সার্ভার সিঙ্ক (Web & API)" else "Cloud Server Sync (Web & API)",
+                        subtitle = if (LanguageManager.currentLanguage == internet.billing.manager.ui.localization.AppLanguage.BANGLA) "ওয়েব সফটওয়্যার ও সেন্ট্রাল ডেটাবেস সংযোগ" else "Connect with Web Software & Central PostgreSQL",
+                        iconTint = AccentCyan,
+                        onClick = {
+                            showServerSyncDialog = true
                         }
                     )
                     Divider(color = CardBorder.copy(alpha = 0.3f), modifier = Modifier.padding(horizontal = 10.dp))
@@ -482,6 +496,12 @@ fun SettingsScreen(
     if (showBackupDialog) {
         BackupRestoreDialog(
             onDismiss = { showBackupDialog = false }
+        )
+    }
+
+    if (showServerSyncDialog) {
+        ServerSyncDialog(
+            onDismiss = { showServerSyncDialog = false }
         )
     }
 }

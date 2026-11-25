@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL Database Service
+  postgres:
+    image: postgres:16-alpine
+    container_name: ibm_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: ibm_admin
+      POSTGRES_PASSWORD: ibm_secure_password_2026
+      POSTGRES_DB: ibm_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./server/sql/schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ibm_admin -d ibm_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Central Backend API & Web Software
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    container_name: ibm_server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://ibm_admin:ibm_secure_password_2026@postgres:5432/ibm_db
+      JWT_SECRET: ibm_super_production_secret_key_change_me
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+    driver: local

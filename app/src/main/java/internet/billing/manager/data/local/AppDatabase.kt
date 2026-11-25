@@ -103,7 +103,7 @@ abstract class AppDatabase : RoomDatabase() {
                 super.onOpen(db)
                 INSTANCE?.let { database ->
                     scope.launch(Dispatchers.IO) {
-                        // Purge legacy fake settings & packages if present in existing database
+                        // Purge legacy fake settings if present in existing database
                         val settings = database.settingsDao().getSettingsSync()
                         if (settings != null && (settings.companyName.equals("U-turn Technologies", ignoreCase = true) || settings.phone == "01700000000")) {
                             database.settingsDao().insertOrUpdate(
@@ -115,7 +115,6 @@ abstract class AppDatabase : RoomDatabase() {
                                 )
                             )
                         }
-                        database.packageDao().deleteLegacyDefaultPackages()
                     }
                 }
             }
