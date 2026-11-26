@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import morgan from 'morgan';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { config } from './config/index.js';
 import { initializeDatabase } from './db/index.js';
@@ -55,7 +56,14 @@ app.use('/api/mikrotik', mikrotikRouter);
 app.use('/api/sync', syncRouter);
 
 // Serve Web Frontend Static Files
-const webPath = path.resolve(__dirname, '../../web');
+const candidates = [
+    process.env.WEB_PATH,
+    path.resolve(__dirname, '../../web'),
+    path.resolve(__dirname, '../web'),
+    path.resolve(process.cwd(), 'web')
+].filter(Boolean) as string[];
+
+const webPath = candidates.find(p => fs.existsSync(p)) || path.resolve(__dirname, '../../web');
 app.use(express.static(webPath));
 
 // Fallback for Single-Page Application (SPA) routing
